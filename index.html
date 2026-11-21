@@ -177,7 +177,6 @@ async function cargarCategoriasSupabase() {
     return null;
   }
 } 
-cargarCategoriasSupabase();
 const isEnv=id=>id==='c5';
 const cIc=c=>`<span class="ic" aria-hidden="true"${c.imgId?` data-img="${esc(c.imgId)}" data-alt=""`:''}>${esc(c.icon||'✿')}</span>`;
 const cat=id=>D.cats.find(c=>c.id===id),box=id=>D.boxes.find(b=>b.id===id),cnt=id=>D.prods.filter(p=>p.box===id).length;
@@ -315,6 +314,7 @@ function confirmDlg(msg,fn){dlg('¿Confirmar?',`<p>${esc(msg)}</p><div class="ro
 const AUTH_URL='https://odbrsvgxrffbzmghzyng.supabase.co';
 const AUTH_PUBLISHABLE_KEY='sb_publishable_63jGTgYrsIXaAKk1Cfnjmw_wXTHvxRB';
 const AUTH_WORKER='https://dearcupid-test.yuujimin.workers.dev';
+cargarCategoriasSupabase();
 let adminSession=null,adminReady=false;
 const authConfigured=()=>AUTH_PUBLISHABLE_KEY.startsWith('sb_publishable_');
 function loginView(){return `<section class="login-shell"><h1>Acceso administrativo ♡</h1><p>Inicia sesión con tu cuenta autorizada de Dearcupid Club.</p><form class="f" data-f="login"><div><label for="adminEmail">Correo electrónico</label><input id="adminEmail" type="email" name="email" autocomplete="username" required></div><div><label for="adminPassword">Contraseña</label><input id="adminPassword" type="password" name="password" autocomplete="current-password" required></div><button class="btn pri">Iniciar sesión</button><p class="err" id="loginError" role="alert"></p></form></section>`}
