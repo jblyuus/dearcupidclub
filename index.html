@@ -152,6 +152,32 @@ function seed(){const c=[['c1','Pedidos Japón','Compras grupales desde tiendas 
 return{v:4,cats:c,boxes:[],prods:[],envios:[],cargos:{},notices:[],updated:new Date().toISOString()}}
 let D;function load(){try{D=JSON.parse(localStorage.getItem(KEY))}catch(e){}if(!D||!D.cats)D=seed();if(D.v!==4){(D.prods||[]).forEach(p=>p.pay=1);Object.values(D.cargos||{}).forEach(b=>Object.values(b).forEach(c=>{c.emsSt=c.emsSt===2?1:0;c.aduSt=c.aduSt===2?1:0}));D.envios=D.envios||[];D.v=4}D.envios=D.envios||[];D.boxes=D.boxes||[];D.prods=D.prods||[];D.cargos=D.cargos||{}}
 function save(){D.updated=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){toast('No se pudo guardar: almacenamiento lleno.',1)}}
+async function cargarCategoriasSupabase() {
+  try {
+    const respuesta = await fetch(
+      AUTH_URL + '/rest/v1/categorias?select=id,nombre,orden,activa&order=orden.asc',
+      {
+        headers: {
+          apikey: AUTH_PUBLISHABLE_KEY
+        }
+      }
+    );
+
+    if (!respuesta.ok) {
+      throw new Error('Error al consultar categorías: ' + respuesta.status);
+    }
+
+    const categorias = await respuesta.json();
+
+    console.log('Categorías cargadas desde Supabase:', categorias);
+
+    return categorias;
+  } catch (error) {
+    console.error('Error de conexión con Supabase:', error);
+    return null;
+  }
+} 
+cargarCategoriasSupabase();
 const isEnv=id=>id==='c5';
 const cIc=c=>`<span class="ic" aria-hidden="true"${c.imgId?` data-img="${esc(c.imgId)}" data-alt=""`:''}>${esc(c.icon||'✿')}</span>`;
 const cat=id=>D.cats.find(c=>c.id===id),box=id=>D.boxes.find(b=>b.id===id),cnt=id=>D.prods.filter(p=>p.box===id).length;
