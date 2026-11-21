@@ -168,9 +168,18 @@ async function cargarCategoriasSupabase() {
     }
 
     const categorias = await respuesta.json();
+    D.cats = categorias.map(c => ({
+  id: c.id,
+  name: c.nombre,
+  desc: '',
+  icon: '♡',
+  orden: c.orden
+}));
 
     console.log('Categorías cargadas desde Supabase:', categorias);
-
+if (location.hash !== '#admin' && typeof route === 'function') {
+  await route();
+}
     return categorias;
   } catch (error) {
     console.error('Error de conexión con Supabase:', error);
