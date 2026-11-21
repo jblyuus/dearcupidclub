@@ -323,13 +323,44 @@ function confirmDlg(msg,fn){dlg('¿Confirmar?',`<p>${esc(msg)}</p><div class="ro
 const AUTH_URL='https://odbrsvgxrffbzmghzyng.supabase.co';
 const AUTH_PUBLISHABLE_KEY='sb_publishable_63jGTgYrsIXaAKk1Cfnjmw_wXTHvxRB';
 const AUTH_WORKER='https://dearcupid-test.yuujimin.workers.dev';
-cargarCategoriasSupabase();
 let adminSession=null,adminReady=false;
 const authConfigured=()=>AUTH_PUBLISHABLE_KEY.startsWith('sb_publishable_');
 function loginView(){return `<section class="login-shell"><h1>Acceso administrativo ♡</h1><p>Inicia sesión con tu cuenta autorizada de Dearcupid Club.</p><form class="f" data-f="login"><div><label for="adminEmail">Correo electrónico</label><input id="adminEmail" type="email" name="email" autocomplete="username" required></div><div><label for="adminPassword">Contraseña</label><input id="adminPassword" type="password" name="password" autocomplete="current-password" required></div><button class="btn pri">Iniciar sesión</button><p class="err" id="loginError" role="alert"></p></form></section>`}
 async function verifyAdmin(token){const r=await fetch(AUTH_URL+'/rest/v1/rpc/es_admin',{method:'POST',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:'{}',cache:'no-store'});if(!r.ok)return false;return await r.json()===true}
 async function loginAdmin(email,password){if(!authConfigured())throw Error('Falta configurar la clave publicable de Supabase en el HTML.');const r=await fetch(AUTH_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:AUTH_PUBLISHABLE_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok||!j.access_token)throw Error('No se pudo iniciar sesión. Revisa tu correo y contraseña.');const ok=await verifyAdmin(j.access_token);if(!ok)throw Error('La cuenta no tiene acceso administrativo o no se pudo verificar.');adminSession={token:j.access_token,refresh:j.refresh_token,expires:Date.now()+(j.expires_in||3600)*1000};adminReady=true}
 async function refreshAdmin(){if(!adminSession||!authConfigured())return false;if(Date.now()<adminSession.expires-60000)return verifyAdmin(adminSession.token);try{const r=await fetch(AUTH_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:AUTH_PUBLISHABLE_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:adminSession.refresh})});if(!r.ok)throw Error('Sesión expirada');const j=await r.json();if(!await verifyAdmin(j.access_token))throw Error('Sin permisos');adminSession={token:j.access_token,refresh:j.refresh_token,expires:Date.now()+(j.expires_in||3600)*1000};return true}catch(e){adminSession=null;adminReady=false;return false}}
+async function guardarCajaSupabase(caja) {
+  const sesionValida = await refreshAdmin();
+
+  if (!sesionValida || !adminSession?.token) {
+    throw new Error('Debes iniciar sesión como administrador.');
+  }
+
+  const respuesta = await fetch(AUTH_URL + '/rest/v1/cajas', {
+    method: 'POST',
+    headers: {
+      apikey: AUTH_PUBLISHABLE_KEY,
+      Authorization: 'Bearer ' + adminSession.token,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify({
+      categoria_id: caja.cat,
+      nombre: caja.name,
+      descripcion: caja.desc || null,
+      guia: caja.tracking || null,
+      estado: caja.st || 'abierta'
+    })
+  });
+
+  if (!respuesta.ok) {
+    const detalle = await respuesta.text();
+    throw new Error('No se pudo guardar la caja: ' + detalle);
+  }
+
+  const datos = await respuesta.json();
+  return datos[0];
+}
 /* ===== Router ===== */
 async function route(){const h=location.hash.slice(1)||'/',p=h.split('/').filter(Boolean),app=$('#app');let html;
  if(!p.length)html=await vHome2();else if(p[0]==='categorias')html=vCats();else if(p[0]==='cat')html=vCat(p[1]);else if(p[0]==='box')html=vBox(p[1],p[2]==='u'?'':p[2],p[2]==='u'?decodeURIComponent(p[3]||''):'');else if(p[0]==='buscar')html=vFind(decodeURIComponent(p[1]||''));else if(p[0]==='admin'){if(adminReady&&!await refreshAdmin())adminReady=false;html=adminReady?await vAdmin(p[1],p[2]):loginView();}else html=nf();
@@ -396,5 +427,10 @@ function refresh(){size();init();running=false;x.clearRect(0,0,W,H);running=true
 addEventListener('dc-theme',refresh);addEventListener('resize',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});rm.addEventListener?.('change',refresh);refresh()})();
 /* ===== Inicio ===== */
 (async()=>{loadTheme();load();try{await imgStore.open()}catch(e){toast('IndexedDB no disponible: las fotos no se guardarán.',1);imgStore.get=imgStore.put=imgStore.del=imgStore.clear=async()=>null}
- await loadCustomFont();await setLogo();S.fromNav=0;await route()})();
+await loadCustomFont();
+await setLogo();
+await cargarCategoriasSupabase();
+S.fromNav = 0;
+await route();
+})();
 </script></body></html>
