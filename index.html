@@ -315,6 +315,7 @@ main{padding-top:22px;padding-bottom:24px}
  .home .hero{margin-top:-435px!important}
 }
 
+.cargo-info{margin:16px 0 20px}.cargo-info-text{white-space:normal;line-height:1.7;overflow-wrap:anywhere;margin:0 0 15px!important;color:var(--t2)}.cargo-info-dates{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.cargo-info-dates>div{border:1px solid var(--bd);border-radius:12px;padding:12px;background:var(--bg);display:grid;gap:4px}.cargo-info-dates strong{font-size:.94rem}.cargo-info-dates span{color:var(--t2)}
 /* Inicio sin banner: diseño compacto, conservando logo y contenido. */
 .home .bn{display:none!important}
 .home .hero{margin-top:0!important;padding-top:18px!important;padding-bottom:0!important;position:relative!important}
@@ -409,7 +410,7 @@ if (location.hash !== '#admin' && typeof route === 'function') {
 async function cargarCajasSupabase() {
   try {
     const respuesta = await fetch(
-      AUTH_URL + '/rest/v1/cajas?select=id,categoria_id,nombre,descripcion,estado,guia,created_at&order=created_at.desc',
+      AUTH_URL + '/rest/v1/cajas?select=id,categoria_id,nombre,descripcion,estado,guia,descripcion_cargos,fecha_limite_ems,fecha_limite_aduana,created_at&order=created_at.desc',
       {
         headers: {
           apikey: AUTH_PUBLISHABLE_KEY
@@ -614,7 +615,7 @@ const catGrid=()=>`<h2 class="s" style="margin-top:0">Categorías</h2><div class
 const vCats=()=>bc([['Inicio','#/'],['Categorías']])+catGrid();
 // Orden natural de cajas en todas las categorías: 1, 2, 3, 4, 4.5, 5.
 const ordenCajas=(a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{numeric:true,sensitivity:'base'});
-function vCat(id){const c=cat(id);if(!c)return nf();if(isEnv(id))return vEnvios();const bs=D.boxes.filter(b=>b.cat===id).sort(ordenCajas);return bc([['Inicio','#/'],[c.name]])+`<h1>${esc(c.name)}</h1><p style="color:var(--t2)">${esc(c.desc)}</p><div class="grid" style="margin-top:20px">${bs.map(b=>`<a class="card" href="#/box/${b.id}"><h3>${esc(b.name)}</h3>${b.desc?.trim()?`<p>${esc(b.desc)}</p>`:''}<p>${cnt(b.id)} productos</p><div style="margin-top:10px">${bBox(b.st)}</div><p>Creada: ${b.created}${b.closed?' · Cierre: '+b.closed:''}</p></a>`).join('')||'<div class="empty">Aún no hay cajas en esta categoría.</div>'}</div>`}
+function vCat(id){const c=cat(id);if(!c)return nf();if(isEnv(id))return vEnvios();const bs=D.boxes.filter(b=>b.cat===id).sort(ordenCajas);return bc([['Inicio','#/'],[c.name]])+`<h1>${esc(c.name)}</h1><p style="color:var(--t2)">${esc(c.desc)}</p><div class="grid" style="margin-top:20px">${bs.map(b=>`<a class="card" href="#/box/${b.id}"><h3>${esc(b.name)}</h3>${b.desc?.trim()?`<p>${esc(b.desc)}</p>`:''}<p>${cnt(b.id)} productos</p><div style="margin-top:10px">${bBox(b.st)}</div></a>`).join('')||'<div class="empty">Aún no hay cajas en esta categoría.</div>'}</div>`}
 const SHIP_ST=['Preparando','Enviado','En tránsito','En reparto','Entregado','Incidencia'];
 const CARRIERS=['Correos de México','Estafeta','DHL','FedEx','Paquetexpress','LaMensajeria','Otra'];
 function vEnvios(){const rows=[...D.envios].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return bc([['Inicio','#/'],['Envíos']])+`<h1>envíos</h1><div class="bar" style="margin-top:22px"><div><label for="shipq">Buscar por username, paquetería o guía</label><input id="shipq" type="search" placeholder="Buscar envío" autocomplete="off"></div></div><div id="shiplist">${shipRows(rows)}</div>`}
@@ -663,13 +664,19 @@ function eShip(id){const x=D.envios.find(v=>v.id===id)||{};
  cargarCupiditosParaBorradores().then(()=>{if($('#shipBuyerSuggestions'))sugerenciasCupiditosEnvio($('#buyer')?.value||'')}).catch(e=>console.warn('No se cargaron las sugerencias',e));
 }
 const nf=()=>`<div class="empty"><h2>No encontramos esa página</h2><a class="btn" href="#/">Volver al inicio</a></div>`;
+function cargoInfoPublica(b){
+ const has=Boolean(b.cargoDesc?.trim()||b.emsLimite||b.aduanaLimite);
+ if(!has)return '';
+ const fecha=x=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(x||''))return '';const [y,m,d]=x.split('-');return `${d}/${m}/${y}`};
+ return `<section class="card cargo-info" aria-label="Información y fechas límite de cargos">${b.cargoDesc?.trim()?`<p class="cargo-info-text">${esc(b.cargoDesc).replace(/\n/g,'<br>')}</p>`:''}<div class="cargo-info-dates">${b.emsLimite?`<div><strong>✦ Fecha límite EMS:</strong><span>${esc(fecha(b.emsLimite))}</span></div>`:''}${b.aduanaLimite?`<div><strong>✦ Fecha límite aduana:</strong><span>${esc(fecha(b.aduanaLimite))}</span></div>`:''}</div></section>`;
+}
 function vBox(id,tab,u){const b=box(id);if(!b)return nf();const c=cat(b.cat);if(S.box!==id){S={...S,q:'',lg:'',pay:'',sort:'original',page:1,box:id,publicCargoSearch:''}}if(u){S.q=u;S.page=1}
  const tabs=`<div class="tabs" role="tablist"><a href="#/box/${id}" ${tab?'':'aria-current="page"'}>Masterlist</a><a href="#/box/${id}/cargos" ${tab?'aria-current="page"':''}>Cargos</a></div>`;
  let body;if(tab){const ps=D.prods.filter(p=>p.box===id);
  body=`<div style="max-width:440px;margin:14px 0"><label for="publicCargoSearch">Buscar cargos por cupidito</label><input id="publicCargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.publicCargoSearch||'')}"></div><p id="publicCargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${renderCargosAgrupados(ps,false)}`;
  }
  else body=`${controls()}<div id="list">${plist(D.prods.filter(p=>p.box===id))}</div>`;
- return bc([['Inicio','#/'],[c.name,'#/cat/'+c.id],[b.name]])+`<div class="row sp"><h1>${esc(c.name)} · ${esc(b.name)}</h1>${bBox(b.st)}</div>${b.tracking?.trim()?`<p class="box-track"><span aria-hidden="true">♥</span> <span>Guía</span> <strong>${esc(b.tracking)}</strong></p>`:''}${b.desc?.trim()?`<p class="box-description">${esc(b.desc).replace(/\n/g,'<br>')}</p>`:''}${tabs}${colorLegend()}${body}`}
+ return bc([['Inicio','#/'],[c.name,'#/cat/'+c.id],[b.name]])+`<div class="row sp"><h1>${esc(c.name)} · ${esc(b.name)}</h1>${bBox(b.st)}</div>${b.tracking?.trim()?`<p class="box-track"><span aria-hidden="true">♥</span> <span>Guía</span> <strong>${esc(b.tracking)}</strong></p>`:''}${b.desc?.trim()?`<p class="box-description">${esc(b.desc).replace(/\n/g,'<br>')}</p>`:''}${tabs}${tab?cargoInfoPublica(b):colorLegend()}${body}`}
 function vFind(q){
  S={...S,q:'',box:''};if(!q)return '<div class="empty">Escribe un username para buscar pedidos y envíos.</div>';
  const term=nmz(q),l=D.prods.filter(p=>nmz(p.buyer).includes(term));
@@ -809,7 +816,7 @@ function datosFormularioCaja(){
  const f=$('#dlg form');if(!f)return null;
  const fd=Object.fromEntries([...new FormData(f)].filter(([k,v])=>typeof v==='string'));
  if(!fd.name?.trim())throw Error('Escribe un nombre antes de guardar el borrador.');
- return {name:fd.name.trim(),cat:fd.cat,st:+fd.st,closed:fd.closed,desc:fd.desc.trim(),tracking:fd.tracking.trim()};
+ return {name:fd.name.trim(),cat:fd.cat,st:+fd.st,closed:fd.closed,desc:fd.desc.trim(),cargoDesc:String(fd.cargoDesc||'').trim(),emsLimite:fd.emsLimite||'',aduanaLimite:fd.aduanaLimite||'',tracking:fd.tracking.trim()};
 }
 let privateWork=null;
 /* Sugerencias privadas: productos publicados, cupiditos y productos de todas las cajas en borrador. */
@@ -878,7 +885,7 @@ async function openPrivateWorkspace(id=null){
   id:p.id,nombre:p.desc,buyer:p.buyer,plat:p.plat||'',
   precio:p.price,moneda:'MXN',logi:p.logi,descripcion:''
  })):[];
- privateWork={id:id||crypto.randomUUID(),contenido:existing||{caja:b?{name:b.name,cat:b.cat,st:b.st,desc:b.desc||'',tracking:b.tracking||'',closed:b.closed||''}:{name:'',cat:D.cats.find(c=>!isEnv(c.id))?.id||'',st:0,desc:'',tracking:'',closed:''},productos:publicados}};
+ privateWork={id:id||crypto.randomUUID(),contenido:existing||{caja:b?{name:b.name,cat:b.cat,st:b.st,desc:b.desc||'',tracking:b.tracking||'',cargoDesc:b.cargoDesc||'',emsLimite:b.emsLimite||'',aduanaLimite:b.aduanaLimite||'',closed:b.closed||''}:{name:'',cat:D.cats.find(c=>!isEnv(c.id))?.id||'',st:0,desc:'',tracking:'',closed:''},productos:publicados}};
  const w=privateWork.contenido;w.productos=Array.isArray(w.productos)?w.productos:[];
  const v=w.caja||{};
  dlg('Editor de borradores',`<div class="f"><div class="note"><strong>${b?'Borrador de caja publicada':'Caja todavía no publicada'}</strong><p style="margin:4px 0">Los productos aquí no aparecen en la masterlist pública. Guardar conserva el trabajo en Supabase.</p></div>${fld('name','Nombre de la caja',v.name||'','text','required')}<div><label for="desc">Descripción</label><textarea name="desc" id="desc">${esc(v.desc||'')}</textarea></div>${fld('tracking','Guía',v.tracking||'')}${sel('cat','Categoría',D.cats.filter(c=>!isEnv(c.id)).map(c=>`<option value="${esc(c.id)}" ${c.id===v.cat?'selected':''}>${esc(c.name)}</option>`).join(''))}${sel('st','Estado',opts(BOX,v.st??0))}<div class="row sp"><h3>Productos</h3><button type="button" class="btn sm" data-act="draftAddProduct">+ Agregar producto</button></div><div class="row" style="align-items:end"><div style="flex:1;min-width:180px"><label for="draftBulkStatus">Cambiar todos los productos a</label><select id="draftBulkStatus">${opts(LOGI,0)}</select></div><button type="button" class="btn sm" data-act="draftApplyAll">Aplicar a todos</button></div><p style="font-size:.85rem;color:var(--t2)">Puedes cambiar varios estados aquí y guardarlos juntos. No se publican hasta que presiones «Publicar caja».</p><span id="draftCount" style="font-size:.85rem;color:var(--t2)"></span><div id="draftProductRows" class="lst"></div><p id="draftStatus" role="status" style="font-size:.9rem"></p>${err}<div class="row"><button type="button" class="btn pri" data-act="draftSaveAll">Guardar borrador privado ♡</button><button type="button" class="btn" data-act="draftPublish">Publicar caja ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.84rem;color:var(--t2)">Publicar hará visible la caja y sus productos. Los productos anteriores que no estén en el borrador se conservarán. Los productos existentes se cargan automáticamente al abrir una caja publicada. Las imágenes se añadirán después con Cloudflare R2.</p></div>`);
@@ -889,7 +896,7 @@ async function draftProductForm(index){
  collectDraftLogistics();
  await cargarCupiditosParaBorradores();
  // Conserva los cambios escritos en la caja mientras se abre el formulario de producto.
- const f=$('#dlg form');if(f){const fd=Object.fromEntries(new FormData(f));privateWork.contenido.caja={name:String(fd.name||'').trim(),desc:String(fd.desc||'').trim(),tracking:String(fd.tracking||'').trim(),cat:fd.cat,st:+fd.st,closed:''}}
+ const f=$('#dlg form');if(f){const fd=Object.fromEntries(new FormData(f));privateWork.contenido.caja={name:String(fd.name||'').trim(),desc:String(fd.desc||'').trim(),tracking:String(fd.tracking||'').trim(),cargoDesc:String(fd.cargoDesc||'').trim(),emsLimite:fd.emsLimite||'',aduanaLimite:fd.aduanaLimite||'',cat:fd.cat,st:+fd.st,closed:''}}
  const p=privateWork.contenido.productos[index]||{};
  dlg(index>=0?'Editar producto del borrador':'Agregar producto al borrador',`<div class="f">${fld('nombre','Nombre o descripción del producto',p.nombre||'','text','required')}${fld('buyer','Username del cupidito',p.buyer||'','text','autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel('plat','Plataforma',PLAT.map(x=>`<option ${(p.plat||plataformaCupidito(p.buyer))===x?'selected':''}>${x}</option>`).join(''))}<div class="f2">${fld('precio','Precio',p.precio??'','number','min="0" step="0.01"')}${sel('moneda','Moneda',['MXN','KRW','JPY','USD'].map(x=>`<option ${p.moneda===x?'selected':''}>${x}</option>`).join(''))}</div>${sel('estado','Estado',LOGI.map((x,i)=>`<option value="${i}" ${p.logi===i?'selected':''}>${esc(x)}</option>`).join(''))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion||'')}</textarea></div><p class="note">Las imágenes se integrarán cuando Cloudflare R2 esté conectado. No se perderán imágenes porque todavía no se admiten en este editor.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,async fd=>{
  if(!fd.nombre.trim())return 'Escribe el nombre del producto.';
@@ -909,9 +916,9 @@ async function eBox(id){
  if(id){try{draft=await leerBorradorCaja(id)}catch(e){toast('No se pudo cargar el borrador: '+e.message,1);return}}
  const v=draft?{...b,...draft}:b;
  const draftControls=id?`<div class="note"><strong>${draft?'Borrador privado recuperado':'Edición de caja'}</strong><p style="margin:4px 0;font-size:.88rem">Guardar borrador no modifica la caja pública. Publicar cambios sí actualiza la caja visible.</p><button type="button" class="btn sm" data-act="saveBoxDraft" data-id="${esc(id)}">Guardar borrador privado ♡</button> <button type="button" class="btn sm" data-act="openBoxWorkspace" data-id="${esc(id)}">Editar productos en borrador</button><p id="draftStatus" role="status" style="margin:4px 0"></p></div>`:'';
- dlg(id?'Editar caja':'Nueva caja',`<div class="f">${draftControls}${fld('name','Nombre',v.name,'text','required')}<div><label for="desc">Descripción de la caja (opcional)</label><textarea id="desc" name="desc" maxlength="1500" placeholder="Información de esta caja">${esc(v.desc||'')}</textarea></div>${fld('tracking','Guía de la caja (opcional)',v.tracking||'','text','maxlength="160" placeholder="Ej. EN549784231JP"')}${sel('cat','Categoría',D.cats.filter(c=>!isEnv(c.id)).map(c=>`<option value="${c.id}" ${v.cat===c.id?'selected':''}>${esc(c.name)}</option>`).join(''))}${sel('st','Estado',opts(BOX,v.st??0))}${fld('closed','Fecha de cierre (opcional)',v.closed,'date')}${err}${id?'<div class="row" style="margin-top:6px"><button class="btn pri">Publicar cambios</button><button type="button" class="btn" data-act="close">Cancelar</button></div>':foot}</div>`,async fd=>{
+ dlg(id?'Editar caja':'Nueva caja',`<div class="f">${draftControls}${fld('name','Nombre',v.name,'text','required')}<div><label for="desc">Descripción de la caja (opcional)</label><textarea id="desc" name="desc" maxlength="1500" placeholder="Información de esta caja">${esc(v.desc||'')}</textarea></div><div><label for="cargoDesc">Descripción pública del apartado Cargos</label><textarea id="cargoDesc" name="cargoDesc" maxlength="4000" placeholder="Indicaciones de pago, multas, avisos…">${esc(v.cargoDesc||'')}</textarea></div><div class="f2">${fld('emsLimite','Fecha límite EMS',v.emsLimite||'','date')}${fld('aduanaLimite','Fecha límite aduana',v.aduanaLimite||'','date')}</div>${fld('tracking','Guía de la caja (opcional)',v.tracking||'','text','maxlength="160" placeholder="Ej. EN549784231JP"')}${sel('cat','Categoría',D.cats.filter(c=>!isEnv(c.id)).map(c=>`<option value="${c.id}" ${v.cat===c.id?'selected':''}>${esc(c.name)}</option>`).join(''))}${sel('st','Estado',opts(BOX,v.st??0))}${fld('closed','Fecha de cierre (opcional)',v.closed,'date')}${err}${id?'<div class="row" style="margin-top:6px"><button class="btn pri">Publicar cambios</button><button type="button" class="btn" data-act="close">Cancelar</button></div>':foot}</div>`,async fd=>{
   if(!fd.name.trim())return 'Escribe un nombre.';
-  const o={name:fd.name.trim(),cat:fd.cat,st:+fd.st,closed:fd.closed,desc:fd.desc.trim(),tracking:fd.tracking.trim()};
+  const o={name:fd.name.trim(),cat:fd.cat,st:+fd.st,closed:fd.closed,desc:fd.desc.trim(),cargoDesc:String(fd.cargoDesc||'').trim(),emsLimite:fd.emsLimite||'',aduanaLimite:fd.aduanaLimite||'',tracking:fd.tracking.trim()};
   if(id){
    const current=await leerBorradorCompleto(id);
    if(current?.productos?.length)throw Error('Esta caja tiene productos pendientes en su borrador. Para evitar una publicación parcial, primero configuraremos la publicación conjunta.');
@@ -1074,6 +1081,7 @@ async function guardarCajaSupabase(caja) {
       categoria_id: caja.cat,
       nombre: caja.name,
       descripcion: caja.desc || null,
+      descripcion_cargos:caja.cargoDesc||null,fecha_limite_ems:caja.emsLimite||null,fecha_limite_aduana:caja.aduanaLimite||null,
       guia: caja.tracking || null,
       estado: BOX[Number(caja.st)] || 'Abierta'
     })
@@ -1091,7 +1099,7 @@ async function actualizarCajaSupabase(id,caja){
  if(!await refreshAdmin()||!adminSession?.token)throw Error('Debes iniciar sesión como administrador.');
  const r=await fetch(AUTH_URL+'/rest/v1/cajas?id=eq.'+encodeURIComponent(id),{
   method:'PATCH',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json',Prefer:'return=representation'},
-  body:JSON.stringify({categoria_id:caja.cat,nombre:caja.name,descripcion:caja.desc||null,guia:caja.tracking||null,estado:BOX[caja.st]||'Abierta'})
+  body:JSON.stringify({categoria_id:caja.cat,nombre:caja.name,descripcion:caja.desc||null,descripcion_cargos:caja.cargoDesc||null,fecha_limite_ems:caja.emsLimite||null,fecha_limite_aduana:caja.aduanaLimite||null,guia:caja.tracking||null,estado:BOX[caja.st]||'Abierta'})
  });
  if(!r.ok)throw Error('No se pudo actualizar la caja: '+await r.text());
  const rows=await r.json();if(!rows.length)throw Error('No se encontró la caja en Supabase o faltan permisos.');
@@ -1100,7 +1108,7 @@ async function actualizarCajaSupabase(id,caja){
 async function sincronizarCajasSupabase(){
  const cajas=await cargarCajasSupabase();
  if(!cajas)return;
- D.boxes=cajas.map(c=>({id:c.id,cat:c.categoria_id,name:c.nombre,desc:c.descripcion||'',tracking:c.guia||'',st:Math.max(0,BOX.findIndex(x=>x.toLowerCase()===(c.estado||'').toLowerCase())),created:(c.created_at||'').slice(0,10),closed:''}));
+ D.boxes=cajas.map(c=>({id:c.id,cat:c.categoria_id,name:c.nombre,desc:c.descripcion||'',tracking:c.guia||'',cargoDesc:c.descripcion_cargos||'',emsLimite:c.fecha_limite_ems||'',aduanaLimite:c.fecha_limite_aduana||'',st:Math.max(0,BOX.findIndex(x=>x.toLowerCase()===(c.estado||'').toLowerCase())),created:(c.created_at||'').slice(0,10),closed:''}));
 }
 /* Productos públicos: nunca consultar borradores desde las páginas públicas. */
 async function sincronizarProductosSupabase(){
