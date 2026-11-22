@@ -201,6 +201,29 @@ input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 
 }
 @media(prefers-reduced-motion:reduce){.menu a,.grid>*,.gal>*,.row2{animation:none!important}*{scroll-behavior:auto!important}}
 
+
+/* Ajuste final de espacios: sin líneas decorativas de separación */
+header,footer{border-top:0!important;border-bottom:0!important;box-shadow:none!important}
+header::after,header::before,footer::before,footer::after{content:none!important;display:none!important}
+/* Mantener bordes de tarjetas, inputs y botones: solo retirar líneas divisorias */
+.tabs{border-bottom:0!important}
+.home main{padding-top:0!important;padding-bottom:24px!important}
+.home .hero{padding-top:clamp(115px,26vw,165px)!important;padding-bottom:0!important}
+.home .bn{height:clamp(295px,77vw,430px)!important}
+.home .hero .lg{margin-bottom:0!important}
+.home .hero h1{margin-top:-60px!important}
+.home .menu{margin-top:8px!important}
+.home footer{margin-top:8px!important}
+footer{margin-top:12px!important;padding:20px 0 32px!important}
+main{padding-top:22px;padding-bottom:24px}
+@media(max-width:600px){
+ main{padding-top:16px!important;padding-bottom:20px!important}
+ .home main{padding-top:0!important;padding-bottom:16px!important}
+ .home .hero{padding-top:clamp(105px,29vw,145px)!important}
+ .home .bn{height:clamp(285px,82vw,365px)!important}
+ .home footer{margin-top:4px!important}
+ footer{margin-top:8px!important;padding:18px 0 28px!important}
+}
 </style></head><body>
 <header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/1a5fc7bc-baf6-40c6-b66d-275017eb574e" data-n="env">Envíos</a></nav></div></header>
 <main class="w" id="app" tabindex="-1" aria-live="polite"><div class="sk"></div></main>
