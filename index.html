@@ -156,6 +156,51 @@ footer a:hover{color:var(--ib)}
  .home .hero p{margin-top:13px}
  .home .menu{margin-top:10px}
 }
+
+/* Pulido visual móvil y escritorio — solo presentación, sin tocar datos. */
+header{border-bottom:0!important;box-shadow:none!important}
+header::after{content:"";position:absolute;left:max(20px,calc((100% - var(--page-width))/2 + 20px));right:max(20px,calc((100% - var(--page-width))/2 + 20px));bottom:-12px;height:1px;background:var(--bd);opacity:.85;pointer-events:none}
+.hd{min-height:72px;padding-top:12px;padding-bottom:12px;gap:10px}
+header nav{align-items:center;gap:6px}
+header nav a{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.back-link{border:1px solid var(--p3);background:linear-gradient(145deg,#fff,var(--p1));color:#85516c;border-radius:999px;box-shadow:0 3px 14px rgba(170,95,130,.09);padding:8px 15px;font-weight:550;gap:9px}
+.back-link span:first-child{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.85);color:var(--ib);font-size:1.12rem;transition:transform .3s var(--e)}
+.back-link:hover{transform:translateY(-2px);box-shadow:0 7px 19px rgba(170,95,130,.15)}
+.back-link:hover span:first-child{transform:translateX(-3px)}
+main{padding-top:48px;padding-bottom:64px}
+footer{margin-top:42px;padding:36px 0 42px;border-top:0;position:relative}
+footer::before{content:"";position:absolute;top:0;left:max(20px,calc((100% - var(--page-width))/2 + 20px));right:max(20px,calc((100% - var(--page-width))/2 + 20px));height:1px;background:var(--bd)}
+.home main{position:relative;padding-top:20px;padding-bottom:66px;isolation:isolate}
+.home .bn{position:absolute;z-index:-1;top:0;left:0;right:0;width:100%;margin:0;height:clamp(360px,88vw,540px);pointer-events:none;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.94) 0%,#000 38%,rgba(0,0,0,.7) 64%,transparent 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,.94) 0%,#000 38%,rgba(0,0,0,.7) 64%,transparent 100%);-webkit-mask-composite:initial;mask-composite:initial}
+.home .bn img{height:100%;width:100%;object-fit:cover;object-position:center top}
+.home .hero{position:relative;padding-top:clamp(170px,37vw,240px)}
+.home .hero .lg{filter:drop-shadow(0 4px 14px rgba(255,255,255,.7))}
+.home footer{margin-top:36px}
+.home .menu{margin-top:12px}
+@keyframes soft-rise{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes soft-glow{0%,100%{box-shadow:0 3px 16px rgba(175,99,136,.06)}50%{box-shadow:0 8px 26px rgba(175,99,136,.13)}}
+.menu a,.grid>*,.gal>*,.row2{animation:soft-rise .6s var(--e) both}
+.menu a:nth-child(2),.grid>*:nth-child(2),.gal>*:nth-child(2){animation-delay:.055s}
+.menu a:nth-child(3),.grid>*:nth-child(3),.gal>*:nth-child(3){animation-delay:.11s}
+.menu a:nth-child(4),.grid>*:nth-child(4),.gal>*:nth-child(4){animation-delay:.165s}
+.menu a:nth-child(n+5),.grid>*:nth-child(n+5),.gal>*:nth-child(n+5){animation-delay:.2s}
+.menu a:hover,.card:hover,.row2:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(160,90,125,.12)}
+button:active,.btn:active,.back-link:active{transform:scale(.97)}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(255,162,185,.15);outline:none}
+@media(max-width:600px){
+ .hd{flex-wrap:nowrap;gap:7px;min-height:72px;padding-left:12px;padding-right:12px}
+ header nav{flex:1;min-width:0;justify-content:space-around;gap:0;flex-wrap:nowrap}
+ header nav a{padding:9px 9px;font-size:.87rem}
+ .back-link{min-height:40px;padding:5px 9px;gap:5px;font-size:.78rem;flex-shrink:0}
+ .back-link span:first-child{width:23px;height:23px}
+ main{padding-top:42px}
+ .home main{padding-top:14px;padding-bottom:58px}
+ .home .bn{height:clamp(345px,105vw,500px)}
+ .home .hero{padding-top:clamp(170px,43vw,235px)}
+ footer{margin-top:36px;padding:32px 0 40px}
+}
+@media(prefers-reduced-motion:reduce){.menu a,.grid>*,.gal>*,.row2{animation:none!important}*{scroll-behavior:auto!important}}
+
 </style></head><body>
 <header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/1a5fc7bc-baf6-40c6-b66d-275017eb574e" data-n="env">Envíos</a></nav></div></header>
 <main class="w" id="app" tabindex="-1" aria-live="polite"><div class="sk"></div></main>
