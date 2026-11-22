@@ -483,7 +483,7 @@ function vFind(q){
  (!l.length&&!ships.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
 }
 /* ===== Admin ===== */
-const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['importar-japon','Importar Japón'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
+const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['importar-japon','Importar Japón'],['fotos-jp1','Fotos JP #1'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
 const nmz=t=>String(t).trim().replace(/^@/,'').toLowerCase();let CUP=[];
 const cupRows=(ns,q='')=>{const k=nmz(q),l=ns.filter(n=>nmz(n).includes(k));return l.length?l.map(n=>`<a class="row2 cup" href="#/admin/cupiditos/${encodeURIComponent(n)}"><div class="mn"><strong>${esc(n)}</strong></div><span aria-hidden="true">›</span></a>`).join(''):'<div class="empty">Sin resultados.</div>'};
 async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">${AT.map(([k,t])=>`<a href="#/admin/${k}" ${k===tab?'aria-current="page"':''}>${t}</a>`).join('')}</div>`;let b='';
@@ -493,6 +493,7 @@ async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">
  if(tab==='borradores'){let drafts=[];try{drafts=await listarBorradoresCaja()}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}b+='<div class="row sp"><h2>Borradores privados</h2><button class="btn pri" data-act="newPrivateBox">Crear caja privada ♡</button></div><p style="color:var(--t2)">Solo visibles para administradores. Puedes continuar editándolos en otro momento.</p><div class="lst">'+(drafts.map(x=>{const v=x.contenido?.caja||{},n=x.contenido?.productos?.length||0;return '<div class="row2"><div class="mn"><strong>'+esc(v.name||'Caja sin nombre')+'</strong><span class="meta">'+n+' productos · '+esc(cat(v.cat)?.name||'Sin categoría')+'</span></div><button class="btn sm" data-act="editPrivateBox" data-id="'+esc(x.caja_id)+'">Continuar</button></div>'}).join('')||'<div class="empty">Todavía no hay borradores privados.</div>')+'</div>';}
  if(tab==='productos'){if(!D.boxes.length)b=`<h2>Productos</h2><div class="empty"><p><strong>Primero crea una caja</strong></p><p>Los productos se agregan dentro de una caja.</p><button class="btn pri" data-act="ebox">Crear caja</button></div>`;else{if(S.ab&&!box(S.ab))S.ab='';b=`<div class="row sp"><h2>Productos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><div style="max-width:360px;margin:14px 0"><label for="ab">Caja</label><select id="ab"><option value="">Todas las cajas</option>${D.boxes.map(x=>`<option value="${x.id}" ${x.id===S.ab?'selected':''}>${esc(cat(x.cat).name)} · ${esc(x.name)}</option>`).join('')}</select></div>${controls()}<div id="list">${plist(D.prods.filter(p=>!S.ab||p.box===S.ab),1)}</div>`}}
  if(tab==='importar-japon')b=`<h2>Importar Japón · importación controlada ♡</h2><p>Primero revisaremos JP #1. Después podrás confirmar la creación de productos sin subir fotografías. Selecciona el archivo <strong>japon_jp1_preparacion.json</strong> que descargaste.</p><div class="card"><label for="jpPreviewFile">Archivo JSON de preparación</label><input id="jpPreviewFile" type="file" accept=".json,application/json"><button type="button" class="btn" id="jpBuyerPreviewBtn" style="margin-top:12px">Revisar compradores del JSON (sin guardar)</button><button type="button" class="btn" id="jpTotalsPreviewBtn" style="margin-top:12px;margin-right:8px">Vista previa de cargos por cupidito (sin guardar)</button><div id="jpTotalsPreviewResult" role="status" aria-live="polite"></div><button type="button" class="btn" id="jpChargesPreviewBtn" style="margin-top:12px;margin-left:8px">Revisar EMS y aduana (sin guardar)</button><div id="jpChargesPreviewResult" role="status" aria-live="polite"></div><p id="jpPreviewStatus" aria-live="polite" style="color:var(--t2)">Esperando archivo…</p><div id="jpPreviewResults"></div></div><p style="color:var(--t2)">Solo se crearán productos nuevos después de tu confirmación. No se modificarán los existentes ni se subirán fotografías.</p>`;
+ if(tab==='fotos-jp1')b=`<h2>Fotografías de JP #1 ♡</h2><p>Importa las 57 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jpPhotosFiles">Fotografías JP__1_fila_N.jpg</label><input type="file" id="jpPhotosFiles" accept=".jpg,.jpeg,image/jpeg" multiple><p id="jpPhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jpPhotosPreview"></div><button type="button" class="btn pri" id="jpPhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jpPhotosProgress" role="status" aria-live="polite"></p></div>`;
  if(tab==='cupiditos'){if(sub){const key=nmz(decodeURIComponent(sub)),ps=D.prods.filter(p=>nmz(p.buyer)===key);if(!ps.length)b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a></nav><div class="empty">Este username ya no tiene productos.</div>`;else{const name=ps[0].buyer,plat=ps[0].plat,bx=[...new Set(ps.map(p=>p.box))].map(box).filter(Boolean);b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a> › <span aria-current="page">${esc(name)}</span></nav><div class="row sp"><div><h2>${esc(name)}</h2><p style="color:var(--t2);margin:4px 0 0">${esc(plat)} · ${ps.length} producto${ps.length>1?'s':''} en ${bx.length} caja${bx.length>1?'s':''}</p></div><button class="btn pri" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}">Agregar producto</button></div>`+bx.map(x=>`<section class="card" style="margin-top:16px"><div class="row sp"><div><strong>${esc(cat(x.cat)?.name)} · ${esc(x.name)}</strong> ${bBox(x.st)}</div><button class="btn sm" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}" data-b="${x.id}">Agregar aquí</button></div><div class="lst" style="margin-top:12px">${ps.filter(p=>p.box===x.id).map(p=>prow(p,1)).join('')}</div></section>`).join('')}}else{const seen={};D.prods.forEach(p=>{const k=nmz(p.buyer);if(!seen[k])seen[k]=p.buyer});CUP=Object.values(seen).sort((a,c)=>a.localeCompare(c));b=`<div class="row sp"><h2>Cupiditos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><p style="color:var(--t2)">Usuarios con al menos un producto en una caja (${CUP.length}). Toca uno para ver sus cajas.</p>`+(CUP.length?`<div style="max-width:360px;margin:14px 0"><label for="cq">Buscar username</label><input id="cq" type="search" autocomplete="off"></div><div id="cl" class="lst">${cupRows(CUP)}</div>`:`<div class="empty"><p><strong>Aún no hay cupiditos</strong></p><p>Aparecen aquí cuando agregas un producto a una caja.</p></div>`)}}
  if(tab==='envios'){try{await sincronizarEnviosSupabase(true)}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}}
  if(tab==='envios')b+=`<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p style="color:var(--t2)">Registra los paquetes nacionales enviados desde la administradora a cada cupidito. No utilizan cajas.</p>${shipRows(D.envios,true)}`;
@@ -987,6 +988,75 @@ async function importarJP1(){
  }catch(e){progress.textContent='Importación detenida. '+creados+' creados y '+omitidos+' omitidos. '+e.message+' Puedes volver a analizar el JSON para reintentar sin sobrescribir.';}
 }
 document.addEventListener('click',e=>{if(e.target?.id==='jpImportConfirm')importarJP1();});
+
+/* ===== Fotografías JP #1: importación protegida y reanudable ===== */
+const JP1_BOX_ID='2cf64152-49aa-46b5-86ee-1e51e6fecc1e';
+let jpPhotosPlan=null,jpPhotosBusy=false;
+async function jpPhotosPreview(files){
+ const status=$('#jpPhotosStatus'),out=$('#jpPhotosPreview'),button=$('#jpPhotosUpload');
+ if(!status||!out||!button)return;
+ button.disabled=true;jpPhotosPlan=null;out.innerHTML='';status.textContent='Comparando imágenes con los productos publicados…';
+ try{
+  if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+  const rows=await jp1Request('productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq.'+JP1_BOX_ID+'&limit=1000');
+  const byRef=new Map(rows.filter(p=>/^JAPON-JP1-FILA\d+$/.test(p.referencia_excel||'')).map(p=>[p.referencia_excel,p]));
+  if(byRef.size!==57)throw Error('Se esperaban 57 productos JP #1, pero hay '+byRef.size+'. No se realizará ninguna subida.');
+  const seen=new Set(),matched=[],extra=[],invalid=[];
+  for(const file of files){
+   const m=/^JP__1_fila_(\d+)\.jpe?g$/i.exec(file.name);
+   if(!m||file.size<1||file.size>5*1024*1024||!['image/jpeg',''].includes(file.type)){invalid.push(file.name);continue}
+   const ref='JAPON-JP1-FILA'+Number(m[1]);
+   if(seen.has(ref)){invalid.push('Duplicado: '+file.name);continue}
+   seen.add(ref);const product=byRef.get(ref);
+   if(!product){extra.push(file.name);continue}
+   matched.push({file,product,ref});
+  }
+  const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
+  const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
+  const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
+   (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
+   (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
+   '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
+  if(invalid.length||missing.length||matched.length!==57){status.textContent+=' Revisa los archivos antes de continuar.';return}
+  jpPhotosPlan=pending;button.disabled=!pending.length;
+ }catch(err){status.textContent='No se pudo verificar: '+(err.message||err)}
+}
+async function jpPhotosUpload(){
+ if(jpPhotosBusy||!jpPhotosPlan?.length)return;
+ if(!confirm('¿Subir '+jpPhotosPlan.length+' fotografías a R2 y vincularlas únicamente con productos de JP #1 que todavía no tengan imagen?'))return;
+ const button=$('#jpPhotosUpload'),progress=$('#jpPhotosProgress');jpPhotosBusy=true;button.disabled=true;
+ let saved=0,skipped=0;const errors=[];
+ try{
+  for(const item of jpPhotosPlan){
+   progress.textContent='Procesando '+(saved+skipped+errors.length+1)+'/'+jpPhotosPlan.length+' · '+item.ref;
+   try{
+    // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
+    const current=await jp1Request('productos?select=id,imagen_url,referencia_excel,caja_id&id=eq.'+encodeURIComponent(item.product.id)+'&limit=1');
+    if(current.length!==1||current[0].caja_id!==JP1_BOX_ID||current[0].referencia_excel!==item.ref)throw Error('El producto cambió.');
+    if(current[0].imagen_url){skipped++;continue}
+    const form=new FormData();form.append('file',item.file,item.file.name);form.append('folder','productos');
+    if(!await refreshAdmin()||!adminSession?.token)throw Error('Sesión expirada.');
+    const uploaded=await fetch(R2_WORKER+'/images',{method:'POST',headers:{Authorization:'Bearer '+adminSession.token},body:form});
+    const result=await uploaded.json().catch(()=>({}));
+    if(!uploaded.ok||!validProductImage(result.url))throw Error(result.error||'Error al subir a R2 ('+uploaded.status+')');
+    const patched=await jp1Request('productos?id=eq.'+encodeURIComponent(item.product.id)+'&caja_id=eq.'+JP1_BOX_ID+'&referencia_excel=eq.'+encodeURIComponent(item.ref)+'&imagen_url=is.null',{
+     method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({imagen_url:result.url})
+    });
+    if(!Array.isArray(patched)||patched.length!==1)throw Error('No se pudo asociar la URL en Supabase; revisa permisos.');
+    saved++;
+   }catch(err){errors.push(item.ref+': '+(err.message||err))}
+  }
+  progress.textContent='Terminó: '+saved+' vinculadas · '+skipped+' omitidas · '+errors.length+' con error.'+(errors.length?' '+errors.slice(0,5).join(' | '):'');
+  try{await sincronizarProductosSupabase()}catch(e){console.warn(e)}
+  toast(errors.length?'Revisa los errores de la importación':'Fotos de JP #1 guardadas ♡',!!errors.length);
+ }finally{jpPhotosBusy=false;jpPhotosPlan=null;button.disabled=true}
+}
+document.addEventListener('change',e=>{if(e.target.id==='jpPhotosFiles')jpPhotosPreview([...e.target.files])});
+document.addEventListener('click',e=>{if(e.target.id==='jpPhotosUpload')jpPhotosUpload()});
 
 /* ===== Compradores JP #1: revisión y asignación confirmada ===== */
 let jp1AsociacionesPendientes=null;
