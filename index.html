@@ -384,9 +384,11 @@ let S={q:'',lg:'',pay:'',sort:'name',view:innerWidth>800?'table':'gallery',page:
 function pager(t,p){const n=Math.ceil(t/PER);if(n<2)return'';return`<nav class="pg" aria-label="Paginación">${Array.from({length:n},(_,i)=>`<button class="btn sm" data-act="page" data-p="${i+1}" ${i+1===p?'aria-current="page"':''}>${i+1}</button>`).join('')}</nav>`}
 function filt(list){const q=S.q.toLowerCase();let r=list.filter(p=>(!q||p.buyer.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q))&&(S.lg===''||p.logi==S.lg));
  const f={name:(a,b)=>a.buyer.localeCompare(b.buyer),pa:(a,b)=>a.price-b.price,pd:(a,b)=>b.price-a.price,prod:(a,b)=>a.desc.localeCompare(b.desc)}[S.sort];return r.sort(f)}
-const pcard=p=>`<article class="card pc"><button class="im" data-act="zoom" data-id="${p.imgId}" aria-label="Ampliar foto de ${esc(p.desc)}">${ph(p.imgId,p.desc)}</button><div class="bd"><strong>${esc(p.desc)}</strong><span>${esc(p.buyer)} <small style="color:var(--t2)">· ${esc(p.plat)}</small></span><strong>${money(p.price)}</strong><div class="row">${bLogi(p.logi)}</div><small style="color:var(--t2)">EMS: ${pm(p.ems)} · Aduana: ${pm(p.adu)}</small></div></article>`;
+const productPhoto=p=>{const url=validProductImage(p.imagenUrl);return url?`<span class="ph"><img src="${esc(url)}" alt="${esc(p.desc)}" loading="lazy" referrerpolicy="no-referrer"></span>`:ph(p.imgId,p.desc)};
+function validProductImage(value){try{const u=new URL(value);return u.origin===R2_WORKER&&/^\/images\/productos\/[a-f0-9-]{36}\.(png|jpg|webp|gif)$/.test(u.pathname)?u.href:''}catch(e){return''}}
+const pcard=p=>`<article class="card pc"><button class="im" data-act="zoom" data-id="${esc(p.imgId||'')}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ampliar foto de ${esc(p.desc)}">${productPhoto(p)}</button><div class="bd"><strong>${esc(p.desc)}</strong><span>${esc(p.buyer)} <small style="color:var(--t2)">· ${esc(p.plat)}</small></span><strong>${money(p.price)}</strong><div class="row">${bLogi(p.logi)}</div><small style="color:var(--t2)">EMS: ${pm(p.ems)} · Aduana: ${pm(p.adu)}</small></div></article>`;
 const pm=n=>+n>0?money(n):'Pendiente';
-const prow=(p,admin)=>`<article class="row2"><button class="th" data-act="zoom" data-id="${p.imgId}" aria-label="Ampliar foto de ${esc(p.desc)}">${ph(p.imgId,p.desc)}</button><div class="mn"><strong>${esc(p.desc)}</strong><span class="meta">${esc(p.buyer)} · ${esc(p.plat)}${admin&&box(p.box)?' · '+esc(box(p.box).name):''}</span><div class="bs">${bLogi(p.logi)}<span class="b">EMS: ${pm(p.ems)}</span><span class="b">Aduana: ${pm(p.adu)}</span></div>${admin?`<div class="ac"><button class="btn sm" data-act="eprod" data-id="${p.id}">Editar</button><button class="btn sm dng" data-act="dprod" data-id="${p.id}">Eliminar</button></div>`:''}</div><div class="pr">${money(p.price)}</div></article>`;
+const prow=(p,admin)=>`<article class="row2"><button class="th" data-act="zoom" data-id="${esc(p.imgId||'')}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ampliar foto de ${esc(p.desc)}">${productPhoto(p)}</button><div class="mn"><strong>${esc(p.desc)}</strong><span class="meta">${esc(p.buyer)} · ${esc(p.plat)}${admin&&box(p.box)?' · '+esc(box(p.box).name):''}</span><div class="bs">${bLogi(p.logi)}<span class="b">EMS: ${pm(p.ems)}</span><span class="b">Aduana: ${pm(p.adu)}</span></div>${admin?`<div class="ac"><button class="btn sm" data-act="eprod" data-id="${p.id}">Editar</button><button class="btn sm dng" data-act="dprod" data-id="${p.id}">Eliminar</button></div>`:''}</div><div class="pr">${money(p.price)}</div></article>`;
 function plist(list,admin){const f=filt(list),pages=Math.max(1,Math.ceil(f.length/PER));if(S.page>pages)S.page=pages;const sl=f.slice((S.page-1)*PER,S.page*PER);
  if(!f.length)return`<div class="empty"><p><strong>Sin resultados</strong></p><p>Prueba con otro username, producto o filtro.</p><button class="btn" data-act="clear">Limpiar filtros</button></div>`;
  return`<p class="sr" aria-live="polite">${f.length} productos</p><div class="lst">${sl.map(p=>prow(p,admin)).join('')}</div>${pager(f.length,S.page)}`}
@@ -811,7 +813,7 @@ async function sincronizarCajasSupabase(){
 /* Productos públicos: nunca consultar borradores desde las páginas públicas. */
 async function sincronizarProductosSupabase(){
  const headers={apikey:AUTH_PUBLISHABLE_KEY};
- const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma&limit=10000',{headers,cache:'no-store'});
+ const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url&limit=10000',{headers,cache:'no-store'});
  if(!r.ok)throw Error('No se pudieron cargar los productos públicos ('+r.status+').');
  const productos=await r.json();
  let names={};
@@ -825,7 +827,7 @@ async function sincronizarProductosSupabase(){
  D.prods=productos.map(p=>({
   id:p.id,box:p.caja_id,buyer:names[p.cupidito_id]||'Cupidito',desc:p.nombre||p.descripcion||'',
   plat:p.plataforma||'',price:Number(p.precio)||0,logi:Math.max(0,states.indexOf(String(p.estado||'comprado').toLowerCase())),
-  ems:0,adu:0,imgId:'',pay:0
+  ems:0,adu:0,imgId:'',imagenUrl:validProductImage(p.imagen_url),pay:0
  }));
 }
 /* ===== Router ===== */
@@ -917,7 +919,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]
   case'themeReset':confirmDlg('¿Restablecer todos los colores, fuentes, tamaños y partículas?',resetTheme);break;
  case'close':$('#dlg').close();break;
  case'terms':e.preventDefault();dlg('Términos y condiciones',`<p>Para información sobre pedidos, cargos de EMS, aduanas y envíos, comunícate con la administración de Dearcupid Club.</p><button type="button" class="btn" data-act="close">Entendido</button>`);break;
- case'zoom':{const u=id&&await imgUrl(id);dlg('Foto del producto',u?`<img class="big" src="${u}" alt="Foto ampliada del producto">`:'<p>Este producto aún no tiene foto.</p>');break}
+ case'zoom':{const u=validProductImage(el.dataset.url)||(id&&await imgUrl(id));dlg('Foto del producto',u?`<img class="big" src="${u}" alt="Foto ampliada del producto">`:'<p>Este producto aún no tiene foto.</p>');break}
  case'view':S.view=a.dataset.v;rerender();break;
  case'page':S.page=+a.dataset.p;relist();scrollTo({top:0});break;
  case'clear':S={...S,q:'',lg:'',pay:'',page:1};rerender();break;
