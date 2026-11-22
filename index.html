@@ -119,8 +119,25 @@ header{background:var(--sf)}
 
 .box-track{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--t2);margin:16px 0 4px}.box-track strong{color:var(--tx);font-weight:500;overflow-wrap:anywhere}.box-description{white-space:normal;color:var(--t2);line-height:1.7;margin:10px 0 20px;overflow-wrap:anywhere}
 .login-shell{max-width:430px;margin:30px auto;padding:32px;background:var(--sf);border:1px solid var(--bd);border-radius:24px;box-shadow:var(--sh)}.login-shell h1{margin-bottom:8px}.login-shell p{color:var(--t2)}.login-shell .f{margin-top:22px}
+
+/* Códigos de colores del Excel de Isa (sin alterar los estados existentes) */
+.logi-color{display:inline-flex;vertical-align:middle;border-radius:999px}
+.logi-color>.b{background:transparent!important;border-color:transparent!important;color:#34343a!important}
+.logi-asegurado{background:#D9FBC5}
+.logi-warehouse{background:#F3DFF4}
+.logi-camino{background:#E1EEFC}
+.logi-mexico{background:#FFF1CB}
+.logi-stock{background:#FBE4E3}
+.logi-neutral{background:transparent}
+.logi-neutral>.b{background:#fff!important;border:1px solid #e6dfe3!important}
+.color-legend{margin:16px 0 20px;padding:17px 19px;border:1px solid var(--bd);border-radius:16px;background:var(--sf)}
+.color-legend h3{font-size:1rem;margin:0 0 12px}
+.color-legend-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.color-legend-item{display:flex;align-items:center;gap:9px;font-size:.9rem}
+.color-legend-dot{width:23px;height:23px;border:1px solid #d8d0d5;border-radius:7px;flex-shrink:0}
+
 </style></head><body>
-<header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/c5" data-n="env">Envíos</a><a href="#/buscar" data-n="bus">Avisos</a></nav></div></header>
+<header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/1a5fc7bc-baf6-40c6-b66d-275017eb574e" data-n="env">Envíos</a></nav></div></header>
 <main class="w" id="app" tabindex="-1" aria-live="polite"><div class="sk"></div></main>
 <footer><div class="w">dearcupid club ݁ ⋆ · <a href="#" data-act="terms">Términos y condiciones</a></div></footer>
 <dialog id="dlg"></dialog><div id="toast" role="status" aria-live="polite"></div>
@@ -131,10 +148,20 @@ const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelecto
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'$'+Number(n||0).toLocaleString('es-MX')+' MXN';
 const uid=p=>p+Math.random().toString(36).slice(2,9);
-const LOGI=['Comprado','Asegurado','En dirección coreana','En dirección japonesa','En camino a México','En México','Entregado'],LI=['①','②','③','④','⑤','⑥','✓'];
+const LOGI=['Comprado','Asegurado','En dirección coreana','En dirección japonesa','En camino a México','En México','Entregado','Stock'],LI=['①','②','③','④','⑤','⑥','✓','▣'];
 const PAY=['Pendiente','Pagado'],PI=['○','●'],BOX=['Abierta','Cerrada','En tránsito','Finalizada'],BI=['◌','▣','➜','✓'],PLAT=['Facebook','Instagram','Otra'];
 const badge=(i,l,ic,k)=>`<span class="b ${k?'k'+i:''}"><span aria-hidden="true">${ic[i]}</span>${esc(l[i])}</span>`;
-const bLogi=i=>badge(i,LOGI,LI),bPay=i=>`<span class="b k${i?2:0}"><span aria-hidden="true">${PI[i]}</span>${PAY[i]}</span>`,bBox=i=>badge(i,BOX,BI);
+/* Colores de referencia del Excel de Isa; no se cambian los estados guardados. */
+const COLOR_CODES=[
+ {name:'Asegurado',color:'#D9FBC5'},
+ {name:'En warehouse',color:'#F3DFF4'},
+ {name:'En camino a México',color:'#E1EEFC'},
+ {name:'En México',color:'#FFF1CB'},
+ {name:'Stock',color:'#FBE4E3'}
+];
+const colorLogi=i=>({1:'logi-asegurado',2:'logi-warehouse',3:'logi-warehouse',4:'logi-camino',5:'logi-mexico',7:'logi-stock'}[Number(i)]||'logi-neutral');
+const colorLegend=()=>`<section class="color-legend" aria-label="Códigos de colores"><h3>Códigos de color ♡</h3><div class="color-legend-items">${COLOR_CODES.map(x=>`<div class="color-legend-item"><span class="color-legend-dot" style="background:${x.color}" aria-hidden="true"></span><span>${esc(x.name)}</span></div>`).join('')}</div></section>`;
+const bLogi=i=>`<span class="logi-color ${colorLogi(i)}">${badge(i,LOGI,LI)}</span>`,bPay=i=>`<span class="b k${i?2:0}"><span aria-hidden="true">${PI[i]}</span>${PAY[i]}</span>`,bBox=i=>badge(i,BOX,BI);
 function toast(m,e){const t=document.createElement('div');t.className='t'+(e?' e':'');t.textContent=m;$('#toast').append(t);setTimeout(()=>t.remove(),3200)}
 /* ===== Almacenamiento: IndexedDB (imágenes) — reemplazable por Cloudflare R2 ===== */
 const imgStore={db:null,
@@ -186,7 +213,34 @@ if (location.hash !== '#admin' && typeof route === 'function') {
     return null;
   }
 } 
-const isEnv=id=>id==='c5';
+
+async function cargarCajasSupabase() {
+  try {
+    const respuesta = await fetch(
+      AUTH_URL + '/rest/v1/cajas?select=id,categoria_id,nombre,descripcion,estado,guia,created_at&order=created_at.desc',
+      {
+        headers: {
+          apikey: AUTH_PUBLISHABLE_KEY
+        }
+      }
+    );
+
+    if (!respuesta.ok) {
+      throw new Error('Error al cargar cajas: ' + respuesta.status);
+    }
+
+    const cajas = await respuesta.json();
+
+    console.log('Cajas obtenidas desde Supabase:', cajas);
+
+    return cajas;
+  } catch (error) {
+    console.error('Error al consultar cajas:', error);
+    return null;
+  }
+}
+
+const isEnv=id=>id==='c5'||D.cats.some(c=>c.id===id&&c.name.toLowerCase()==='envíos');
 const cIc=c=>`<span class="ic" aria-hidden="true"${c.imgId?` data-img="${esc(c.imgId)}" data-alt=""`:''}>${esc(c.icon||'✿')}</span>`;
 const cat=id=>D.cats.find(c=>c.id===id),box=id=>D.boxes.find(b=>b.id===id),cnt=id=>D.prods.filter(p=>p.box===id).length;
 function charges(bid){const m={};D.prods.filter(p=>p.box===bid).forEach(p=>{const o=m[p.buyer]||(m[p.buyer]={buyer:p.buyer,ems:0,adu:0,n:0});o.ems+=+p.ems||0;o.adu+=+p.adu||0;o.n++});
@@ -227,19 +281,51 @@ async function removeCustomFont(){try{await imgStore.del('custom-font')}catch(e)
 function loadTheme(){try{const x=JSON.parse(localStorage.getItem(THEME_KEY));if(x&&typeof x==='object')T={...themeDefaults,...Object.fromEntries(Object.entries(x).filter(([k])=>k in themeDefaults))}}catch(e){}applyTheme()}
 function applyTheme(){const st=document.documentElement.style;for(const k of ['bg','sf','p1','p2','p3','p4','ac','ib','tx','t2','bd'])st.setProperty('--'+k,T[k]);st.setProperty('--font-page',fonts[T.font]||fonts.system);st.setProperty('--font-heading',T.heading==='same'?'inherit':fonts[T.heading]||fonts.system);st.setProperty('--font-scale',T.fontScale/100);st.setProperty('--radius-ui',T.radius+'px');st.setProperty('--shadow-ui',T.shadow/100);st.setProperty('--page-width',T.pageWidth+'px');st.setProperty('--card-pad',T.cardPad+'px');st.setProperty('--header-alpha',T.headerAlpha/100);window.dispatchEvent(new Event('dc-theme'))}
 function saveTheme(){try{localStorage.setItem(THEME_KEY,JSON.stringify(T));return true}catch(e){toast('No se pudo guardar la apariencia.',1);return false}}
+/* Apariencia pública: Supabase es la fuente compartida; localStorage solo conserva la vista previa. */
+async function cargarAparienciaPublica(){
+ const r=await fetch(AUTH_URL+'/rest/v1/configuracion?select=apariencia&id=eq.1&limit=1',{
+  headers:{apikey:AUTH_PUBLISHABLE_KEY},cache:'no-store'});
+ if(!r.ok)throw Error('No se pudo consultar la apariencia compartida ('+r.status+').');
+ const rows=await r.json();const settings=rows[0]?.apariencia;
+ if(!settings||typeof settings!=='object'||Array.isArray(settings)||!Object.keys(settings).length){
+  T={...themeDefaults};applyTheme();return;
+ }
+ const clean={...themeDefaults};
+ for(const [k,v] of Object.entries(settings)){
+  if(!(k in clean)||typeof v!==typeof clean[k])continue;
+  if(typeof v==='string'&&v.length>150)continue;
+  clean[k]=v;
+ }
+ for(const k of Object.keys(themeColorLabels).concat(['particleColor','particleSecond','particleThird'])){
+  if(!/^#[0-9a-f]{6}$/i.test(clean[k]))throw Error('La apariencia pública contiene un color inválido.');
+ }
+ T=clean;applyTheme();
+}
+async function publicarApariencia(){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administradora para publicar la apariencia.');
+ const r=await fetch(AUTH_URL+'/rest/v1/configuracion?id=eq.1',{
+  method:'PATCH',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,
+   'Content-Type':'application/json',Prefer:'return=representation'},
+  body:JSON.stringify({apariencia:T,actualizado_en:new Date().toISOString()})
+ });
+ if(!r.ok)throw Error('No se pudo publicar la apariencia: '+(await r.text()).slice(0,220));
+ const rows=await r.json();if(!Array.isArray(rows)||rows.length!==1)throw Error('Supabase no confirmó la actualización. Revisa los permisos de configuración.');
+ saveTheme();toast('Apariencia publicada para todos ♡');
+}
+
 const themeColorLabels={bg:'Fondo',sf:'Tarjetas y superficies',p1:'Rosa suave / resaltados',p2:'Rosa secundario',p3:'Rosa terciario',p4:'Rosa decorativo',ac:'Acento / botones',ib:'Bordes de campos',tx:'Texto principal',t2:'Texto secundario',bd:'Bordes generales'};
 const themeRange=[['fontScale','Tamaño de texto',80,135,5,'%'],['radius','Redondez de tarjetas',0,36,2,'px'],['shadow','Intensidad de sombras',0,25,1,'%'],['pageWidth','Ancho de contenido',760,1500,20,'px'],['cardPad','Espaciado de tarjetas',10,34,2,'px'],['headerAlpha','Opacidad de cabecera',40,100,5,'%'],['particleCount','Cantidad de partículas',0,160,5,''],['particleSize','Tamaño de partículas',3,30,1,'px'],['particleSpeed','Velocidad de partículas',0,150,5,'%'],['particleOpacity','Opacidad de partículas',5,100,5,'%']];
 function customUi(){const fontOpts=(v,heading)=>Object.keys(fonts).map(k=>`<option value="${k}" ${v===k?'selected':''}>${({system:'Sistema',inter:'Inter',dm:'DM Sans',poppins:'Poppins',nunito:'Nunito',quicksand:'Quicksand',georgia:'Georgia',garamond:'Garamond',mono:'Monoespaciada',custom:'Mi fuente personalizada'})[k]}</option>`).join('');
 const colors=Object.entries(themeColorLabels).map(([k,l])=>`<div class="custom-field"><label for="tc-${k}">${l}</label><input type="color" id="tc-${k}" data-theme="${k}" value="${esc(T[k])}"></div>`).join('');
 const range=(ids)=>themeRange.filter(([k])=>ids.includes(k)).map(([k,l,min,max,step,u])=>`<div class="custom-field"><label for="tr-${k}">${l}: <output id="to-${k}">${T[k]}${u}</output></label><input id="tr-${k}" type="range" data-theme="${k}" min="${min}" max="${max}" step="${step}" value="${T[k]}"></div>`).join('');
-return `<p style="color:var(--t2)">Cambia la apariencia y observa el resultado al instante. Los ajustes se guardan en este navegador.</p>
+return `<p style="color:var(--t2)">Cambia la apariencia y observa el resultado al instante. Los cambios se previsualizan en este navegador. Pulsa «Publicar apariencia» para compartirlos con todos.</p>
 <div class="custom-actions"><label for="themePreset" class="sr">Paleta prediseñada</label><select id="themePreset" style="max-width:230px"><option value="">Elegir una paleta...</option><option value="rosa">Rosa original</option><option value="lavanda">Lavanda</option><option value="menta">Menta</option><option value="crema">Crema</option><option value="noche">Noche</option></select><button type="button" class="btn" data-act="themeExport">Exportar diseño</button><button type="button" class="btn" data-act="themeImport">Importar diseño</button><input type="file" id="themeFile" accept="application/json,.json" hidden><button type="button" class="btn dng" data-act="themeReset">Restablecer diseño</button></div>
 <section class="custom-section"><h3>Colores de toda la página</h3><div class="custom-grid">${colors}</div></section>
 <section class="custom-section"><h3>Tipografías y vista previa</h3><div class="custom-grid"><div><label for="tf">Fuente de la página</label><select id="tf" data-theme="font">${fontOpts(T.font)}</select></div><div><label for="th">Fuente de títulos</label><select id="th" data-theme="heading"><option value="same" ${T.heading==='same'?'selected':''}>Igual que la página</option>${fontOpts(T.heading,true)}</select></div>${range(['fontScale'])}</div><div class="theme-preview"><div class="sample-card"><div class="sample-heading">dearcupid club ✧</div><p class="sample-body">Así se verán los textos, títulos, colores y tarjetas de tu página.</p><button type="button" class="btn pri">Botón de ejemplo ♡</button> <span class="b">Etiqueta de ejemplo</span></div></div></section>
 <section class="custom-section"><h3>Subir fuente personalizada</h3><p>Selecciona un archivo de fuente WOFF2, WOFF, TTF u OTF (máximo 3 MB). La fuente se aplicará a toda la página, con vista previa inmediata. Usa solo fuentes que tengas permiso para utilizar.</p><div class="custom-grid"><div><label for="customFontFile">Archivo de fuente</label><input type="file" id="customFontFile" accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"></div><div class="row" style="align-self:end"><button type="button" class="btn dng" data-act="fontRemove">Eliminar fuente personalizada</button></div></div><p class="err" id="customFontError" role="alert"></p><p style="font-size:.83rem;color:var(--t2)">La fuente se guarda en este navegador. Para mostrarla a todos los visitantes será necesario publicarla en el servidor.</p></section>
 <section class="custom-section"><h3>Diseño y distribución</h3><div class="custom-grid">${range(['radius','shadow','pageWidth','cardPad','headerAlpha'])}</div></section>
 <section class="custom-section"><h3>Partículas y animaciones</h3><div class="custom-grid"><div><label for="tpEnabled">Mostrar partículas</label><select id="tpEnabled" data-theme="particles"><option value="true" ${T.particles?'selected':''}>Activadas</option><option value="false" ${!T.particles?'selected':''}>Desactivadas</option></select></div><div><label for="tpShape">Forma de partículas</label><select id="tpShape" data-theme="particleShape">${[['heart','Corazones'],['star','Estrellitas'],['circle','Burbujas'],['sparkle','Destellos'],['mix','Mezcladas']].map(([v,l])=>`<option value="${v}" ${T.particleShape===v?'selected':''}>${l}</option>`).join('')}</select></div><div><label for="tpColor">Color principal</label><input id="tpColor" type="color" data-theme="particleColor" value="${T.particleColor}"></div><div><label for="tpSecond">Color secundario</label><input id="tpSecond" type="color" data-theme="particleSecond" value="${T.particleSecond}"></div><div><label for="tpThird">Color de destellos</label><input id="tpThird" type="color" data-theme="particleThird" value="${T.particleThird}"></div><div><label for="tpDrift">Movimiento flotante</label><select id="tpDrift" data-theme="particleDrift"><option value="true" ${T.particleDrift?'selected':''}>Sí</option><option value="false" ${!T.particleDrift?'selected':''}>No, estáticas</option></select></div>${range(['particleCount','particleSize','particleSpeed','particleOpacity'])}</div><p style="font-size:.83rem;color:var(--t2)">Si tu dispositivo solicita reducir movimiento, las partículas quedarán estáticas. Muchas partículas pueden consumir más batería.</p></section>
-<section class="custom-section"><h3>Guardar y compartir apariencia</h3><p>Los cambios se aplican automáticamente. Puedes exportar un archivo JSON para recuperar el mismo diseño después.</p><button type="button" class="btn pri" data-act="themeSave">Guardar apariencia</button><p class="err" id="themeError" role="alert"></p></section>`}
+<section class="custom-section"><h3>Guardar y compartir apariencia</h3><p>Los cambios se previsualizan automáticamente. Publícalos en Supabase para que todos los visitantes los vean. También puedes exportar un archivo JSON.</p><button type="button" class="btn pri" data-act="themeSave">Publicar apariencia</button><p class="err" id="themeError" role="alert"></p></section>`}
 function setThemeField(k,v){if(!(k in themeDefaults))return;if(typeof themeDefaults[k]==='number')v=Number(v);if(typeof themeDefaults[k]==='boolean')v=v==='true';if(typeof themeDefaults[k]==='number'&&!Number.isFinite(v))return;T[k]=v;applyTheme();saveTheme()}
 function resetTheme(){T={...themeDefaults};applyTheme();saveTheme();rerender()}
 function exportTheme(){const blob=new Blob([JSON.stringify({format:'dearcupid-theme-v1',settings:T},null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='dearcupid-diseno.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
@@ -259,41 +345,102 @@ const opts=(a,sel)=>a.map((x,i)=>`<option value="${i}" ${sel==i?'selected':''}>$
 const controls=()=>`<div class="bar"><div><label for="q">Buscar username o producto</label><input id="q" type="search" value="${esc(S.q)}" placeholder="Username o producto"></div><div><label for="fl">Estatus logístico</label><select id="fl"><option value="">Todos</option>${opts(LOGI,S.lg)}</select></div><div><label for="so">Ordenar</label><select id="so">${[['name','Comprador A-Z'],['prod','Producto A-Z'],['pa','Precio ↑'],['pd','Precio ↓']].map(([v,t])=>`<option value="${v}" ${S.sort===v?'selected':''}>${t}</option>`).join('')}</select></div></div>`;
 /* ===== Vistas ===== */
 const bc=a=>''; // Migas de pan ocultas: se utiliza el botón Volver.
-async function vHome(){const dt=new Date(D.updated).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
- return`<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><form class="sb" role="search" data-f="find"><label class="sr" for="hq">Buscar por username</label><input id="hq" placeholder="Buscar por username"><button class="btn pri">Buscar</button></form></section>${catGrid()}<h2 class="s">Avisos</h2>${D.notices.length?D.notices.map(n=>`<div class="note">${esc(n)}</div>`).join(''):'<p class="empty">No hay avisos por ahora.</p>'}<p style="color:var(--t2);font-size:.9rem">Última actualización: ${dt}</p>`}
-function homeFind(){const el=$('#hres');if(!el)return;const nm=t=>t.trim().replace(/^@/,'').toLowerCase(),q=nm($('#hq').value);if(!q){el.innerHTML='';return}
-const m={};D.prods.forEach(p=>{if(nm(p.buyer).includes(q))(m[p.box]=m[p.box]||[]).push(p)});const g={};Object.keys(m).forEach(id=>{const b=box(id);if(b)(g[b.cat]=g[b.cat]||[]).push([b,m[id]])});const cs=D.cats.filter(c=>g[c.id]);
-el.innerHTML=cs.length?cs.map(c=>`<section class="res"><h3>${esc(c.name)}</h3><div class="grid">${g[c.id].map(([b,l])=>`<a class="card" href="#/box/${b.id}/u/${encodeURIComponent(l[0].buyer)}"><strong>${esc(b.name)}</strong><p>${esc(l[0].buyer)} · ${l.length} producto${l.length>1?'s':''}</p><div style="margin-top:8px">${bBox(b.st)}</div></a>`).join('')}</div></section>`).join(''):`<div class="empty"><p><strong>No encontramos pedidos con ese username.</strong></p><p>Revisa que esté escrito igual que en tu pedido.</p></div>`}
+async function vHome(){return `<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><form class="sb" role="search" data-f="find"><label class="sr" for="hq">Buscar por username</label><input id="hq" placeholder="Buscar por username"><button class="btn pri">Buscar</button></form></section>${catGrid()}`}
+function homeFind(){
+ const el=$('#hres');if(!el)return;
+ const q=nmz($('#hq').value);if(!q){el.innerHTML='';return}
+ const products=D.prods.filter(p=>nmz(p.buyer).includes(q));
+ const shipments=D.envios.filter(x=>nmz(x.buyer).includes(q));
+ const boxes=[...new Set(products.map(p=>p.box))].map(id=>({b:box(id),count:products.filter(p=>p.box===id).length})).filter(x=>x.b);
+ el.innerHTML=(boxes.length?`<section class="res"><h3>Pedidos</h3><div class="grid">${boxes.map(({b,count})=>`<a class="card" href="#/box/${esc(b.id)}"><strong>${esc(b.name)}</strong><p>${count} producto(s)</p></a>`).join('')}</div></section>`:'')+
+ (shipments.length?`<section class="res"><h3>Envíos nacionales</h3>${shipRows(shipments)}</section>`:'')+
+ (!boxes.length&&!shipments.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
+}
 const bannerHtml=async()=>{const u=await imgUrl('banner');return u?`<div class="bn"><img src="${u}" alt="Banner de dearcupid club"></div>`:''};
 async function vHome2(){return`${await bannerHtml()}<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><a class="carrd" href="https://dearcupidclub.carrd.co" target="_blank" rel="noopener">dearcupidclub.carrd.co <span aria-hidden="true">↗</span></a><form class="sb" role="search" data-f="find" style="margin:24px auto 0"><label class="sr" for="hq">Buscar por username</label><input id="hq" type="search" placeholder="Busca tu username" autocomplete="off"><button class="btn pri">Buscar</button></form><div id="hres" aria-live="polite"></div></section><nav class="menu" aria-label="Secciones">${D.cats.map(c=>`<a href="#/cat/${c.id}">${cIc(c)}<span>${esc(c.name)}<small>${esc(c.desc)}</small></span></a>`).join('')}</nav>`}
-function vSearch(){const dt=new Date(D.updated).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});return bc([['Inicio','#/'],['Avisos']])+`<h1>Avisos</h1><h2 class="s">Avisos</h2>${D.notices.length?D.notices.map(n=>`<div class="note">${esc(n)}</div>`).join(''):'<p class="empty">No hay avisos por ahora.</p>'}<p style="color:var(--t2);font-size:.9rem">Última actualización: ${dt}</p>`}
 const catGrid=()=>`<h2 class="s" style="margin-top:0">Categorías</h2><div class="grid">${D.cats.map(c=>`<a class="card" href="#/cat/${c.id}">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p></a>`).join('')}</div>`;
 const vCats=()=>bc([['Inicio','#/'],['Categorías']])+catGrid();
 function vCat(id){const c=cat(id);if(!c)return nf();if(isEnv(id))return vEnvios();const bs=D.boxes.filter(b=>b.cat===id);return bc([['Inicio','#/'],[c.name]])+`<h1>${esc(c.name)}</h1><p style="color:var(--t2)">${esc(c.desc)}</p><div class="grid" style="margin-top:20px">${bs.map(b=>`<a class="card" href="#/box/${b.id}"><h3>${esc(b.name)}</h3>${b.desc?.trim()?`<p>${esc(b.desc)}</p>`:''}<p>${cnt(b.id)} productos</p><div style="margin-top:10px">${bBox(b.st)}</div><p>Creada: ${b.created}${b.closed?' · Cierre: '+b.closed:''}</p></a>`).join('')||'<div class="empty">Aún no hay cajas en esta categoría.</div>'}</div>`}
 const SHIP_ST=['Preparando','Enviado','En tránsito','En reparto','Entregado','Incidencia'];
 const CARRIERS=['Correos de México','Estafeta','DHL','FedEx','Paquetexpress','LaMensajeria','Otra'];
 function vEnvios(){const rows=[...D.envios].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return bc([['Inicio','#/'],['Envíos']])+`<h1>envíos</h1><p style="color:var(--t2);max-width:850px">hola! en este apartado encontrarás el registro de los envíos nacionales hechos desde la casa de la administradora hasta el domicilio de cada cupidito, cualquier duda por favor no dudes en comunicarte conmigo ♡</p><div class="bar" style="margin-top:22px"><div><label for="shipq">Buscar por username, paquetería o guía</label><input id="shipq" type="search" placeholder="Buscar envío" autocomplete="off"></div></div><div id="shiplist">${shipRows(rows)}</div>`}
-function shipRows(rows,admin=false){return rows.length?`<div class="shipwrap"><table class="shiptable"><thead><tr><th>Nombre</th><th>Collage</th><th>Paquetería</th><th>Guía</th><th>Status</th>${admin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.map(x=>`<tr><td data-l="Nombre"><strong>${esc(x.buyer||x.name||'Sin nombre')}</strong></td><td data-l="Collage"><button type="button" class="shipphoto" data-act="zoom" data-id="${esc(x.imgId||'')}" aria-label="Ver collage de ${esc(x.buyer||x.name||'envío')}">${ph(x.imgId||'', 'Collage del envío')}</button></td><td data-l="Paquetería"><span class="b shipcarrier">${esc(x.carrier||'Sin asignar')}</span></td><td data-l="Guía"><span class="shiptrack">${esc(x.tracking||x.reference||'Pendiente')}</span></td><td data-l="Status">${badge(Math.max(0,Math.min(SHIP_ST.length-1,+x.status||0)),SHIP_ST,['◌','●','➜','→','✓','!'],true)}</td>${admin?`<td data-l="Acciones"><div class="row"><button class="btn sm" data-act="eship" data-id="${esc(x.id)}">Editar</button><button class="btn sm dng" data-act="dship" data-id="${esc(x.id)}">Eliminar</button></div></td>`:''}</tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay envíos nacionales registrados.</div>'}
-function eShip(id){const x=D.envios.find(v=>v.id===id)||{};pend={blob:null,rm:false,old:x.imgId||'',max:1000};dlg(id?'Editar envío nacional':'Nuevo envío nacional',`<div class="f">${fld('buyer','Username del cupidito',x.buyer||x.name||'','text','required maxlength="120"')}${sel('carrier','Paquetería',CARRIERS.map(v=>`<option value="${esc(v)}" ${x.carrier===v?'selected':''}>${esc(v)}</option>`).join(''))}${fld('tracking','Número de guía (visible públicamente)',x.tracking||x.reference||'','text','maxlength="120"')}${sel('status','Status',opts(SHIP_ST,x.status??0))}${fld('date','Fecha de envío',x.date||new Date().toISOString().slice(0,10),'date')}${imgField(x.imgId,'Collage del paquete')}<p style="color:var(--t2);font-size:.85rem">Solo envíos nacionales. No subas imágenes que muestren direcciones, teléfonos ni datos personales de las etiquetas.</p>${err}${foot}</div>`,async fd=>{if(!fd.buyer.trim())return'Escribe el username del cupidito.';let imgId=x.imgId||'';try{if(pend.blob){imgId=imgId||uid('shipimg');await imgStore.put(imgId,pend.blob);freeUrl(imgId)}else if(pend.rm&&imgId){await imgStore.del(imgId);freeUrl(imgId);imgId=''}}catch(e){return'No se pudo guardar el collage. Inténtalo de nuevo.'}const o={buyer:fd.buyer.trim(),carrier:fd.carrier,tracking:fd.tracking.trim(),status:+fd.status,date:fd.date,imgId};if(id)Object.assign(x,o);else D.envios.unshift({id:uid('ship'),...o});save();toast('Envío nacional guardado');return 0});if(x.imgId)imgUrl(x.imgId).then(u=>u&&setPv(u))}
+/* Los envíos publicados se consultan siempre desde Supabase. */
+const shipStatusIndex=value=>{const i=SHIP_ST.findIndex(x=>x.toLowerCase()===String(value||'').toLowerCase());return i<0?0:i};
+const shipPublicImage=url=>{try{const u=new URL(url);return ['https:','http:'].includes(u.protocol)?u.href:''}catch(e){return''}};
+function mapShip(x){return {id:x.id,buyer:x.nombre||'',carrier:x.paqueteria||'',tracking:x.guia||'',status:shipStatusIndex(x.estado),date:(x.created_at||'').slice(0,10),collageUrl:shipPublicImage(x.collage_url),notes:x.notas||''}}
+async function sincronizarEnviosSupabase(admin=false){
+ const headers={apikey:AUTH_PUBLISHABLE_KEY};let url=AUTH_URL+'/rest/v1/envios?select=id,nombre,collage_url,paqueteria,guia,estado,created_at&order=created_at.desc&limit=10000';
+ let options={headers,cache:'no-store'};
+ if(admin){if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');url=AUTH_URL+'/rest/v1/rpc/obtener_envios_admin';options={method:'POST',headers:{...headers,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json'},body:'{}',cache:'no-store'}}
+ const r=await fetch(url,options);if(!r.ok)throw Error('No se pudieron consultar los envíos en Supabase ('+r.status+'): '+(await r.text()).slice(0,240));
+ const rows=await r.json();D.envios=rows.map(mapShip);return D.envios;
+}
+async function guardarEnvioSupabase(id,fd){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+ const nombre=String(fd.buyer||'').trim();if(!nombre)throw Error('Escribe el username del cupidito.');
+ const data={nombre,paqueteria:fd.carrier||null,guia:String(fd.tracking||'').trim()||null,estado:SHIP_ST[Number(fd.status)]||SHIP_ST[0]};
+ const url=AUTH_URL+'/rest/v1/envios'+(id?'?id=eq.'+encodeURIComponent(id):'');
+ const r=await fetch(url,{method:id?'PATCH':'POST',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(data)});
+ if(!r.ok)throw Error('No se pudo guardar el envío en Supabase: '+(await r.text()).slice(0,300));
+ await sincronizarEnviosSupabase(true);
+ if(id && !D.envios.some(x=>x.id===id))throw Error('No se encontró el envío actualizado.'); 
+ if(!id && !D.envios.some(x=>x.buyer===nombre && x.carrier===(fd.carrier||'') && x.tracking===String(fd.tracking||'').trim()))throw Error('No se encontró el nuevo envío después de guardar.');
+}
+async function eliminarEnvioSupabase(id){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+ const r=await fetch(AUTH_URL+'/rest/v1/envios?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,Prefer:'return=minimal'}});
+ if(!r.ok)throw Error('No se pudo eliminar el envío: '+(await r.text()).slice(0,250));
+ await sincronizarEnviosSupabase(true);
+ if(D.envios.some(x=>x.id===id))throw Error('El envío sigue apareciendo después de eliminar.');
+}
+function shipRows(rows,admin=false){return rows.length?`<div class="shipwrap"><table class="shiptable"><thead><tr><th>Nombre</th><th>Collage</th><th>Paquetería</th><th>Guía</th><th>Status</th>${admin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.map(x=>{const img=shipPublicImage(x.collageUrl);return `<tr><td data-l="Nombre"><strong>${esc(x.buyer||'Sin nombre')}</strong></td><td data-l="Collage">${img?`<a class="shipphoto" href="${esc(img)}" target="_blank" rel="noopener noreferrer" aria-label="Ver collage del envío"><img src="${esc(img)}" alt="Collage del envío" loading="lazy"></a>`:'<span style="color:var(--t2)">Pendiente</span>'}</td><td data-l="Paquetería"><span class="b shipcarrier">${esc(x.carrier||'Sin asignar')}</span></td><td data-l="Guía"><span class="shiptrack">${esc(x.tracking||'Pendiente')}</span></td><td data-l="Status">${badge(Math.max(0,Math.min(SHIP_ST.length-1,+x.status||0)),SHIP_ST,['◌','●','➜','→','✓','!'],true)}</td>${admin?`<td data-l="Acciones"><div class="row"><button class="btn sm" data-act="eship" data-id="${esc(x.id)}">Editar</button><button class="btn sm dng" data-act="dship" data-id="${esc(x.id)}">Eliminar</button></div></td>`:''}</tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay envíos nacionales registrados.</div>'}
+function sugerenciasCupiditosEnvio(valor){
+ const el=$('#shipBuyerSuggestions');if(!el)return;
+ const q=normCupidito(valor);
+ if(!q){el.innerHTML='';return;}
+ const matches=draftCupiditos.filter(c=>normCupidito(c.nombre).includes(q)).slice(0,8);
+ el.innerHTML=matches.map(c=>`<button type="button" class="sug" data-act="chooseShipBuyer" data-u="${esc(c.nombre)}"><strong>${esc(c.nombre)}</strong>${c.plat?`<small>${esc(c.plat)}</small>`:''}</button>`).join('');
+}
+function eShip(id){const x=D.envios.find(v=>v.id===id)||{};
+ dlg(id?'Editar envío nacional':'Nuevo envío nacional',`<div class="f">${fld('buyer','Username del cupidito',x.buyer||'','text','required maxlength="120" autocomplete="off" aria-controls="shipBuyerSuggestions"')}<div id="shipBuyerSuggestions" aria-live="polite"></div>${sel('carrier','Paquetería',CARRIERS.map(v=>`<option value="${esc(v)}" ${x.carrier===v?'selected':''}>${esc(v)}</option>`).join(''))}${fld('tracking','Número de guía (visible públicamente)',x.tracking||'','text','maxlength="120"')}${sel('status','Status',opts(SHIP_ST,x.status??0))}<p class="note">El envío se guardará directamente en Supabase. Los collages se conectarán después con Cloudflare R2; por ahora no se pueden subir desde este formulario.</p><p style="color:var(--t2);font-size:.85rem">No incluyas direcciones, teléfonos ni datos personales en el nombre o la guía.</p>${err}${foot}</div>`,async fd=>{await guardarEnvioSupabase(id,fd);toast('Envío guardado y verificado en Supabase ♡');return 0});
+ cargarCupiditosParaBorradores().then(()=>{if($('#shipBuyerSuggestions'))sugerenciasCupiditosEnvio($('#buyer')?.value||'')}).catch(e=>console.warn('No se cargaron las sugerencias',e));
+}
 const nf=()=>`<div class="empty"><h2>No encontramos esa página</h2><a class="btn" href="#/">Volver al inicio</a></div>`;
 function vBox(id,tab,u){const b=box(id);if(!b)return nf();const c=cat(b.cat);if(S.box!==id){S={...S,q:'',lg:'',pay:'',sort:'name',page:1,box:id}}if(u){S.q=u;S.page=1}
  const tabs=`<div class="tabs" role="tablist"><a href="#/box/${id}" ${tab?'':'aria-current="page"'}>Masterlist</a><a href="#/box/${id}/cargos" ${tab?'aria-current="page"':''}>Cargos</a></div>`;
- let body;if(tab){const cs=charges(id);body=cs.length?`<p style="color:var(--t2)">Los totales suman los productos de cada comprador más los ajustes de la administradora.</p><table><thead><tr><th>Comprador</th><th>Total EMS</th><th>Pago EMS</th><th>Total aduana</th><th>Pago aduana</th></tr></thead><tbody>${cs.map(x=>`<tr><td data-l="Comprador">${esc(x.buyer)} <small>(${x.n} prod.)</small></td><td data-l="Total EMS">${pm(x.emsT)}</td><td data-l="Pago EMS">${+x.emsT>0?bPay(x.emsSt):'—'}</td><td data-l="Total aduana">${pm(x.aduT)}</td><td data-l="Pago aduana">${+x.aduT>0?bPay(x.aduSt):'—'}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">Esta caja aún no tiene cargos.</div>`}
+ let body;if(tab){const ps=D.prods.filter(p=>p.box===id&&publishedCharges[p.id]);
+ const status=(amount,paid)=>Number(amount)>0?(paid?'<span class="b">Pagado</span>':'<span class="b">Pendiente</span>'):'—';
+ body=ps.length?`<p style="color:var(--t2)">Cargos publicados por producto. Los importes que aún están en borrador no aparecen aquí.</p><table><thead><tr><th>Producto</th><th>Cupidito</th><th>EMS</th><th>Pago EMS</th><th>Aduana</th><th>Pago aduana</th><th>Otros</th><th>Pago otros</th></tr></thead><tbody>${ps.map(p=>{const x=publishedCharges[p.id];return `<tr><td data-l="Producto">${esc(p.desc||'Producto')}</td><td data-l="Cupidito">${esc(p.buyer)}</td><td data-l="EMS">${pm(x.ems)}</td><td data-l="Pago EMS">${status(x.ems,x.ems_pagado)}</td><td data-l="Aduana">${pm(x.aduana)}</td><td data-l="Pago aduana">${status(x.aduana,x.aduana_pagada)}</td><td data-l="Otros">${pm(x.otros)}</td><td data-l="Pago otros">${status(x.otros,x.otros_pagados)}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty">Esta caja aún no tiene cargos publicados.</div>';
+ }
  else body=`${controls()}<div id="list">${plist(D.prods.filter(p=>p.box===id))}</div>`;
- return bc([['Inicio','#/'],[c.name,'#/cat/'+c.id],[b.name]])+`<div class="row sp"><h1>${esc(c.name)} · ${esc(b.name)}</h1>${bBox(b.st)}</div>${b.tracking?.trim()?`<p class="box-track"><span aria-hidden="true">♥</span> <span>Guía</span> <strong>${esc(b.tracking)}</strong></p>`:''}${b.desc?.trim()?`<p class="box-description">${esc(b.desc).replace(/\n/g,'<br>')}</p>`:''}${tabs}${body}`}
-function vFind(q){S={...S,q:'',box:''};if(!q)return vSearch();const l=D.prods.filter(p=>p.buyer.toLowerCase().includes(q.toLowerCase()));return bc([['Inicio','#/'],['Búsqueda']])+`<h1>Resultados para “${esc(q)}”</h1><div style="margin-top:20px">${l.length?`<div class="gal">${l.map(p=>{const b=box(p.box);return pcard(p).replace('</article>',`<div class="bd" style="padding-top:0"><a href="#/box/${b.id}">${esc(cat(b.cat).name)} · ${esc(b.name)}</a></div></article>`)}).join('')}</div>`:`<div class="empty"><p><strong>No encontramos pedidos con ese username.</strong></p><a class="btn" href="#/">Intentar de nuevo</a></div>`}</div>`}
+ return bc([['Inicio','#/'],[c.name,'#/cat/'+c.id],[b.name]])+`<div class="row sp"><h1>${esc(c.name)} · ${esc(b.name)}</h1>${bBox(b.st)}</div>${b.tracking?.trim()?`<p class="box-track"><span aria-hidden="true">♥</span> <span>Guía</span> <strong>${esc(b.tracking)}</strong></p>`:''}${b.desc?.trim()?`<p class="box-description">${esc(b.desc).replace(/\n/g,'<br>')}</p>`:''}${tabs}${colorLegend()}${body}`}
+function vFind(q){
+ S={...S,q:'',box:''};if(!q)return '<div class="empty">Escribe un username para buscar pedidos y envíos.</div>';
+ const term=nmz(q),l=D.prods.filter(p=>nmz(p.buyer).includes(term));
+ const ships=D.envios.filter(x=>nmz(x.buyer).includes(term));
+ return `<h1>Resultados para “${esc(q)}”</h1>`+
+ (l.length?`<h2 class="s">Productos</h2><div class="gal">${l.map(p=>{const b=box(p.box);return b?pcard(p).replace('</article>',`<div class="bd" style="padding-top:0"><a href="#/box/${esc(b.id)}">${esc(b.name)}</a></div></article>`):pcard(p)}).join('')}</div>`:'')+
+ (ships.length?`<h2 class="s">Envíos nacionales</h2>${shipRows(ships)}`:'')+
+ (!l.length&&!ships.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
+}
 /* ===== Admin ===== */
-const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['productos','Productos'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
+const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
 const nmz=t=>String(t).trim().replace(/^@/,'').toLowerCase();let CUP=[];
 const cupRows=(ns,q='')=>{const k=nmz(q),l=ns.filter(n=>nmz(n).includes(k));return l.length?l.map(n=>`<a class="row2 cup" href="#/admin/cupiditos/${encodeURIComponent(n)}"><div class="mn"><strong>${esc(n)}</strong></div><span aria-hidden="true">›</span></a>`).join(''):'<div class="empty">Sin resultados.</div>'};
 async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">${AT.map(([k,t])=>`<a href="#/admin/${k}" ${k===tab?'aria-current="page"':''}>${t}</a>`).join('')}</div>`;let b='';
- if(tab==='resumen'){const tot=D.prods.reduce((s,p)=>s+p.price,0);b=`<div class="grid">${[['Productos',D.prods.length],['Cajas',D.boxes.length],['Compradores',new Set(D.prods.map(p=>p.buyer)).size],['Valor total',money(tot)],['Cajas abiertas',D.boxes.filter(x=>x.st===0).length]].map(([l,v])=>`<div class="card"><div class="stat">${v}</div><p>${l}</p></div>`).join('')}</div><h2 class="s">Avisos</h2><form data-f="notices" class="f"><label for="nt">Un aviso por línea</label><textarea id="nt">${esc(D.notices.join('\n'))}</textarea><button class="btn pri">Guardar avisos</button></form>`}
+ if(tab==='resumen'){const tot=D.prods.reduce((s,p)=>s+p.price,0);b=`<div class="grid">${[['Productos',D.prods.length],['Cajas',D.boxes.length],['Compradores',new Set(D.prods.map(p=>p.buyer)).size],['Valor total',money(tot)],['Cajas abiertas',D.boxes.filter(x=>x.st===0).length]].map(([l,v])=>`<div class="card"><div class="stat">${v}</div><p>${l}</p></div>`).join('')}</div>`}
  if(tab==='categorias')b=`<div class="row sp"><h2>Categorías</h2><button class="btn pri" data-act="ecat">Nueva categoría</button></div><div class="grid" style="margin-top:16px">${D.cats.map(c=>`<div class="card">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><div class="row" style="margin-top:12px"><button class="btn sm" data-act="ecat" data-id="${c.id}">Editar</button><button class="btn sm dng" data-act="dcat" data-id="${c.id}">Eliminar</button></div></div>`).join('')}</div>`;
  if(tab==='cajas')b=`<div class="row sp"><h2>Cajas</h2><button class="btn pri" data-act="ebox">Nueva caja</button></div><table style="margin-top:16px"><thead><tr><th>Caja</th><th>Estado</th><th>Productos</th><th>Fechas</th><th>Acciones</th></tr></thead><tbody>${D.boxes.map(x=>`<tr><td data-l="Caja">${esc(cat(x.cat)?.name)} · ${esc(x.name)}</td><td data-l="Estado">${bBox(x.st)}</td><td data-l="Productos">${cnt(x.id)}</td><td data-l="Fechas">${x.created}${x.closed?' → '+x.closed:''}</td><td data-l="Acciones"><button class="btn sm pri" data-act="boxprods" data-id="${x.id}">Productos</button> <button class="btn sm" data-act="ebox" data-id="${x.id}">Editar</button> <button class="btn sm" data-act="tbox" data-id="${x.id}">${x.st===0?'Cerrar':'Reabrir'}</button> <button class="btn sm dng" data-act="dbox" data-id="${x.id}">Eliminar</button></td></tr>`).join('')}</tbody></table>`;
+ if(tab==='borradores'){let drafts=[];try{drafts=await listarBorradoresCaja()}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}b+='<div class="row sp"><h2>Borradores privados</h2><button class="btn pri" data-act="newPrivateBox">Crear caja privada ♡</button></div><p style="color:var(--t2)">Solo visibles para administradores. Puedes continuar editándolos en otro momento.</p><div class="lst">'+(drafts.map(x=>{const v=x.contenido?.caja||{},n=x.contenido?.productos?.length||0;return '<div class="row2"><div class="mn"><strong>'+esc(v.name||'Caja sin nombre')+'</strong><span class="meta">'+n+' productos · '+esc(cat(v.cat)?.name||'Sin categoría')+'</span></div><button class="btn sm" data-act="editPrivateBox" data-id="'+esc(x.caja_id)+'">Continuar</button></div>'}).join('')||'<div class="empty">Todavía no hay borradores privados.</div>')+'</div>';}
  if(tab==='productos'){if(!D.boxes.length)b=`<h2>Productos</h2><div class="empty"><p><strong>Primero crea una caja</strong></p><p>Los productos se agregan dentro de una caja.</p><button class="btn pri" data-act="ebox">Crear caja</button></div>`;else{if(S.ab&&!box(S.ab))S.ab='';b=`<div class="row sp"><h2>Productos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><div style="max-width:360px;margin:14px 0"><label for="ab">Caja</label><select id="ab"><option value="">Todas las cajas</option>${D.boxes.map(x=>`<option value="${x.id}" ${x.id===S.ab?'selected':''}>${esc(cat(x.cat).name)} · ${esc(x.name)}</option>`).join('')}</select></div>${controls()}<div id="list">${plist(D.prods.filter(p=>!S.ab||p.box===S.ab),1)}</div>`}}
  if(tab==='cupiditos'){if(sub){const key=nmz(decodeURIComponent(sub)),ps=D.prods.filter(p=>nmz(p.buyer)===key);if(!ps.length)b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a></nav><div class="empty">Este username ya no tiene productos.</div>`;else{const name=ps[0].buyer,plat=ps[0].plat,bx=[...new Set(ps.map(p=>p.box))].map(box).filter(Boolean);b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a> › <span aria-current="page">${esc(name)}</span></nav><div class="row sp"><div><h2>${esc(name)}</h2><p style="color:var(--t2);margin:4px 0 0">${esc(plat)} · ${ps.length} producto${ps.length>1?'s':''} en ${bx.length} caja${bx.length>1?'s':''}</p></div><button class="btn pri" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}">Agregar producto</button></div>`+bx.map(x=>`<section class="card" style="margin-top:16px"><div class="row sp"><div><strong>${esc(cat(x.cat)?.name)} · ${esc(x.name)}</strong> ${bBox(x.st)}</div><button class="btn sm" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}" data-b="${x.id}">Agregar aquí</button></div><div class="lst" style="margin-top:12px">${ps.filter(p=>p.box===x.id).map(p=>prow(p,1)).join('')}</div></section>`).join('')}}else{const seen={};D.prods.forEach(p=>{const k=nmz(p.buyer);if(!seen[k])seen[k]=p.buyer});CUP=Object.values(seen).sort((a,c)=>a.localeCompare(c));b=`<div class="row sp"><h2>Cupiditos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><p style="color:var(--t2)">Usuarios con al menos un producto en una caja (${CUP.length}). Toca uno para ver sus cajas.</p>`+(CUP.length?`<div style="max-width:360px;margin:14px 0"><label for="cq">Buscar username</label><input id="cq" type="search" autocomplete="off"></div><div id="cl" class="lst">${cupRows(CUP)}</div>`:`<div class="empty"><p><strong>Aún no hay cupiditos</strong></p><p>Aparecen aquí cuando agregas un producto a una caja.</p></div>`)}}
- if(tab==='envios')b=`<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p style="color:var(--t2)">Registra los paquetes nacionales enviados desde la administradora a cada cupidito. No utilizan cajas.</p>${shipRows(D.envios,true)}`;
-  if(tab==='cargos'){const bid=S.cb&&box(S.cb)?S.cb:D.boxes[0]?.id,cs=bid?charges(bid):[];b=`<h2>Cargos EMS y aduanas</h2><p style="color:var(--t2)">Los totales se suman desde los productos. Usa ajustes (positivos o negativos) cuando el cobro real cambie. Estos cargos podrán ser públicos o privados en el futuro.</p><div style="max-width:320px;margin:14px 0"><label for="cb">Caja</label><select id="cb">${D.boxes.map(x=>`<option value="${x.id}" ${x.id===bid?'selected':''}>${esc(cat(x.cat).name)} · ${esc(x.name)}</option>`).join('')}</select></div>${cs.length?`<table><thead><tr><th>Comprador</th><th>EMS (suma + ajuste)</th><th>Aduana (suma + ajuste)</th><th>Acciones</th></tr></thead><tbody>${cs.map(x=>`<tr><td data-l="Comprador">${esc(x.buyer)}</td><td data-l="EMS">${+x.emsT>0?money(x.emsT)+' '+bPay(x.emsSt):'Pendiente'}</td><td data-l="Aduana">${+x.aduT>0?money(x.aduT)+' '+bPay(x.aduSt):'Pendiente'}</td><td data-l="Acciones"><button class="btn sm" data-act="ecg" data-b="${bid}" data-u="${esc(x.buyer)}">Editar cargos</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Sin productos en esta caja.</div>'}`}
+ if(tab==='envios'){try{await sincronizarEnviosSupabase(true)}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}}
+ if(tab==='envios')b+=`<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p style="color:var(--t2)">Registra los paquetes nacionales enviados desde la administradora a cada cupidito. No utilizan cajas.</p>${shipRows(D.envios,true)}`;
+  if(tab==='cargos'){
+   const bid=S.cb&&box(S.cb)?S.cb:D.boxes[0]?.id;
+   const ps=bid?D.prods.filter(p=>p.box===bid):[];
+   b=`<h2>Cargos individuales por producto</h2><p style="color:var(--t2)">Selecciona una caja publicada y abre el editor privado. Puedes guardar los importes poco a poco en Supabase sin mostrarlos al público.</p><div style="max-width:340px;margin:14px 0"><label for="cb">Caja publicada</label><select id="cb">${D.boxes.map(x=>`<option value="${esc(x.id)}" ${x.id===bid?'selected':''}>${esc(cat(x.cat)?.name||'Categoría')} · ${esc(x.name)}</option>`).join('')}</select></div>${bid?`<div class="row" style="margin:12px 0"><button type="button" class="btn pri" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>`:''}<p style="color:var(--t2)">${ps.length} producto(s) publicado(s) en esta caja.</p>${ps.length?`<div class="lst">${ps.map(p=>{const c=publishedCharges[p.id];const pago=c?['ems','aduana','otros'].map(k=>{const col={ems:'ems_pagado',aduana:'aduana_pagada',otros:'otros_pagados'}[k],importe=Number(c[k])||0;return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px"><span>${k==='ems'?'EMS':k==='aduana'?'Aduana':'Otros'}: ${pm(importe)} · ${importe>0?(c[col]?'Pagado':'Pendiente'):'Sin cargo'}</span>${importe>0?`<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col]?'1':'0'}">${c[col]?'Marcar pendiente':'Marcar pagado'}</button>`:''}</div>`}).join(''):'<p style="color:var(--t2);font-size:.85rem">Sin cargos publicados todavía.</p>';return `<div class="row2"><div class="mn" style="width:100%"><strong>${esc(p.desc||'Producto sin descripción')}</strong><span class="meta">${esc(p.buyer)} · ${money(p.price)}</span>${pago}</div></div>`}).join('')}</div>`:'<div class="empty">Esta caja todavía no tiene productos publicados.</div>'}`;
+  }
  if(tab==='personalizar'){const u=await imgUrl('logo'),bu=await imgUrl('banner');b=`<h2>Personalizar página</h2>${customUi()}<div class="card" style="max-width:520px;margin-top:14px"><h3>Logo (PNG)</h3><div class="f"><div class="drop">${u?`<img src="${u}" alt="Vista previa del logo actual">`:'<p style="color:var(--t2);margin:0">Aún no hay logo. Selecciona un PNG de hasta 2 MB.</p>'}<label for="lf">Archivo PNG</label><input type="file" id="lf" accept="image/png"></div>${u?`<div><label for="lsz">Tamaño del logo en la página principal: <strong id="lszv">${logoW()}px</strong></label><input type="range" id="lsz" min="100" max="420" step="10" value="${logoW()}"><div class="prev"><img id="lpv" src="${u}" alt="Vista previa del tamaño del logo" style="width:${logoW()}px"></div><button type="button" class="btn sm" data-act="logoreset">Restablecer tamaño</button></div>`:''}<div class="row"><button class="btn" data-act="logoup">${u?'Cambiar logo':'Guardar logo'}</button>${u?'<button class="btn dng" data-act="logodel">Eliminar logo</button>':''}</div><p class="err" id="le" role="alert"></p></div></div><div class="card" style="max-width:520px;margin-top:16px"><h3>Banner de inicio</h3><p>Aparece arriba en la página principal y se desvanece en su parte superior. JPG, PNG o WebP, máx. 5 MB.</p><div class="f"><div class="drop">${bu?'<img src="'+bu+'" alt="Vista previa del banner actual">':'<p style="color:var(--t2);margin:0">Aún no hay banner.</p>'}<label for="bf">Imagen del banner</label><input type="file" id="bf" accept="image/jpeg,image/png,image/webp"></div><div class="row"><button class="btn" data-act="bannerup">${bu?'Cambiar banner':'Guardar banner'}</button>${bu?'<button class="btn dng" data-act="bannerdel">Eliminar banner</button>':''}</div><p class="err" id="be" role="alert"></p></div></div>`}
  return bc([['Inicio','#/'],['Panel administrativo']])+`<div class="row sp"><h1>Panel administrativo</h1><button type="button" class="btn sm" data-act="logout">Cerrar sesión</button></div>${tabs}${b}`}
 /* ===== Modal y formularios ===== */
@@ -301,21 +448,257 @@ let onSub=null,pend={blob:null,rm:false,old:''};
 function dlg(title,html,fn){onSub=fn;const d=$('#dlg');d.innerHTML=`<form data-f="dlg" novalidate><div class="row sp"><h2>${esc(title)}</h2><button type="button" class="btn sm" data-act="close" aria-label="Cerrar">✕</button></div>${html}</form>`;d.showModal()}
 const fld=(id,l,v='',t='text',x='')=>`<div><label for="${id}">${l}</label><input id="${id}" name="${id}" type="${t}" value="${esc(v)}" ${x}></div>`;
 const sel=(id,l,o,v)=>`<div><label for="${id}">${l}</label><select id="${id}" name="${id}">${o}</select></div>`;
-const err='<p class="err" id="er" role="alert"></p>',foot=`<div class="row" style="margin-top:6px"><button class="btn pri">Guardar</button><button type="button" class="btn" data-act="close">Cancelar</button></div>`;
+const err='<p class="err" id="er" role="alert"></p>',foot=`<div class="row" style="margin-top:6px"><button type="submit" class="btn pri">Guardar</button><button type="button" class="btn" data-act="close">Cancelar</button></div>`;
 function imgField(has,lab='Foto del producto'){return`<div class="drop"><label for="pf">${lab} (JPG, PNG o WebP, máx. 8 MB)</label><input type="file" id="pf" accept="image/jpeg,image/png,image/webp"><img id="pv" alt="Vista previa de la foto" ${has?'':'hidden'}><button type="button" class="btn sm dng" id="prm" data-act="rmimg" ${has?'':'hidden'}>Eliminar foto</button></div>`}
 let previewUrl=null;function setPv(u){if(previewUrl&&previewUrl!==u){URL.revokeObjectURL(previewUrl);previewUrl=null}if(u&&u.startsWith('blob:')&&!Object.values(urls).includes(u))previewUrl=u;const i=$('#pv');if(u){i.src=u;i.hidden=false;$('#prm').hidden=false}else{i.hidden=true;$('#prm').hidden=true}}
 function buyerSug(){const el=$('#bsug');if(!el)return;const nm=t=>t.trim().replace(/^@/,'').toLowerCase(),q=nm($('#buyer').value);if(!q){el.innerHTML='';return}
 const m={},pl={};D.prods.forEach(p=>{if(nm(p.buyer).includes(q)){const b=box(p.box);if(!b)return;const o=m[p.buyer]=m[p.buyer]||{};o[b.id]=(o[b.id]||0)+1;pl[p.buyer]=p.plat}});const ns=Object.keys(m);
 el.innerHTML=ns.length?`<p class="meta">Ya existen en cajas. Toca uno para usar ese username:</p>`+ns.slice(0,6).map(n=>`<button type="button" class="sug" data-act="usebuyer" data-u="${esc(n)}" data-p="${esc(pl[n])}"><strong>${esc(n)}</strong><small>${Object.entries(m[n]).map(([id,c])=>esc(cat(box(id).cat).name)+' · '+esc(box(id).name)+' ('+c+')').join(' | ')}</small></button>`).join(''):`<p class="meta">Username nuevo: aún no aparece en ninguna caja.</p>`}
 function prodForm(id,pre){const p=D.prods.find(x=>x.id===id)||{...pre},ne=!id;if(!D.boxes.length){toast('Primero crea una caja.',1);return eBox()}pend={blob:null,rm:false,old:p.imgId||''};
- dlg(ne?'Nuevo producto':'Editar producto',`<div class="f">${fld('buyer','Username del comprador',p.buyer,'text','required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel('plat','Plataforma',PLAT.map(x=>`<option ${p.plat===x?'selected':''}>${x}</option>`).join(''))}${sel('box','Caja',D.boxes.map(b=>`<option value="${b.id}" ${p.box===b.id||S.ab===b.id&&ne?'selected':''}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(''))}</div><div><label for="desc">Descripción</label><textarea id="desc" name="desc" required>${esc(p.desc)}</textarea></div><div class="f2">${fld('price','Precio (MXN)',p.price,'number','min="0" step="0.01" required')}${sel('logi','Estatus logístico',opts(LOGI,p.logi??0))}</div><div class="f2">${fld('ems','EMS (MXN, 0 = pendiente)',p.ems??0,'number','min="0" step="0.01"')}${fld('adu','Aduana (MXN, 0 = pendiente)',p.adu??0,'number','min="0" step="0.01"')}</div><p class="note" style="margin:0">Al registrar el producto como comprado, se considera pagado. No se aceptan pagos parciales de productos.</p>${imgField(p.imgId)}${err}${foot}</div>`,async fd=>{
+ dlg(ne?'Nuevo producto':'Editar producto',`<div class="f">${fld('buyer','Username del comprador',p.buyer,'text','required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel('plat','Plataforma',PLAT.map(x=>`<option ${p.plat===x?'selected':''}>${x}</option>`).join(''))}${sel('box','Caja',D.boxes.map(b=>`<option value="${b.id}" ${p.box===b.id||S.ab===b.id&&ne?'selected':''}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(''))}</div><div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld('price','Precio (MXN)',p.price,'number','min="0" step="0.01" required')}${sel('logi','Estatus logístico',opts(LOGI,p.logi??0))}</div><div class="f2">${fld('ems','EMS (MXN, 0 = pendiente)',p.ems??0,'number','min="0" step="0.01"')}${fld('adu','Aduana (MXN, 0 = pendiente)',p.adu??0,'number','min="0" step="0.01"')}</div>${imgField(p.imgId)}${err}${foot}</div>`,async fd=>{
   const o={buyer:fd.buyer.trim(),plat:fd.plat,box:fd.box,desc:fd.desc.trim(),price:+fd.price,logi:+fd.logi,ems:+fd.ems||0,adu:+fd.adu||0};
-  if(!o.buyer)return'Escribe el username del comprador.';if(!o.desc)return'Escribe una descripción.';if(!(o.price>=0)||fd.price==='')return'Ingresa un precio válido.';
+  if(!o.buyer)return'Escribe el username del comprador.';if(!(o.price>=0)||fd.price==='')return'Ingresa un precio válido.';
   let imgId=p.imgId||'';try{if(pend.blob){imgId=imgId||uid('img');await imgStore.put(imgId,pend.blob);freeUrl(imgId)}else if(pend.rm&&imgId){await imgStore.del(imgId);freeUrl(imgId);imgId=''}}catch(e){return 'No se pudo guardar la fotografía. Intenta con una imagen más pequeña.'}
   o.imgId=imgId;o.pay=1;if(ne)D.prods.unshift({id:uid('p'),...o});else Object.assign(p,o);save();toast(ne?'Producto creado':'Producto actualizado');return 0});
  if(p.imgId)imgUrl(p.imgId).then(u=>u&&setPv(u))}
 function eCat(id){const c=cat(id)||{};pend={blob:null,rm:false,old:c.imgId||'',max:256};dlg(id?'Editar categoría':'Nueva categoría',`<div class="f">${fld('name','Nombre',c.name,'text','required')}${fld('desc','Descripción breve',c.desc)}${imgField(c.imgId,'Imagen del icono')}${err}${foot}</div>`,async fd=>{if(!fd.name.trim())return'Escribe un nombre.';const t=c.id?c:{id:uid('c'),icon:'✿'};let imgId=t.imgId||'';try{if(pend.blob){imgId=imgId||uid('cimg');await imgStore.put(imgId,pend.blob);freeUrl(imgId)}else if(pend.rm&&imgId){await imgStore.del(imgId);freeUrl(imgId);imgId=''}}catch(e){toast('El icono no se pudo guardar.',1)}Object.assign(t,{name:fd.name.trim(),desc:fd.desc.trim(),imgId});if(!c.id)D.cats.push(t);save();toast('Categoría guardada');return 0});if(c.imgId)imgUrl(c.imgId).then(u=>u&&setPv(u))}
-function eBox(id){const b=box(id)||{};if(!D.cats.length)return toast('Crea una categoría primero.',1);dlg(id?'Editar caja':'Nueva caja',`<div class="f">${fld('name','Nombre',b.name,'text','required')}<div><label for="desc">Descripción de la caja (opcional)</label><textarea id="desc" name="desc" maxlength="1500" placeholder="Información de esta caja">${esc(b.desc||'')}</textarea></div>${fld('tracking','Guía de la caja (opcional)',b.tracking||'','text','maxlength="160" placeholder="Ej. EN549784231JP"')}${sel('cat','Categoría',D.cats.filter(c=>!isEnv(c.id)).map(c=>`<option value="${c.id}" ${b.cat===c.id?'selected':''}>${esc(c.name)}</option>`).join(''))}${sel('st','Estado',opts(BOX,b.st??0))}${fld('closed','Fecha de cierre (opcional)',b.closed,'date')}${err}${foot}</div>`,fd=>{if(!fd.name.trim())return'Escribe un nombre.';const o={name:fd.name.trim(),cat:fd.cat,st:+fd.st,closed:fd.closed,desc:fd.desc.trim(),tracking:fd.tracking.trim()};if(id)Object.assign(b,o);else D.boxes.push({id:uid('b'),created:new Date().toISOString().slice(0,10),...o});save();toast('Caja guardada');return 0})}
+/* Borradores privados de los datos de una caja (no publicados). */
+async function borradorRequest(path,options={}){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador para usar borradores.');
+ const r=await fetch(AUTH_URL+'/rest/v1/borradores_cajas'+path,{
+  ...options,headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})},cache:'no-store'
+ });
+ if(!r.ok)throw Error('Error de borradores ('+r.status+'): '+(await r.text()).slice(0,300));
+ return r;
+}
+async function leerBorradorCompleto(id){
+ const r=await borradorRequest('?select=contenido&caja_id=eq.'+encodeURIComponent(id)+'&limit=1');
+ const rows=await r.json();return rows[0]?.contenido||null;
+}
+async function leerBorradorCaja(id){return (await leerBorradorCompleto(id))?.caja||null}
+async function listarBorradoresCaja(){const r=await borradorRequest('?select=caja_id,contenido,actualizado_en&order=actualizado_en.desc');return r.json()}
+async function guardarBorradorCompleto(id,contenido){
+ await borradorRequest('?on_conflict=caja_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({caja_id:id,contenido,actualizado_en:new Date().toISOString()})});
+}
+async function guardarBorradorCaja(id,datos){
+ const anterior=await leerBorradorCompleto(id)||{};
+ await guardarBorradorCompleto(id,{...anterior,caja:datos});
+}
+async function borrarBorradorCaja(id){await borradorRequest('?caja_id=eq.'+encodeURIComponent(id),{method:'DELETE'})}
+async function publicarBorradorCaja(id){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Sesión de administrador no disponible.');
+ const r=await fetch(AUTH_URL+'/rest/v1/rpc/publicar_borrador_caja',{
+  method:'POST',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json'},
+  body:JSON.stringify({p_caja_id:id}),cache:'no-store'
+ });
+ if(!r.ok){let message=await r.text();try{const j=JSON.parse(message);message=j.message||message}catch(e){}throw Error('No se pudo publicar: '+message.slice(0,300))}
+ return r.json();
+}
+
+function datosFormularioCaja(){
+ const f=$('#dlg form');if(!f)return null;
+ const fd=Object.fromEntries([...new FormData(f)].filter(([k,v])=>typeof v==='string'));
+ if(!fd.name?.trim())throw Error('Escribe un nombre antes de guardar el borrador.');
+ return {name:fd.name.trim(),cat:fd.cat,st:+fd.st,closed:fd.closed,desc:fd.desc.trim(),tracking:fd.tracking.trim()};
+}
+let privateWork=null;
+/* Sugerencias privadas: productos publicados, cupiditos y productos de todas las cajas en borrador. */
+let draftCupiditos=[];
+const normCupidito=v=>String(v||'').trim().replace(/^@/,'').toLocaleLowerCase('es');
+async function cargarCupiditosParaBorradores(){
+ const matches=new Map();
+ const add=(nombre,plat)=>{const key=normCupidito(nombre);if(!key)return;const old=matches.get(key);if(!old)matches.set(key,{nombre:String(nombre).trim(),plat:plat||''});else if(!old.plat&&plat)old.plat=plat};
+ (D.prods||[]).forEach(p=>add(p.buyer,p.plat));
+ try{
+  const r=await fetch(AUTH_URL+'/rest/v1/cupiditos?select=nombre,alias&limit=1000',{headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token}});
+  if(r.ok)(await r.json()).forEach(c=>add(c.alias||c.nombre,''));
+ }catch(e){console.warn('No se pudieron consultar los cupiditos registrados',e)}
+ try{
+  const borradores=await listarBorradoresCaja();
+  borradores.forEach(b=>(b.contenido?.productos||[]).forEach(p=>add(p.buyer,p.plat)));
+ }catch(e){console.warn('No se pudieron consultar los cupiditos de borradores',e)}
+ (privateWork?.contenido?.productos||[]).forEach(p=>add(p.buyer,p.plat));
+ draftCupiditos=[...matches.values()].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+}
+function sugerenciasCupiditos(valor){
+ const el=$('#draftBuyerSuggestions');if(!el)return;
+ const q=normCupidito(valor);
+ const matches=q?draftCupiditos.filter(c=>normCupidito(c.nombre).includes(q)).slice(0,8):[];
+ el.innerHTML=matches.map((c,i)=>`<button type="button" class="sug" data-act="draftChooseCupidito" data-cupidito-index="${draftCupiditos.indexOf(c)}"><strong>${esc(c.nombre)}</strong>${c.plat?`<small>${esc(c.plat)}</small>`:''}</button>`).join('');
+ el.hidden=!matches.length;
+}
+
+function draftProductRows(){
+ const l=privateWork?.contenido?.productos||[];
+ const el=$('#draftProductRows');if(!el)return;
+ el.innerHTML=l.length?l.map((p,i)=>`<div class="row2"><div class="mn"><strong>${esc(p.nombre)}</strong><span class="meta">${esc(p.buyer||'Sin username')} · ${money(p.precio)} · ${esc(p.moneda||'MXN')}</span><label for="draft-logi-${i}">Estado logístico</label><select id="draft-logi-${i}" data-draft-logi="${i}" aria-label="Estado de ${esc(p.nombre)}">${opts(LOGI,p.logi??0)}</select></div><button type="button" class="btn sm" data-act="draftEditProduct" data-index="${i}">Editar</button><button type="button" class="btn sm dng" data-act="draftDeleteProduct" data-index="${i}">Quitar</button></div>`).join(''):'<p style="color:var(--t2)">Todavía no has añadido productos al borrador.</p>';
+ const count=$('#draftCount');if(count)count.textContent=l.length+' producto(s) en el borrador';
+}
+function collectDraftLogistics(){
+ if(!privateWork)throw Error('No hay borrador abierto.');
+ $$('[data-draft-logi]', $('#dlg')).forEach(el=>{
+  const i=Number(el.dataset.draftLogi),v=Number(el.value);
+  if(!Number.isInteger(i)||!privateWork.contenido.productos[i]||!Number.isInteger(v)||v<0||v>=LOGI.length)throw Error('Estado logístico inválido.');
+  privateWork.contenido.productos[i].logi=v;
+ });
+}
+async function verifyDraftSaved(id,expected){
+ const actual=await leerBorradorCompleto(id);
+ if(!actual||!Array.isArray(actual.productos)||actual.productos.length!==expected.productos.length)throw Error('No se pudo verificar el borrador en Supabase.');
+ const estados=new Map(actual.productos.map(p=>[p.id,Number(p.logi)]));
+ if(expected.productos.some(p=>!estados.has(p.id)||estados.get(p.id)!==Number(p.logi)))throw Error('Los estados guardados no coinciden. Intenta guardar de nuevo.');
+}
+async function guardarYVerificarBorrador(){
+ if(!privateWork)throw Error('Abre un borrador primero.');
+ const id=privateWork.id,contenido=structuredClone(privateWork.contenido);
+ await guardarBorradorCompleto(id,contenido);
+ await verifyDraftSaved(id,contenido);
+ draftStatus('Todos los estados verificados en Supabase ♡');
+}
+function draftStatus(msg,error=false){const el=$('#draftStatus');if(el){el.textContent=msg;el.style.color=error?'#8d2a45':'#1f5a27'}}
+async function persistPrivateWork(){if(!privateWork)throw Error('Abre un borrador primero.');await guardarBorradorCompleto(privateWork.id,privateWork.contenido);draftStatus('Guardado en Supabase ♡')}
+async function openPrivateWorkspace(id=null){
+ if(!await refreshAdmin())throw Error('Inicia sesión como administrador.');
+ const existing=id?await leerBorradorCompleto(id):null;
+ const b=id?box(id):null;
+ if(id&&!existing&&!b)throw Error('No se encontró este borrador.');
+ // Al editar una caja publicada sin borrador, cargar sus productos reales.
+ // Conservar los UUID originales permite que la RPC actualice, no duplique.
+ const publicados=b&&!existing?D.prods.filter(p=>p.box===id).map(p=>({
+  id:p.id,nombre:p.desc,buyer:p.buyer,plat:p.plat||'',
+  precio:p.price,moneda:'MXN',logi:p.logi,descripcion:''
+ })):[];
+ privateWork={id:id||crypto.randomUUID(),contenido:existing||{caja:b?{name:b.name,cat:b.cat,st:b.st,desc:b.desc||'',tracking:b.tracking||'',closed:b.closed||''}:{name:'',cat:D.cats.find(c=>!isEnv(c.id))?.id||'',st:0,desc:'',tracking:'',closed:''},productos:publicados}};
+ const w=privateWork.contenido;w.productos=Array.isArray(w.productos)?w.productos:[];
+ const v=w.caja||{};
+ dlg('Editor de borradores',`<div class="f"><div class="note"><strong>${b?'Borrador de caja publicada':'Caja todavía no publicada'}</strong><p style="margin:4px 0">Los productos aquí no aparecen en la masterlist pública. Guardar conserva el trabajo en Supabase.</p></div>${fld('name','Nombre de la caja',v.name||'','text','required')}<div><label for="desc">Descripción</label><textarea name="desc" id="desc">${esc(v.desc||'')}</textarea></div>${fld('tracking','Guía',v.tracking||'')}${sel('cat','Categoría',D.cats.filter(c=>!isEnv(c.id)).map(c=>`<option value="${esc(c.id)}" ${c.id===v.cat?'selected':''}>${esc(c.name)}</option>`).join(''))}${sel('st','Estado',opts(BOX,v.st??0))}<div class="row sp"><h3>Productos</h3><button type="button" class="btn sm" data-act="draftAddProduct">+ Agregar producto</button></div><div class="row" style="align-items:end"><div style="flex:1;min-width:180px"><label for="draftBulkStatus">Cambiar todos los productos a</label><select id="draftBulkStatus">${opts(LOGI,0)}</select></div><button type="button" class="btn sm" data-act="draftApplyAll">Aplicar a todos</button></div><p style="font-size:.85rem;color:var(--t2)">Puedes cambiar varios estados aquí y guardarlos juntos. No se publican hasta que presiones «Publicar caja».</p><span id="draftCount" style="font-size:.85rem;color:var(--t2)"></span><div id="draftProductRows" class="lst"></div><p id="draftStatus" role="status" style="font-size:.9rem"></p>${err}<div class="row"><button type="button" class="btn pri" data-act="draftSaveAll">Guardar borrador privado ♡</button><button type="button" class="btn" data-act="draftPublish">Publicar caja ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.84rem;color:var(--t2)">Publicar hará visible la caja y sus productos. Los productos anteriores que no estén en el borrador se conservarán. Los productos existentes se cargan automáticamente al abrir una caja publicada. Las imágenes se añadirán después con Cloudflare R2.</p></div>`);
+ draftProductRows();
+}
+async function draftProductForm(index){
+ if(!privateWork)return;
+ collectDraftLogistics();
+ await cargarCupiditosParaBorradores();
+ // Conserva los cambios escritos en la caja mientras se abre el formulario de producto.
+ const f=$('#dlg form');if(f){const fd=Object.fromEntries(new FormData(f));privateWork.contenido.caja={name:String(fd.name||'').trim(),desc:String(fd.desc||'').trim(),tracking:String(fd.tracking||'').trim(),cat:fd.cat,st:+fd.st,closed:''}}
+ const p=privateWork.contenido.productos[index]||{};
+ dlg(index>=0?'Editar producto del borrador':'Agregar producto al borrador',`<div class="f">${fld('nombre','Nombre o descripción del producto',p.nombre||'','text','required')}${fld('buyer','Username del cupidito',p.buyer||'','text','autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel('plat','Plataforma',PLAT.map(x=>`<option ${p.plat===x?'selected':''}>${x}</option>`).join(''))}<div class="f2">${fld('precio','Precio',p.precio??'','number','min="0" step="0.01"')}${sel('moneda','Moneda',['MXN','KRW','JPY','USD'].map(x=>`<option ${p.moneda===x?'selected':''}>${x}</option>`).join(''))}</div>${sel('estado','Estado',LOGI.map((x,i)=>`<option value="${i}" ${p.logi===i?'selected':''}>${esc(x)}</option>`).join(''))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion||'')}</textarea></div><p class="note">Las imágenes se integrarán cuando Cloudflare R2 esté conectado. No se perderán imágenes porque todavía no se admiten en este editor.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,async fd=>{
+ if(!fd.nombre.trim())return 'Escribe el nombre del producto.';
+ const o={...p,id:p.id||crypto.randomUUID(),nombre:fd.nombre.trim(),buyer:fd.buyer.trim(),plat:fd.plat,precio:fd.precio===''?null:Number(fd.precio),moneda:fd.moneda,logi:+fd.estado,descripcion:fd.descripcion.trim()};
+ if(o.precio!==null&&(!Number.isFinite(o.precio)||o.precio<0))return 'Precio inválido.';
+ if(index>=0)privateWork.contenido.productos[index]=o;else privateWork.contenido.productos.push(o);
+ await persistPrivateWork();
+ // El formulario se cerrará y se abrirá el espacio de trabajo.
+ setTimeout(()=>openPrivateWorkspace(privateWork.id).catch(e=>toast(e.message,1)),0);
+ return 0;
+ });
+}
+async function eBox(id){
+ const b=box(id)||{};
+ if(!D.cats.length)return toast('Crea una categoría primero.',1);
+ let draft=null;
+ if(id){try{draft=await leerBorradorCaja(id)}catch(e){toast('No se pudo cargar el borrador: '+e.message,1);return}}
+ const v=draft?{...b,...draft}:b;
+ const draftControls=id?`<div class="note"><strong>${draft?'Borrador privado recuperado':'Edición de caja'}</strong><p style="margin:4px 0;font-size:.88rem">Guardar borrador no modifica la caja pública. Publicar cambios sí actualiza la caja visible.</p><button type="button" class="btn sm" data-act="saveBoxDraft" data-id="${esc(id)}">Guardar borrador privado ♡</button> <button type="button" class="btn sm" data-act="openBoxWorkspace" data-id="${esc(id)}">Editar productos en borrador</button><p id="draftStatus" role="status" style="margin:4px 0"></p></div>`:'';
+ dlg(id?'Editar caja':'Nueva caja',`<div class="f">${draftControls}${fld('name','Nombre',v.name,'text','required')}<div><label for="desc">Descripción de la caja (opcional)</label><textarea id="desc" name="desc" maxlength="1500" placeholder="Información de esta caja">${esc(v.desc||'')}</textarea></div>${fld('tracking','Guía de la caja (opcional)',v.tracking||'','text','maxlength="160" placeholder="Ej. EN549784231JP"')}${sel('cat','Categoría',D.cats.filter(c=>!isEnv(c.id)).map(c=>`<option value="${c.id}" ${v.cat===c.id?'selected':''}>${esc(c.name)}</option>`).join(''))}${sel('st','Estado',opts(BOX,v.st??0))}${fld('closed','Fecha de cierre (opcional)',v.closed,'date')}${err}${id?'<div class="row" style="margin-top:6px"><button class="btn pri">Publicar cambios</button><button type="button" class="btn" data-act="close">Cancelar</button></div>':foot}</div>`,async fd=>{
+  if(!fd.name.trim())return 'Escribe un nombre.';
+  const o={name:fd.name.trim(),cat:fd.cat,st:+fd.st,closed:fd.closed,desc:fd.desc.trim(),tracking:fd.tracking.trim()};
+  if(id){
+   const current=await leerBorradorCompleto(id);
+   if(current?.productos?.length)throw Error('Esta caja tiene productos pendientes en su borrador. Para evitar una publicación parcial, primero configuraremos la publicación conjunta.');
+   await actualizarCajaSupabase(id,o);Object.assign(b,o);
+   try{await borrarBorradorCaja(id)}catch(e){console.warn('No se pudo limpiar el borrador',e)}
+  }else{
+   const guardada=await guardarCajaSupabase(o);
+   if(!guardada?.id)throw Error('Supabase no devolvió el identificador de la caja.');
+   D.boxes.push({id:guardada.id,created:(guardada.created_at||new Date().toISOString()).slice(0,10),...o});
+  }
+  save();toast(id?'Cambios publicados':'Caja guardada');return 0;
+ });
+}
+
+/* ===== Borradores privados de cargos por producto ===== */
+let chargesWork=null;
+let publishedCharges={};
+async function chargesDraftRequest(path,options={}){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+ const r=await fetch(AUTH_URL+'/rest/v1/borradores_cargos'+path,{
+  ...options,headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})},cache:'no-store'
+ });
+ if(!r.ok)throw Error('Supabase ('+r.status+'): '+(await r.text()).slice(0,220));
+ return r;
+}
+async function openChargesDraft(bid){
+ const b=box(bid);if(!b)throw Error('No encontramos la caja.');
+ const products=D.prods.filter(p=>p.box===bid);
+ if(!products.length)throw Error('Esta caja todavía no tiene productos publicados.');
+ const r=await chargesDraftRequest('?select=contenido&caja_id=eq.'+encodeURIComponent(bid)+'&limit=1');
+ const rows=await r.json();const saved=rows[0]?.contenido?.productos||{};
+ chargesWork={bid,values:JSON.parse(JSON.stringify(saved)),products};
+ const fields=products.map(p=>{
+  const v=chargesWork.values[p.id]||{};
+  const inp=(key,label)=>`<div><label for="ch-${key}-${p.id}">${label} (MXN)</label><input type="number" inputmode="decimal" min="0" step="0.01" id="ch-${key}-${p.id}" data-charge-id="${esc(p.id)}" data-charge-key="${key}" value="${v[key]??''}" placeholder="0.00"></div>`;
+  return `<div class="card" style="padding:14px"><strong>${esc(p.desc||'Producto sin descripción')}</strong><p style="margin:2px 0 12px;color:var(--t2)">${esc(p.buyer)} · ${money(p.price)}</p><div class="f2">${inp('ems','EMS')}${inp('aduana','Aduana')}</div><div style="margin-top:10px">${inp('otros','Otros cargos')}</div></div>`;
+ }).join('');
+ dlg('Borrador de cargos · '+b.name,`<div class="f"><div class="note">Los cambios son privados y no alteran los cargos publicados. Deja un campo vacío si aún no conoces su importe.</div>${fields}<p id="chargesDraftStatus" role="status" class="err"></p><div class="row"><button type="button" class="btn pri" data-act="saveChargesDraft">Guardar borrador en Supabase ♡</button><button type="button" class="btn" data-act="publishChargesDraft">Publicar cargos ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.85rem;color:var(--t2)">Publicar hará visibles los importes. Cada concepto nuevo quedará pendiente de pago.</p></div>`);
+}
+async function saveChargesDraft(){
+ if(!chargesWork)throw Error('No hay un borrador abierto.');
+ const values={...chargesWork.values};
+ for(const p of chargesWork.products){
+  const v={...(values[p.id]||{})};
+  for(const key of ['ems','aduana','otros']){
+   const el=$('#dlg [data-charge-id="'+p.id+'"][data-charge-key="'+key+'"]');
+   const raw=el?.value.trim()||'';
+   if(raw===''){delete v[key];continue}
+   const n=Number(raw);if(!Number.isFinite(n)||n<0||!/^\d+(?:\.\d{1,2})?$/.test(raw))throw Error('Revisa el importe de '+(p.desc||'producto')+' ('+key+').');
+   v[key]=n;
+  }
+  if(Object.keys(v).length)values[p.id]=v;else delete values[p.id];
+ }
+ await chargesDraftRequest('?on_conflict=caja_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({caja_id:chargesWork.bid,contenido:{productos:values},actualizado_en:new Date().toISOString()})});
+ chargesWork.values=values;
+ const status=$('#chargesDraftStatus');if(status){status.style.color='#286b44';status.textContent='Borrador guardado en Supabase ♡'}
+}
+async function sincronizarCargosPublicados(){
+ const r=await fetch(AUTH_URL+'/rest/v1/cargos_productos?select=producto_id,ems,aduana,otros,ems_pagado,aduana_pagada,otros_pagados&limit=10000',{headers:{apikey:AUTH_PUBLISHABLE_KEY},cache:'no-store'});
+ if(!r.ok)throw Error('No se pudieron consultar los cargos publicados ('+r.status+').');
+ const rows=await r.json();publishedCharges=Object.fromEntries(rows.map(x=>[x.producto_id,x]));
+}
+async function publicarCargosBorrador(){
+ if(!chargesWork)throw Error('Abre un borrador primero.');
+ // Guardar los cambios aún no guardados antes de confirmar la publicación.
+ await saveChargesDraft();
+ const bid=chargesWork.bid;
+ if(!confirm('¿Publicar los cargos de esta caja?\n\nLos importes serán visibles públicamente. Los pagos nuevos quedarán pendientes.'))return;
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+ const r=await fetch(AUTH_URL+'/rest/v1/rpc/publicar_borrador_cargos',{
+  method:'POST',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json'},
+  body:JSON.stringify({p_caja_id:bid}),cache:'no-store'
+ });
+ if(!r.ok)throw Error('No se pudieron publicar los cargos: '+(await r.text()).slice(0,350));
+ await sincronizarCargosPublicados();
+ chargesWork=null;$('#dlg').close();await route();toast('Cargos publicados correctamente ♡');
+}
+async function cambiarEstadoCargo(productoId,col,marcarPagado){
+ const permitidas=['ems_pagado','aduana_pagada','otros_pagados'];
+ if(!permitidas.includes(col))throw Error('Estado de pago inválido.');
+ const actual=publishedCharges[productoId];
+ const campo={ems_pagado:'ems',aduana_pagada:'aduana',otros_pagados:'otros'}[col];
+ if(!actual||Number(actual[campo])<=0)throw Error('Este concepto no tiene un cargo publicado.');
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+ const r=await fetch(AUTH_URL+'/rest/v1/cargos_productos?producto_id=eq.'+encodeURIComponent(productoId),{
+  method:'PATCH',
+  headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json',Prefer:'return=representation'},
+  body:JSON.stringify({[col]:marcarPagado,actualizado_en:new Date().toISOString()}),
+  cache:'no-store'
+ });
+ if(!r.ok)throw Error('No se pudo actualizar el pago: '+(await r.text()).slice(0,250));
+ const rows=await r.json();
+ if(rows.length!==1)throw Error('No se confirmó la actualización del pago.');
+ await sincronizarCargosPublicados();
+ await route();
+ toast(marcarPagado?'Cargo marcado como pagado ♡':'Cargo marcado como pendiente ♡');
+}
 function eCg(bid,u){const c=(D.cargos[bid]||{})[u]||{},x=charges(bid).find(k=>k.buyer===u);dlg('Cargos de '+u,`<p style="color:var(--t2)">Suma de productos: EMS ${pm(x.ems)} · Aduana ${pm(x.adu)}</p><div class="f"><div class="f2">${fld('emsAdj','Ajuste EMS (MXN)',c.emsAdj||0,'number','step="0.01"')}${sel('emsSt','Pago EMS',opts(PAY,c.emsSt??0))}</div><div class="f2">${fld('aduAdj','Ajuste aduana (MXN)',c.aduAdj||0,'number','step="0.01"')}${sel('aduSt','Pago aduana',opts(PAY,c.aduSt??0))}</div>${err}${foot}</div>`,fd=>{(D.cargos[bid]=D.cargos[bid]||{})[u]={emsAdj:+fd.emsAdj||0,aduAdj:+fd.aduAdj||0,emsSt:+fd.emsSt,aduSt:+fd.aduSt};save();toast('Cargos actualizados');return 0})}
 function confirmDlg(msg,fn){dlg('¿Confirmar?',`<p>${esc(msg)}</p><div class="row"><button class="btn dng">Sí, eliminar</button><button type="button" class="btn" data-act="close">Cancelar</button></div>`,async()=>{await fn();return 0})}
 /* ===== Autenticación administrativa ===== */
@@ -349,7 +732,7 @@ async function guardarCajaSupabase(caja) {
       nombre: caja.name,
       descripcion: caja.desc || null,
       guia: caja.tracking || null,
-      estado: caja.st || 'abierta'
+      estado: BOX[Number(caja.st)] || 'Abierta'
     })
   });
 
@@ -361,25 +744,119 @@ async function guardarCajaSupabase(caja) {
   const datos = await respuesta.json();
   return datos[0];
 }
+async function actualizarCajaSupabase(id,caja){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Debes iniciar sesión como administrador.');
+ const r=await fetch(AUTH_URL+'/rest/v1/cajas?id=eq.'+encodeURIComponent(id),{
+  method:'PATCH',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json',Prefer:'return=representation'},
+  body:JSON.stringify({categoria_id:caja.cat,nombre:caja.name,descripcion:caja.desc||null,guia:caja.tracking||null,estado:BOX[caja.st]||'Abierta'})
+ });
+ if(!r.ok)throw Error('No se pudo actualizar la caja: '+await r.text());
+ const rows=await r.json();if(!rows.length)throw Error('No se encontró la caja en Supabase o faltan permisos.');
+ return rows[0];
+}
+async function sincronizarCajasSupabase(){
+ const cajas=await cargarCajasSupabase();
+ if(!cajas)return;
+ D.boxes=cajas.map(c=>({id:c.id,cat:c.categoria_id,name:c.nombre,desc:c.descripcion||'',tracking:c.guia||'',st:Math.max(0,BOX.findIndex(x=>x.toLowerCase()===(c.estado||'').toLowerCase())),created:(c.created_at||'').slice(0,10),closed:''}));
+}
+/* Productos públicos: nunca consultar borradores desde las páginas públicas. */
+async function sincronizarProductosSupabase(){
+ const headers={apikey:AUTH_PUBLISHABLE_KEY};
+ const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma&limit=10000',{headers,cache:'no-store'});
+ if(!r.ok)throw Error('No se pudieron cargar los productos públicos ('+r.status+').');
+ const productos=await r.json();
+ let names={};
+ if(productos.some(p=>p.cupidito_id)){
+  const c=await fetch(AUTH_URL+'/rest/v1/cupiditos_publicos?select=*&limit=10000',{headers,cache:'no-store'});
+  if(!c.ok)throw Error('No se pudo cargar la lista pública de cupiditos ('+c.status+').');
+  const rows=await c.json();
+  for(const x of rows){const id=x.id||x.cupidito_id;if(id)names[id]=x.nombre||x.username||x.alias||''}
+ }
+ const states=['comprado','asegurado','en dirección coreana','en dirección japonesa','en camino a méxico','en méxico','entregado','stock'];
+ D.prods=productos.map(p=>({
+  id:p.id,box:p.caja_id,buyer:names[p.cupidito_id]||'Cupidito',desc:p.nombre||p.descripcion||'',
+  plat:p.plataforma||'',price:Number(p.precio)||0,logi:Math.max(0,states.indexOf(String(p.estado||'comprado').toLowerCase())),
+  ems:0,adu:0,imgId:'',pay:0
+ }));
+}
 /* ===== Router ===== */
 async function route(){const h=location.hash.slice(1)||'/',p=h.split('/').filter(Boolean),app=$('#app');let html;
- if(!p.length)html=await vHome2();else if(p[0]==='categorias')html=vCats();else if(p[0]==='cat')html=vCat(p[1]);else if(p[0]==='box')html=vBox(p[1],p[2]==='u'?'':p[2],p[2]==='u'?decodeURIComponent(p[3]||''):'');else if(p[0]==='buscar')html=vFind(decodeURIComponent(p[1]||''));else if(p[0]==='admin'){if(adminReady&&!await refreshAdmin())adminReady=false;html=adminReady?await vAdmin(p[1],p[2]):loginView();}else html=nf();
+ if(!p.length){try{await sincronizarEnviosSupabase()}catch(e){console.warn('Envíos no disponibles:',e)}html=await vHome2();}else if(p[0]==='categorias')html=vCats();else if(p[0]==='cat'){if(isEnv(p[1])){try{await sincronizarEnviosSupabase()}catch(e){console.warn(e);D.envios=[];toast('No se pudieron cargar los envíos: '+e.message,1)}}html=vCat(p[1]);}else if(p[0]==='box')html=vBox(p[1],p[2]==='u'?'':p[2],p[2]==='u'?decodeURIComponent(p[3]||''):'');else if(p[0]==='buscar'){try{await sincronizarEnviosSupabase()}catch(e){console.warn('Envíos no disponibles:',e)}html=vFind(decodeURIComponent(p[1]||''));}else if(p[0]==='admin'){if(adminReady&&!await refreshAdmin())adminReady=false;html=adminReady?await vAdmin(p[1],p[2]):loginView();}else html=nf();
  // El botón vuelve al nivel anterior dentro de Dearcupid, sin salir del sitio.
  const back=p[0]==='admin'?(p[2]?'#/admin/cupiditos':p[1]?'#/admin':'#/'):p[0]==='box'?(p[2]?'#/box/'+p[1]:'#/cat/'+(box(p[1])?.cat||'c1')):p[0]==='cat'||p[0]==='categorias'||p[0]==='buscar'?'#/':'#/';
  $('#hl').href=back;
  document.body.classList.toggle('home',!p.length);app.innerHTML=html;app.style.animation='none';app.offsetWidth;app.style.animation='';hydrate();
- $$('nav a[data-n]').forEach(a=>{const n=a.dataset.n,on=n==='home'&&!p.length||n==='categorias'&&p[0]==='categorias'||n==='admin'&&p[0]==='admin'||n==='env'&&p[1]==='c5';on?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')});
+ $$('nav a[data-n]').forEach(a=>{const n=a.dataset.n,on=n==='home'&&!p.length||n==='categorias'&&p[0]==='categorias'||n==='admin'&&p[0]==='admin'||n==='env'&&p[0]==='cat'&&isEnv(p[1]);on?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')});
  if(S.fromNav){scrollTo(0,0);app.focus({preventScroll:true})}}
 const rerender=()=>route();
 function relist(){const l=$('#list');if(l){const adm=location.hash.startsWith('#/admin');l.innerHTML=plist(adm?D.prods.filter(p=>!S.ab||p.box===S.ab):D.prods.filter(p=>p.box===S.box),adm);hydrate()}}
 addEventListener('hashchange',()=>{S.fromNav=1;route()});
 /* ===== Eventos ===== */
+document.addEventListener('input',e=>{if(e.target?.matches('#dlg [name="buyer"]')&&privateWork)sugerenciasCupiditos(e.target.value)});
+document.addEventListener('input',e=>{if(e.target?.id==='buyer'&&$('#shipBuyerSuggestions'))sugerenciasCupiditosEnvio(e.target.value)});
 document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]');if(!a)return;const ac=a.dataset.act,id=a.dataset.id;if(ac!=='terms'&&a.tagName==='A')e.preventDefault();
  if(ac==='logout'){adminReady=false;adminSession=null;toast('Sesión cerrada');location.hash='#/';return}
  if(location.hash.startsWith('#/admin')&&!adminReady&&!['close'].includes(ac))return;
  switch(ac){
+ case'chooseShipBuyer':{const field=$('#dlg #buyer');if(field){field.value=a.dataset.u||'';const el=$('#shipBuyerSuggestions');if(el)el.innerHTML='';field.focus()}break;}
+  case'saveBoxDraft':{
+   const btn=a;btn.disabled=true;
+   try{const data=datosFormularioCaja();await guardarBorradorCaja(id,data);draftStatus('Borrador guardado en Supabase ♡')}
+   catch(ex){toast(ex.message||'No se pudo guardar el borrador',1)}
+   finally{btn.disabled=false}
+   break;
+  }
+  case'toggleChargePaid':{const btn=a;btn.disabled=true;try{await cambiarEstadoCargo(id,a.dataset.chargeCol,a.dataset.paid!=='1')}catch(ex){toast(ex.message,1)}finally{btn.disabled=false}break;}
+  case'openChargesDraft':try{await openChargesDraft(id)}catch(ex){toast(ex.message,1)}break;
+  case'publishChargesDraft':{const btn=a;btn.disabled=true;try{await publicarCargosBorrador()}catch(ex){const el=$('#chargesDraftStatus');if(el)el.textContent=ex.message;else toast(ex.message,1)}finally{btn.disabled=false}break;}
+  case'saveChargesDraft':{const btn=a;btn.disabled=true;try{await saveChargesDraft()}catch(ex){const el=$('#chargesDraftStatus');if(el)el.textContent=ex.message;else toast(ex.message,1)}finally{btn.disabled=false}break;}
+  case'newPrivateBox':try{await openPrivateWorkspace()}catch(ex){toast(ex.message,1)}break;
+  case'editPrivateBox':case'openBoxWorkspace':try{await openPrivateWorkspace(id)}catch(ex){toast(ex.message,1)}break;
+  case'draftApplyAll':{
+   try{const v=Number($('#draftBulkStatus')?.value);if(!Number.isInteger(v)||v<0||v>=LOGI.length)throw Error('Estado inválido.');
+    privateWork.contenido.productos.forEach(p=>p.logi=v);draftProductRows();draftStatus('Estados preparados. Presiona Guardar borrador privado ♡ para guardarlos.');
+   }catch(ex){draftStatus(ex.message,true)}break;
+  }
+  case'draftSaveAll':{
+   try{const f=$('#dlg form');const fd=Object.fromEntries(new FormData(f));if(!String(fd.name||'').trim())throw Error('Escribe un nombre para la caja.');privateWork.contenido.caja={name:String(fd.name).trim(),cat:fd.cat,desc:String(fd.desc||'').trim(),tracking:String(fd.tracking||'').trim(),st:+fd.st,closed:''};collectDraftLogistics();await guardarYVerificarBorrador()}catch(ex){draftStatus(ex.message,true)}break;
+  }
+  case'draftPublish':{
+   const btn=a;btn.disabled=true;
+   try{
+    const f=$('#dlg form');if(!f||!privateWork)throw Error('Abre el editor primero.');
+    const fd=Object.fromEntries(new FormData(f));
+    if(!String(fd.name||'').trim())throw Error('Escribe un nombre para la caja.');
+    privateWork.contenido.caja={name:String(fd.name).trim(),cat:fd.cat,desc:String(fd.desc||'').trim(),tracking:String(fd.tracking||'').trim(),st:+fd.st,closed:''};
+    collectDraftLogistics();
+    const esperados=privateWork.contenido.productos.map(p=>({id:p.id,logi:Number(p.logi)}));
+    const n=esperados.length;
+    if(!confirm('¿Publicar «'+privateWork.contenido.caja.name+'» con '+n+' producto(s)?\n\nEsta acción hará visibles los cambios al público.'))break;
+    await guardarYVerificarBorrador();
+    const result=await publicarBorradorCaja(privateWork.id);
+    await sincronizarCajasSupabase();
+    await sincronizarProductosSupabase();
+    const actuales=new Map(D.prods.map(p=>[p.id,Number(p.logi)]));
+    const faltantes=esperados.filter(p=>actuales.get(p.id)!==p.logi);
+    if(faltantes.length)throw Error('La publicación terminó, pero '+faltantes.length+' estado(s) no coinciden con Supabase. Recarga antes de intentar otra vez.');
+    privateWork=null;$('#dlg').close();await route();
+    toast('Caja publicada ♡ '+(result.productos_procesados||0)+' productos procesados');
+   }catch(ex){draftStatus(ex.message||'No se pudo publicar',true);toast(ex.message||'No se pudo publicar',1)}
+   finally{btn.disabled=false}
+   break;
+  }
+  case'draftAddProduct':try{await draftProductForm(-1)}catch(ex){toast(ex.message,1)}break;
+  case'draftEditProduct':try{await draftProductForm(+a.dataset.index)}catch(ex){toast(ex.message,1)}break;
+  case'draftDeleteProduct':try{privateWork.contenido.productos.splice(+a.dataset.index,1);await persistPrivateWork();draftProductRows()}catch(ex){draftStatus(ex.message,true)}break;
+  case'draftChooseCupidito':{
+   const c=draftCupiditos[Number(a.dataset.cupiditoIndex)];
+   if(c){const input=$('#dlg [name="buyer"]');if(input)input.value=c.nombre;
+    if(c.plat){const plat=$('#dlg [name="plat"]');if(plat&&[...plat.options].some(o=>o.value===c.plat))plat.value=c.plat}
+    sugerenciasCupiditos('');}
+   break;
+  }
+  case'draftBack':try{await guardarBorradorCompleto(privateWork.id,privateWork.contenido);await openPrivateWorkspace(privateWork.id)}catch(ex){toast(ex.message,1)}break;
   case'fontRemove':await removeCustomFont();break;
-  case'themeSave':saveTheme();toast('Apariencia guardada');break;
+  case'themeSave':try{await publicarApariencia()}catch(ex){toast(ex.message,1);const el=$('#themeError');if(el)el.textContent=ex.message}break;
   case'themeExport':exportTheme();break;
   case'themeImport':$('#themeFile').click();break;
   case'themeReset':confirmDlg('¿Restablecer todos los colores, fuentes, tamaños y partículas?',resetTheme);break;
@@ -390,7 +867,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]
  case'page':S.page=+a.dataset.p;relist();scrollTo({top:0});break;
  case'clear':S={...S,q:'',lg:'',pay:'',page:1};rerender();break;
  case'eship':eShip(id);break;
- case'dship':confirmDlg('¿Eliminar este envío nacional y su collage?',async()=>{const sh=D.envios.find(x=>x.id===id);if(sh?.imgId){try{await imgStore.del(sh.imgId)}catch(e){}freeUrl(sh.imgId)}D.envios=D.envios.filter(x=>x.id!==id);save();toast('Envío eliminado');rerender()});break;
+ case'dship':confirmDlg('¿Eliminar este envío nacional de Supabase?',async()=>{await eliminarEnvioSupabase(id);toast('Envío eliminado de Supabase');rerender()});break;
  case'eprod':prodForm(id,a.dataset.u?{buyer:a.dataset.u,plat:a.dataset.p,box:a.dataset.b}:undefined);break;
  case'dprod':confirmDlg('Se eliminará este producto y su foto.',async()=>{const p=D.prods.find(x=>x.id===id);if(p.imgId){try{await imgStore.del(p.imgId)}catch(e){}freeUrl(p.imgId)}D.prods=D.prods.filter(x=>x.id!==id);save();toast('Producto eliminado');rerender()});break;
  case'ecat':eCat(id);break;case'ebox':eBox(id);break;case'ecg':eCg(a.dataset.b,a.dataset.u);break;
@@ -410,26 +887,94 @@ document.addEventListener('submit',async e=>{const f=e.target.dataset.f;if(!f)re
  if(f==='login'){const er=$('#loginError');try{await loginAdmin(e.target.elements.email.value,e.target.elements.password.value);toast('Sesión iniciada');await route()}catch(x){if(er)er.textContent=x.message||'No se pudo iniciar sesión.'}return}
  if(f!=='find'&&f!=='login'&&!adminReady)return;
  if(f==='find')homeFind();
- if(f==='notices'){D.notices=$('#nt').value.split('\n').map(s=>s.trim()).filter(Boolean);save();toast('Avisos guardados')}
- if(f==='dlg'){const fd=Object.fromEntries([...new FormData(e.target)].filter(([k,v])=>typeof v==='string'));const r=await onSub(fd);if(r){const er=$('#er');if(er)er.textContent=r;else toast(String(r),1);return}$('#dlg').close();rerender()}});
+ if(f==='dlg'){
+  const form=e.target,submit=form.querySelector('button[type="submit"],button:not([type])');
+  const er=form.querySelector('#er');
+  if(submit?.disabled)return;
+  const fd=Object.fromEntries([...new FormData(form)].filter(([k,v])=>typeof v==='string'));
+  if(er)er.textContent='';
+  const original=submit?.textContent;
+  if(submit){submit.disabled=true;submit.textContent='Guardando…';}
+  try{
+    const r=await onSub(fd);
+    if(r){if(er)er.textContent=String(r);else toast(String(r),1);return;}
+    $('#dlg').close();await rerender();
+  }catch(error){
+    console.error('Error al guardar:',error);
+    const message=error?.message||'No se pudo guardar. Inténtalo de nuevo.';
+    if(er)er.textContent=message;
+    toast(message,1);
+  }finally{
+    if(submit){submit.disabled=false;submit.textContent=original;}
+  }
+ }
+});
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset.theme){setThemeField(t.dataset.theme,t.value);const o=$('#to-'+t.dataset.theme);if(o)o.textContent=t.value+(themeRange.find(x=>x[0]===t.dataset.theme)?.[5]||'');}if(t.id==='shipq'){$('#shiplist').innerHTML=shipRows(D.envios.filter(x=>((x.buyer||x.name||'')+' '+(x.carrier||'')+' '+(x.tracking||x.reference||'')).toLowerCase().includes(t.value.toLowerCase())))}if(t.id==='hq')homeFind();if(t.id==='buyer')buyerSug();if(t.id==='cq')$('#cl').innerHTML=cupRows(CUP,t.value);if(t.id==='q'){S.q=t.value;S.page=1;relist()}if(t.id==='lsz'){const v=+t.value;try{localStorage.setItem('dc_logo_w',v)}catch(x){}applyLogoW();$('#lszv').textContent=v+'px';$('#lpv').style.width=v+'px'}});
 document.addEventListener('change',async e=>{const t=e.target;if(t.id==='themePreset'&&t.value){T={...T,...themePresets[t.value]};applyTheme();saveTheme();rerender();return}if(t.id==='customFontFile'&&t.files[0]){await uploadCustomFont(t.files[0]);return}if(t.id==='themeFile'&&t.files[0]){await importTheme(t.files[0]);return}
  if(t.id==='fl'){S.lg=t.value;S.page=1;relist()}if(t.id==='fp'){S.pay=t.value;S.page=1;relist()}if(t.id==='so'){S.sort=t.value;relist()}if(t.id==='cb'){S.cb=t.value;rerender()}if(t.id==='ab'){S.ab=t.value;S.page=1;rerender()}
  if(t.id==='pf'){const f=t.files[0],er=$('#er');if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)){er.textContent='Formato no válido. Usa JPG, PNG o WebP.';t.value='';return}if(f.size>8*1048576){er.textContent='La foto pesa más de 8 MB.';t.value='';return}er.textContent='';pend.blob=await compress(f,pend.max||1200);pend.rm=false;setPv(URL.createObjectURL(pend.blob))}
  if(t.id==='bf'){const f=t.files[0];if(f&&f.type.startsWith('image/')){const d=t.closest('.drop'),i=d.querySelector('img')||document.createElement('img');i.src=URL.createObjectURL(f);i.alt='Vista previa del nuevo banner';d.prepend(i)}}if(t.id==='lf'){const f=t.files[0];if(f&&f.type==='image/png'){const i=$('.drop img')||document.createElement('img');i.src=URL.createObjectURL(f);i.alt='Vista previa del nuevo logo';$('.drop').prepend(i)}}});
-/* ===== Partículas configurables ===== */
-(()=>{const c=document.createElement('canvas');c.id='stars';c.setAttribute('aria-hidden','true');document.body.prepend(c);const x=c.getContext('2d'),rm=matchMedia('(prefers-reduced-motion:reduce)');let W=0,H=0,A=[],running=false,token=0;
-function size(){const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0)}
-function init(){const n=Math.min(160,Math.max(0,Math.round(T.particleCount)));A=Array.from({length:n},()=>{const r=Math.max(2,T.particleSize)*(.5+Math.random()*.9),a=Math.random()*Math.PI*2;return{x:Math.random()*W,y:Math.random()*H,r,dx:Math.cos(a),dy:Math.sin(a),rot:Math.random()*6.28,vr:(Math.random()-.5)*.008,color:[T.particleColor,T.particleSecond,T.particleThird][Math.random()*3|0],opacity:.4+Math.random()*.6,shape:T.particleShape==='mix'?['heart','star','circle','sparkle'][Math.random()*4|0]:T.particleShape}})}
+/* ===== Partículas continuas: un solo ciclo, sin reinicios al cambiar de vista ===== */
+(()=>{
+const c=document.createElement('canvas');c.id='stars';c.setAttribute('aria-hidden','true');document.body.prepend(c);
+const x=c.getContext('2d'),rm=matchMedia('(prefers-reduced-motion:reduce)');
+let W=0,H=0,A=[],raf=0,last=0;
+function size(){
+ const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight),oldW=W,oldH=H;
+ W=w;H=h;const d=Math.min(devicePixelRatio||1,2);
+ c.width=Math.round(W*d);c.height=Math.round(H*d);x.setTransform(d,0,0,d,0,0);
+ if(oldW&&oldH)for(const s of A){s.x=s.x/oldW*W;s.y=s.y/oldH*H}
+}
+function particle(){
+ const r=Math.max(2,T.particleSize)*(.5+Math.random()*.9),a=Math.random()*Math.PI*2;
+ return{x:Math.random()*W,y:Math.random()*H,r,dx:Math.cos(a),dy:Math.sin(a),rot:Math.random()*6.28,vr:(Math.random()-.5)*.008,color:[T.particleColor,T.particleSecond,T.particleThird][Math.random()*3|0],opacity:.4+Math.random()*.6,shape:T.particleShape==='mix'?['heart','star','circle','sparkle'][Math.random()*4|0]:T.particleShape};
+}
+function sync(){
+ const n=T.particles?Math.min(160,Math.max(0,Math.round(T.particleCount))):0;
+ while(A.length<n)A.push(particle());
+ if(A.length>n)A.length=n;
+ // Los cambios de apariencia no reinician posiciones ni velocidades.
+}
 function draw(s){const r=s.r;x.save();x.translate(s.x,s.y);x.rotate(s.rot);x.fillStyle=s.color;x.strokeStyle=s.color;x.globalAlpha=s.opacity*T.particleOpacity/100;x.beginPath();if(s.shape==='circle'){x.arc(0,0,r*.6,0,Math.PI*2);x.fill()}else if(s.shape==='star'){for(let j=0;j<10;j++){const a=-Math.PI/2+j*Math.PI/5,rr=j%2?r*.42:r;x.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}x.closePath();x.fill()}else if(s.shape==='sparkle'){x.moveTo(0,-r);x.quadraticCurveTo(r*.13,-r*.13,r,0);x.quadraticCurveTo(r*.13,r*.13,0,r);x.quadraticCurveTo(-r*.13,r*.13,-r,0);x.quadraticCurveTo(-r*.13,-r*.13,0,-r);x.fill()}else{x.moveTo(0,r*.85);x.bezierCurveTo(-r*1.3,r*.1,-r,-r,0,-r*.35);x.bezierCurveTo(r,-r,r*1.3,r*.1,0,r*.85);x.fill()}x.restore()}
-function frame(t){if(!running)return;x.clearRect(0,0,W,H);if(T.particles){for(const s of A){if(!rm.matches&&T.particleDrift&&T.particleSpeed>0){const speed=T.particleSpeed/100;s.x+=s.dx*speed;s.y+=s.dy*speed;s.rot+=s.vr*speed;if(s.x<-s.r)s.x=W+s.r;if(s.x>W+s.r)s.x=-s.r;if(s.y<-s.r)s.y=H+s.r;if(s.y>H+s.r)s.y=-s.r}draw(s)}}if(!rm.matches&&!document.hidden&&T.particleDrift&&T.particleSpeed>0)requestAnimationFrame(frame);else running=false}
-function refresh(){size();init();running=false;x.clearRect(0,0,W,H);running=true;requestAnimationFrame(frame)}
-addEventListener('dc-theme',refresh);addEventListener('resize',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});rm.addEventListener?.('change',refresh);refresh()})();
+function frame(t){
+ raf=0;
+ // Tiempo real entre cuadros, limitado para evitar saltos tras cambiar de pestaña.
+ const dt=last?Math.min(40,Math.max(0,t-last)):16.67;last=t;
+ x.clearRect(0,0,W,H);
+ if(T.particles){
+  const moving=!rm.matches&&T.particleDrift&&T.particleSpeed>0;
+  const step=dt/16.67*Math.min(1.5,Math.max(0,T.particleSpeed/100));
+  for(const s of A){
+   if(moving){
+    s.x+=s.dx*step;s.y+=s.dy*step;s.rot+=s.vr*step;
+    if(s.x<-s.r)s.x=W+s.r;else if(s.x>W+s.r)s.x=-s.r;
+    if(s.y<-s.r)s.y=H+s.r;else if(s.y>H+s.r)s.y=-s.r;
+   }
+   draw(s);
+  }
+ }
+ if(!document.hidden)raf=requestAnimationFrame(frame);
+}
+function start(){if(document.hidden||raf)return;last=0;raf=requestAnimationFrame(frame)}
+function onTheme(){sync();start()}
+size();sync();start();
+addEventListener('dc-theme',onTheme);
+addEventListener('resize',()=>{size();start()});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){if(raf)cancelAnimationFrame(raf);raf=0;last=0}
+ else start();
+});
+rm.addEventListener?.('change',start);
+})();
 /* ===== Inicio ===== */
-(async()=>{loadTheme();load();try{await imgStore.open()}catch(e){toast('IndexedDB no disponible: las fotos no se guardarán.',1);imgStore.get=imgStore.put=imgStore.del=imgStore.clear=async()=>null}
+(async()=>{loadTheme();load();try{await cargarAparienciaPublica()}catch(e){console.warn(e);toast('No se pudo cargar la apariencia compartida.',1)}try{await imgStore.open()}catch(e){toast('IndexedDB no disponible: las fotos no se guardarán.',1);imgStore.get=imgStore.put=imgStore.del=imgStore.clear=async()=>null}
 await loadCustomFont();
 await setLogo();
 await cargarCategoriasSupabase();
+await sincronizarCajasSupabase();
+try{await sincronizarProductosSupabase()}catch(e){console.warn(e);toast('No se pudieron cargar los productos públicos: '+e.message,1)}
+try{await sincronizarCargosPublicados()}catch(e){console.warn(e);toast(e.message,1)}
+try{await sincronizarEnviosSupabase()}catch(e){console.warn(e);D.envios=[];toast('No se pudieron cargar los envíos públicos: '+e.message,1)}
 S.fromNav = 0;
 await route();
 })();
