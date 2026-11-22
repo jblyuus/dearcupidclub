@@ -274,6 +274,33 @@ main{padding-top:22px;padding-bottom:24px}
  .home .hero{margin-top:-25px!important;padding-top:0!important}
  .home .hero h1{margin-top:-40px!important}
 }
+
+/* Ajuste final: banner de borde a borde de la ventana, sin márgenes laterales. */
+.home .bn{
+  width:100vw!important;
+  width:100dvw!important;
+  max-width:none!important;
+  position:relative!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  margin:0!important;
+  height:clamp(140px,17vw,225px)!important;
+  overflow:hidden!important;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 52%,transparent 100%)!important;
+  mask-image:linear-gradient(to bottom,#000 0%,#000 52%,transparent 100%)!important;
+}
+.home .bn img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+}
+.home .hero{margin-top:-75px!important;padding-top:0!important}
+@media(max-width:600px){
+  .home .bn{height:clamp(125px,38vw,170px)!important}
+  .home .hero{margin-top:-48px!important}
+}
 </style></head><body>
 <header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/1a5fc7bc-baf6-40c6-b66d-275017eb574e" data-n="env">Envíos</a></nav></div></header>
 <main class="w" id="app" tabindex="-1" aria-live="polite"><div class="sk"></div></main>
