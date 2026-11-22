@@ -843,7 +843,7 @@ async function sincronizarCajasSupabase(){
 /* Productos públicos: nunca consultar borradores desde las páginas públicas. */
 async function sincronizarProductosSupabase(){
  const headers={apikey:AUTH_PUBLISHABLE_KEY};
- const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,ems,aduana,created_at&limit=10000',{headers,cache:'no-store'});
+ const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,ems,aduana,created_at&order=created_at.asc,id.asc&limit=10000',{headers,cache:'no-store'});
  if(!r.ok)throw Error('No se pudieron cargar los productos públicos ('+r.status+').');
  const productos=await r.json();
  let names={};
