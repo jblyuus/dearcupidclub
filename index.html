@@ -301,6 +301,30 @@ main{padding-top:22px;padding-bottom:24px}
   .home .bn{height:clamp(125px,38vw,170px)!important}
   .home .hero{margin-top:-48px!important}
 }
+
+/* 2026-11-22: banner difuminado detrás del logo, sin desplazar el contenido. */
+.home .bn{
+  height:520px!important;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 35%,rgba(0,0,0,.9) 52%,transparent 100%)!important;
+  mask-image:linear-gradient(to bottom,#000 0%,#000 35%,rgba(0,0,0,.9) 52%,transparent 100%)!important;
+  pointer-events:none!important;
+}
+.home .hero{margin-top:-445px!important;position:relative!important;z-index:2!important}
+@media(max-width:600px){
+ .home .bn{height:520px!important}
+ .home .hero{margin-top:-435px!important}
+}
+
+/* Inicio sin banner: diseño compacto, conservando logo y contenido. */
+.home .bn{display:none!important}
+.home .hero{margin-top:0!important;padding-top:18px!important;padding-bottom:0!important;position:relative!important}
+.home .hero .lg{margin-top:0!important;margin-bottom:0!important}
+.home .hero h1{margin-top:-32px!important}
+.home .menu{margin-top:10px!important}
+@media(max-width:600px){
+ .home .hero{margin-top:0!important;padding-top:12px!important}
+ .home .hero h1{margin-top:-26px!important}
+}
 </style></head><body>
 <header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/1a5fc7bc-baf6-40c6-b66d-275017eb574e" data-n="env">Envíos</a></nav></div></header>
 <main class="w" id="app" tabindex="-1" aria-live="polite"><div class="sk"></div></main>
@@ -585,7 +609,7 @@ function homeFind(){
  (!boxes.length&&!shipments.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
 }
 const bannerHtml=async()=>{const u=await currentImage('banner');return u?`<div class="bn"><img src="${u}" alt="Banner de dearcupid club"></div>`:''};
-async function vHome2(){return`${await bannerHtml()}<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><div class="isa-watermark">@sejeongmeal</div><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><div class="carrd-caption">info, envíos &amp; términos y condiciones:</div><a class="carrd" href="https://dearcupidclub.carrd.co" target="_blank" rel="noopener">dearcupidclub.carrd.co <span aria-hidden="true">↗</span></a><form class="sb" role="search" data-f="find" style="margin:18px auto 0"><label class="sr" for="hq">Buscar por username</label><input id="hq" type="search" placeholder="Busca tu username" autocomplete="off"><button class="btn pri">Buscar</button></form><div id="hres" aria-live="polite"></div></section><nav class="menu" aria-label="Secciones">${D.cats.map(c=>`<a href="#/cat/${c.id}">${cIc(c)}<span>${esc(c.name)}<small>${esc(c.desc)}</small></span></a>`).join('')}</nav>`}
+async function vHome2(){return`<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><div class="isa-watermark">@sejeongmeal</div><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><div class="carrd-caption">info, envíos &amp; términos y condiciones:</div><a class="carrd" href="https://dearcupidclub.carrd.co" target="_blank" rel="noopener">dearcupidclub.carrd.co <span aria-hidden="true">↗</span></a><form class="sb" role="search" data-f="find" style="margin:18px auto 0"><label class="sr" for="hq">Buscar por username</label><input id="hq" type="search" placeholder="Busca tu username" autocomplete="off"><button class="btn pri">Buscar</button></form><div id="hres" aria-live="polite"></div></section><nav class="menu" aria-label="Secciones">${D.cats.map(c=>`<a href="#/cat/${c.id}">${cIc(c)}<span>${esc(c.name)}<small>${esc(c.desc)}</small></span></a>`).join('')}</nav>`}
 const catGrid=()=>`<h2 class="s" style="margin-top:0">Categorías</h2><div class="grid">${D.cats.map(c=>`<a class="card" href="#/cat/${c.id}">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p></a>`).join('')}</div>`;
 const vCats=()=>bc([['Inicio','#/'],['Categorías']])+catGrid();
 // Orden natural de cajas en todas las categorías: 1, 2, 3, 4, 4.5, 5.
@@ -618,10 +642,13 @@ async function guardarEnvioSupabase(id,fd){
 }
 async function eliminarEnvioSupabase(id){
  if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
- const r=await fetch(AUTH_URL+'/rest/v1/envios?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,Prefer:'return=minimal'}});
- if(!r.ok)throw Error('No se pudo eliminar el envío: '+(await r.text()).slice(0,250));
+ if(!id || !D.envios.some(x=>String(x.id)===String(id)))throw Error('No se encontró el envío seleccionado en el panel.');
+ const r=await fetch(AUTH_URL+'/rest/v1/envios?id=eq.'+encodeURIComponent(id)+'&select=id',{method:'DELETE',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,Prefer:'return=representation, count=exact'}});
+ if(!r.ok)throw Error('Supabase rechazó la eliminación: '+(await r.text()).slice(0,250));
+ const borrados=await r.json();
+ if(!Array.isArray(borrados)||!borrados.some(x=>String(x.id)===String(id)))throw Error('Supabase no confirmó la eliminación. Revisa los permisos de la tabla envios.');
  await sincronizarEnviosSupabase(true);
- if(D.envios.some(x=>x.id===id))throw Error('El envío sigue apareciendo después de eliminar.');
+ if(D.envios.some(x=>String(x.id)===String(id)))throw Error('El envío sigue apareciendo después de eliminar.');
 }
 function shipRows(rows,admin=false){return rows.length?`<div class="shipwrap"><table class="shiptable"><thead><tr><th>Nombre</th><th>Collage</th><th>Paquetería</th><th>Guía</th><th>Status</th>${admin?'<th>Acciones</th>':''}</tr></thead><tbody>${rows.map(x=>{const img=shipPublicImage(x.collageUrl);return `<tr><td data-l="Nombre"><strong>${esc(x.buyer||'Sin nombre')}</strong></td><td data-l="Collage">${img?`<a class="shipphoto" href="${esc(img)}" target="_blank" rel="noopener noreferrer" aria-label="Ver collage del envío"><img src="${esc(img)}" alt="Collage del envío" loading="lazy"></a>`:'<span style="color:var(--t2)">Pendiente</span>'}</td><td data-l="Paquetería"><span class="b shipcarrier">${esc(x.carrier||'Sin asignar')}</span></td><td data-l="Guía"><span class="shiptrack">${esc(x.tracking||'Pendiente')}</span></td><td data-l="Status">${badge(Math.max(0,Math.min(SHIP_ST.length-1,+x.status||0)),SHIP_ST,['◌','●','➜','→','✓','!'],true)}</td>${admin?`<td data-l="Acciones"><div class="row"><button class="btn sm" data-act="eship" data-id="${esc(x.id)}">Editar</button><button class="btn sm dng" data-act="dship" data-id="${esc(x.id)}">Eliminar</button></div></td>`:''}</tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Todavía no hay envíos nacionales registrados.</div>'}
 function sugerenciasCupiditosEnvio(valor){
@@ -1749,7 +1776,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]
  case'page':S.page=+a.dataset.p;relist();scrollTo({top:0});break;
  case'clear':S={...S,q:'',lg:'',pay:'',page:1};rerender();break;
  case'eship':eShip(id);break;
- case'dship':confirmDlg('¿Eliminar este envío nacional de Supabase?',async()=>{await eliminarEnvioSupabase(id);toast('Envío eliminado de Supabase');rerender()});break;
+ case'dship':{const envio=D.envios.find(x=>String(x.id)===String(id));if(!envio){toast('No se encontró este envío.',1);break}confirmDlg('¿Eliminar definitivamente el envío de '+(envio.buyer||'este cupidito')+'? Esta acción no se puede deshacer.',async()=>{await eliminarEnvioSupabase(id);toast('Envío eliminado y verificado en Supabase');rerender()});break}
  case'eprod':prodForm(id,a.dataset.u?{buyer:a.dataset.u,plat:a.dataset.p,box:a.dataset.b}:undefined);break;
  case'dprod':{
   const producto=D.prods.find(x=>x.id===id);
