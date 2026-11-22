@@ -486,7 +486,7 @@ function vFind(q){
  (!l.length&&!ships.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
 }
 /* ===== Admin ===== */
-const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['importar-japon','Importar Japón'],['fotos-jp1','Fotos JP #1'],['fotos-jp2','Fotos JP #2'],['fotos-jp3','Fotos JP #3'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
+const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['importar-japon','Importar Japón'],['fotos-jp1','Fotos JP #1'],['fotos-jp2','Fotos JP #2'],['fotos-jp3','Fotos JP #3'],['fotos-jp4','Fotos JP #4'],['fotos-jp45','Fotos JP #4.5'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
 const nmz=t=>String(t).trim().replace(/^@/,'').toLowerCase();let CUP=[];
 const cupRows=(ns,q='')=>{const k=nmz(q),l=ns.filter(n=>nmz(n).includes(k));return l.length?l.map(n=>`<a class="row2 cup" href="#/admin/cupiditos/${encodeURIComponent(n)}"><div class="mn"><strong>${esc(n)}</strong></div><span aria-hidden="true">›</span></a>`).join(''):'<div class="empty">Sin resultados.</div>'};
 async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">${AT.map(([k,t])=>`<a href="#/admin/${k}" ${k===tab?'aria-current="page"':''}>${t}</a>`).join('')}</div>`;let b='';
@@ -499,6 +499,8 @@ async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">
  if(tab==='fotos-jp1')b=`<h2>Fotografías de JP #1 ♡</h2><p>Importa las 57 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG o PNG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jpPhotosFiles">Fotografías JP__1_fila_N.jpg</label><input type="file" id="jpPhotosFiles" accept=".jpg,.jpeg,image/jpeg" multiple><p id="jpPhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jpPhotosPreview"></div><button type="button" class="btn pri" id="jpPhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jpPhotosProgress" role="status" aria-live="polite"></p></div>`;
  if(tab==='fotos-jp2')b=`<h2>Fotografías de JP #2 ♡</h2><p>Importa las 71 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG o PNG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jp2PhotosFiles">Fotografías JP__2_fila_N.jpg</label><input type="file" id="jp2PhotosFiles" accept=".jpg,.jpeg,image/jpeg" multiple><p id="jp2PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jp2PhotosPreview"></div><button type="button" class="btn pri" id="jp2PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jp2PhotosProgress" role="status" aria-live="polite"></p></div>`;
  if(tab==='fotos-jp3')b=`<h2>Fotografías de JP #3 ♡</h2><p>Importa las 83 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG o PNG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jp3PhotosFiles">Fotografías JP__3_fila_N.jpg / .png</label><input type="file" id="jp3PhotosFiles" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple><p id="jp3PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jp3PhotosPreview"></div><button type="button" class="btn pri" id="jp3PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jp3PhotosProgress" role="status" aria-live="polite"></p></div>`;
+
+ if(tab==='fotos-jp4'||tab==='fotos-jp45'){const half=tab==='fotos-jp45',key=half?'jp45':'jp4',label=half?'JP #4.5':'JP #4',qty=half?44:47;b=`<h2>Fotografías de ${label} ♡</h2><p>Importa las ${qty} fotografías JPG o PNG sin modificar precios, compradores ni pagos. Las imágenes provienen de la hoja combinada JP #4/.5; se separan por su número de fila original.</p><div class="card"><label for="${key}PhotosFiles">Fotografías de ${label} (JPG o PNG)</label><input type="file" id="${key}PhotosFiles" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple><p id="${key}PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="${key}PhotosPreview"></div><button type="button" class="btn pri" id="${key}PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="${key}PhotosProgress" role="status" aria-live="polite"></p></div>`;}
  if(tab==='cupiditos'){if(sub){const key=nmz(decodeURIComponent(sub)),ps=D.prods.filter(p=>nmz(p.buyer)===key);if(!ps.length)b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a></nav><div class="empty">Este username ya no tiene productos.</div>`;else{const name=ps[0].buyer,plat=ps[0].plat,bx=[...new Set(ps.map(p=>p.box))].map(box).filter(Boolean);b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a> › <span aria-current="page">${esc(name)}</span></nav><div class="row sp"><div><h2>${esc(name)}</h2><p style="color:var(--t2);margin:4px 0 0">${esc(plat)} · ${ps.length} producto${ps.length>1?'s':''} en ${bx.length} caja${bx.length>1?'s':''}</p></div><button class="btn pri" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}">Agregar producto</button></div>`+bx.map(x=>`<section class="card" style="margin-top:16px"><div class="row sp"><div><strong>${esc(cat(x.cat)?.name)} · ${esc(x.name)}</strong> ${bBox(x.st)}</div><button class="btn sm" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}" data-b="${x.id}">Agregar aquí</button></div><div class="lst" style="margin-top:12px">${ps.filter(p=>p.box===x.id).map(p=>prow(p,1)).join('')}</div></section>`).join('')}}else{const seen={};D.prods.forEach(p=>{const k=nmz(p.buyer);if(!seen[k])seen[k]=p.buyer});CUP=Object.values(seen).sort((a,c)=>a.localeCompare(c));b=`<div class="row sp"><h2>Cupiditos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><p style="color:var(--t2)">Usuarios con al menos un producto en una caja (${CUP.length}). Toca uno para ver sus cajas.</p>`+(CUP.length?`<div style="max-width:360px;margin:14px 0"><label for="cq">Buscar username</label><input id="cq" type="search" autocomplete="off"></div><div id="cl" class="lst">${cupRows(CUP)}</div>`:`<div class="empty"><p><strong>Aún no hay cupiditos</strong></p><p>Aparecen aquí cuando agregas un producto a una caja.</p></div>`)}}
  if(tab==='envios'){try{await sincronizarEnviosSupabase(true)}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}}
  if(tab==='envios')b+=`<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p style="color:var(--t2)">Registra los paquetes nacionales enviados desde la administradora a cada cupidito. No utilizan cajas.</p>${shipRows(D.envios,true)}`;
@@ -1217,6 +1219,148 @@ async function jp3PhotosUpload(){
 }
 document.addEventListener('change',e=>{if(e.target.id==='jp3PhotosFiles')jp3PhotosPreview([...e.target.files])});
 document.addEventListener('click',e=>{if(e.target.id==='jp3PhotosUpload')jp3PhotosUpload()});
+
+
+/* ===== Fotografías JP #4: importación protegida y reanudable ===== */
+const JP4_BOX_ID='a25fb2e5-c7ca-4961-b25f-869033fc4ca9';
+let jp4PhotosPlan=null,jp4PhotosBusy=false;
+async function jp4PhotosPreview(files){
+ const status=$('#jp4PhotosStatus'),out=$('#jp4PhotosPreview'),button=$('#jp4PhotosUpload');
+ if(!status||!out||!button)return;
+ button.disabled=true;jp4PhotosPlan=null;out.innerHTML='';status.textContent='Comparando imágenes con los productos publicados…';
+ try{
+  if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+  const rows=await jp1Request('productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq.'+JP4_BOX_ID+'&limit=1000');
+  const byRef=new Map(rows.filter(p=>/^JAPON-JP4-FILA\d+$/.test(p.referencia_excel||'')).map(p=>[p.referencia_excel,p]));
+  if(byRef.size!==47)throw Error('Se esperaban 47 productos JP #4, pero hay '+byRef.size+'. No se realizará ninguna subida.');
+  const seen=new Set(),matched=[],extra=[],invalid=[];
+  for(const file of files){
+   const m=/^JP__4(?:[._]5|_\.5)?_fila_(\d+)\.(?:jpe?g|png)$/i.exec(file.name);
+   if(!m||file.size<1||file.size>5*1024*1024||!['image/jpeg','image/png',''].includes(file.type)){invalid.push(file.name);continue}
+   const fila=Number(m[1]);if(fila<4||fila>50){extra.push(file.name);continue}
+   const ref='JAPON-JP4-FILA'+fila;
+   if(seen.has(ref)){invalid.push('Duplicado: '+file.name);continue}
+   seen.add(ref);const product=byRef.get(ref);
+   if(!product){extra.push(file.name);continue}
+   matched.push({file,product,ref});
+  }
+  const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
+  const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
+  const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
+   (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
+   (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
+   '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
+  if(invalid.length||missing.length||matched.length!==47){status.textContent+=' Revisa los archivos antes de continuar.';return}
+  jp4PhotosPlan=pending;button.disabled=!pending.length;
+ }catch(err){status.textContent='No se pudo verificar: '+(err.message||err)}
+}
+async function jp4PhotosUpload(){
+ if(jp4PhotosBusy||!jp4PhotosPlan?.length)return;
+ if(!confirm('¿Subir '+jp4PhotosPlan.length+' fotografías a R2 y vincularlas únicamente con productos de JP #4 que todavía no tengan imagen?'))return;
+ const button=$('#jp4PhotosUpload'),progress=$('#jp4PhotosProgress');jp4PhotosBusy=true;button.disabled=true;
+ let saved=0,skipped=0;const errors=[];
+ try{
+  for(const item of jp4PhotosPlan){
+   progress.textContent='Procesando '+(saved+skipped+errors.length+1)+'/'+jp4PhotosPlan.length+' · '+item.ref;
+   try{
+    // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
+    const current=await jp1Request('productos?select=id,imagen_url,referencia_excel,caja_id&id=eq.'+encodeURIComponent(item.product.id)+'&limit=1');
+    if(current.length!==1||current[0].caja_id!==JP4_BOX_ID||current[0].referencia_excel!==item.ref)throw Error('El producto cambió.');
+    if(current[0].imagen_url){skipped++;continue}
+    const form=new FormData();form.append('file',item.file,item.file.name);form.append('folder','productos');
+    if(!await refreshAdmin()||!adminSession?.token)throw Error('Sesión expirada.');
+    const uploaded=await fetch(R2_WORKER+'/images',{method:'POST',headers:{Authorization:'Bearer '+adminSession.token},body:form});
+    const result=await uploaded.json().catch(()=>({}));
+    if(!uploaded.ok||!validProductImage(result.url))throw Error(result.error||'Error al subir a R2 ('+uploaded.status+')');
+    const patched=await jp1Request('productos?id=eq.'+encodeURIComponent(item.product.id)+'&caja_id=eq.'+JP4_BOX_ID+'&referencia_excel=eq.'+encodeURIComponent(item.ref)+'&imagen_url=is.null',{
+     method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({imagen_url:result.url})
+    });
+    if(!Array.isArray(patched)||patched.length!==1)throw Error('No se pudo asociar la URL en Supabase; revisa permisos.');
+    saved++;
+   }catch(err){errors.push(item.ref+': '+(err.message||err))}
+  }
+  progress.textContent='Terminó: '+saved+' vinculadas · '+skipped+' omitidas · '+errors.length+' con error.'+(errors.length?' '+errors.slice(0,5).join(' | '):'');
+  try{await sincronizarProductosSupabase()}catch(e){console.warn(e)}
+  toast(errors.length?'Revisa los errores de la importación':'Fotos de JP #4 guardadas ♡',!!errors.length);
+ }finally{jp4PhotosBusy=false;jp4PhotosPlan=null;button.disabled=true}
+}
+document.addEventListener('change',e=>{if(e.target.id==='jp4PhotosFiles')jp4PhotosPreview([...e.target.files])});
+document.addEventListener('click',e=>{if(e.target.id==='jp4PhotosUpload')jp4PhotosUpload()});
+
+
+/* ===== Fotografías JP #4.5: importación protegida y reanudable ===== */
+const JP45_BOX_ID='ab8f32bd-1817-472e-a060-aff0bdaa7b3e';
+let jp45PhotosPlan=null,jp45PhotosBusy=false;
+async function jp45PhotosPreview(files){
+ const status=$('#jp45PhotosStatus'),out=$('#jp45PhotosPreview'),button=$('#jp45PhotosUpload');
+ if(!status||!out||!button)return;
+ button.disabled=true;jp45PhotosPlan=null;out.innerHTML='';status.textContent='Comparando imágenes con los productos publicados…';
+ try{
+  if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+  const rows=await jp1Request('productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq.'+JP45_BOX_ID+'&limit=1000');
+  const byRef=new Map(rows.filter(p=>/^JAPON-JP4-FILA\d+$/.test(p.referencia_excel||'')).map(p=>[p.referencia_excel,p]));
+  if(byRef.size!==44)throw Error('Se esperaban 44 productos JP #4.5, pero hay '+byRef.size+'. No se realizará ninguna subida.');
+  const seen=new Set(),matched=[],extra=[],invalid=[];
+  for(const file of files){
+   const m=/^JP__4(?:[._]5|_\.5)?_fila_(\d+)\.(?:jpe?g|png)$/i.exec(file.name);
+   if(!m||file.size<1||file.size>5*1024*1024||!['image/jpeg','image/png',''].includes(file.type)){invalid.push(file.name);continue}
+   const fila=Number(m[1]);if(fila<54||fila>97){extra.push(file.name);continue}
+   const ref='JAPON-JP4-FILA'+fila;
+   if(seen.has(ref)){invalid.push('Duplicado: '+file.name);continue}
+   seen.add(ref);const product=byRef.get(ref);
+   if(!product){extra.push(file.name);continue}
+   matched.push({file,product,ref});
+  }
+  const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
+  const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
+  const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
+   (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
+   (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
+   '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
+  if(invalid.length||missing.length||matched.length!==44){status.textContent+=' Revisa los archivos antes de continuar.';return}
+  jp45PhotosPlan=pending;button.disabled=!pending.length;
+ }catch(err){status.textContent='No se pudo verificar: '+(err.message||err)}
+}
+async function jp45PhotosUpload(){
+ if(jp45PhotosBusy||!jp45PhotosPlan?.length)return;
+ if(!confirm('¿Subir '+jp45PhotosPlan.length+' fotografías a R2 y vincularlas únicamente con productos de JP #4.5 que todavía no tengan imagen?'))return;
+ const button=$('#jp45PhotosUpload'),progress=$('#jp45PhotosProgress');jp45PhotosBusy=true;button.disabled=true;
+ let saved=0,skipped=0;const errors=[];
+ try{
+  for(const item of jp45PhotosPlan){
+   progress.textContent='Procesando '+(saved+skipped+errors.length+1)+'/'+jp45PhotosPlan.length+' · '+item.ref;
+   try{
+    // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
+    const current=await jp1Request('productos?select=id,imagen_url,referencia_excel,caja_id&id=eq.'+encodeURIComponent(item.product.id)+'&limit=1');
+    if(current.length!==1||current[0].caja_id!==JP45_BOX_ID||current[0].referencia_excel!==item.ref)throw Error('El producto cambió.');
+    if(current[0].imagen_url){skipped++;continue}
+    const form=new FormData();form.append('file',item.file,item.file.name);form.append('folder','productos');
+    if(!await refreshAdmin()||!adminSession?.token)throw Error('Sesión expirada.');
+    const uploaded=await fetch(R2_WORKER+'/images',{method:'POST',headers:{Authorization:'Bearer '+adminSession.token},body:form});
+    const result=await uploaded.json().catch(()=>({}));
+    if(!uploaded.ok||!validProductImage(result.url))throw Error(result.error||'Error al subir a R2 ('+uploaded.status+')');
+    const patched=await jp1Request('productos?id=eq.'+encodeURIComponent(item.product.id)+'&caja_id=eq.'+JP45_BOX_ID+'&referencia_excel=eq.'+encodeURIComponent(item.ref)+'&imagen_url=is.null',{
+     method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({imagen_url:result.url})
+    });
+    if(!Array.isArray(patched)||patched.length!==1)throw Error('No se pudo asociar la URL en Supabase; revisa permisos.');
+    saved++;
+   }catch(err){errors.push(item.ref+': '+(err.message||err))}
+  }
+  progress.textContent='Terminó: '+saved+' vinculadas · '+skipped+' omitidas · '+errors.length+' con error.'+(errors.length?' '+errors.slice(0,5).join(' | '):'');
+  try{await sincronizarProductosSupabase()}catch(e){console.warn(e)}
+  toast(errors.length?'Revisa los errores de la importación':'Fotos de JP #4.5 guardadas ♡',!!errors.length);
+ }finally{jp45PhotosBusy=false;jp45PhotosPlan=null;button.disabled=true}
+}
+document.addEventListener('change',e=>{if(e.target.id==='jp45PhotosFiles')jp45PhotosPreview([...e.target.files])});
+document.addEventListener('click',e=>{if(e.target.id==='jp45PhotosUpload')jp45PhotosUpload()});
 
 
 /* ===== Compradores JP #1: revisión y asignación confirmada ===== */
