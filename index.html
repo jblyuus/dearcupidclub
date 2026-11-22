@@ -823,7 +823,7 @@ async function sincronizarCajasSupabase(){
 /* Productos públicos: nunca consultar borradores desde las páginas públicas. */
 async function sincronizarProductosSupabase(){
  const headers={apikey:AUTH_PUBLISHABLE_KEY};
- const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,created_at&limit=10000',{headers,cache:'no-store'});
+ const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,ems,aduana,created_at&limit=10000',{headers,cache:'no-store'});
  if(!r.ok)throw Error('No se pudieron cargar los productos públicos ('+r.status+').');
  const productos=await r.json();
  let names={};
@@ -838,7 +838,7 @@ async function sincronizarProductosSupabase(){
   referenciaExcel:p.referencia_excel||'',ordenCarga:i,
   id:p.id,box:p.caja_id,buyer:names[p.cupidito_id]||'Cupidito',desc:p.nombre||p.descripcion||'',
   plat:p.plataforma||'',price:Number(p.precio)||0,logi:Math.max(0,states.indexOf(String(p.estado||'comprado').toLowerCase())),
-  ems:0,adu:0,imgId:'',imagenUrl:validProductImage(p.imagen_url),pay:0
+  ems:Number(p.ems)||0,adu:Number(p.aduana)||0,imgId:'',imagenUrl:validProductImage(p.imagen_url),pay:0
  }));
 }
 /* ===== Router ===== */
