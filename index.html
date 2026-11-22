@@ -855,7 +855,11 @@ async function jp1Request(path,options={}){
  if(!await refreshAdmin()||!adminSession?.token)throw Error('Sesión administrativa expirada.');
  const r=await fetch(AUTH_URL+'/rest/v1/'+path,{...options,headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})},cache:'no-store'});
  if(!r.ok)throw Error('Supabase '+r.status+': '+(await r.text()).slice(0,240));
- return r.status===204?null:r.json();
+ // Supabase con Prefer: return=minimal responde sin cuerpo (a menudo HTTP 201).
+ // Una respuesta vacía es válida; no intentar JSON.parse sobre ella.
+ const raw=await r.text();
+ if(!raw.trim())return null;
+ try{return JSON.parse(raw)}catch(e){throw Error('Supabase devolvió una respuesta no válida ('+r.status+').')}
 }
 
 async function previsualizarJP1(file){
