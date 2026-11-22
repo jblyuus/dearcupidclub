@@ -469,10 +469,10 @@ function eShip(id){const x=D.envios.find(v=>v.id===id)||{};
  cargarCupiditosParaBorradores().then(()=>{if($('#shipBuyerSuggestions'))sugerenciasCupiditosEnvio($('#buyer')?.value||'')}).catch(e=>console.warn('No se cargaron las sugerencias',e));
 }
 const nf=()=>`<div class="empty"><h2>No encontramos esa página</h2><a class="btn" href="#/">Volver al inicio</a></div>`;
-function vBox(id,tab,u){const b=box(id);if(!b)return nf();const c=cat(b.cat);if(S.box!==id){S={...S,q:'',lg:'',pay:'',sort:'original',page:1,box:id}}if(u){S.q=u;S.page=1}
+function vBox(id,tab,u){const b=box(id);if(!b)return nf();const c=cat(b.cat);if(S.box!==id){S={...S,q:'',lg:'',pay:'',sort:'original',page:1,box:id,publicCargoSearch:''}}if(u){S.q=u;S.page=1}
  const tabs=`<div class="tabs" role="tablist"><a href="#/box/${id}" ${tab?'':'aria-current="page"'}>Masterlist</a><a href="#/box/${id}/cargos" ${tab?'aria-current="page"':''}>Cargos</a></div>`;
  let body;if(tab){const ps=D.prods.filter(p=>p.box===id);
- body=renderCargosAgrupados(ps,false);
+ body=`<div style="max-width:440px;margin:14px 0"><label for="publicCargoSearch">Buscar cargos por cupidito</label><input id="publicCargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.publicCargoSearch||'')}"></div><p id="publicCargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${renderCargosAgrupados(ps,false)}`;
  }
  else body=`${controls()}<div id="list">${plist(D.prods.filter(p=>p.box===id))}</div>`;
  return bc([['Inicio','#/'],[c.name,'#/cat/'+c.id],[b.name]])+`<div class="row sp"><h1>${esc(c.name)} · ${esc(b.name)}</h1>${bBox(b.st)}</div>${b.tracking?.trim()?`<p class="box-track"><span aria-hidden="true">♥</span> <span>Guía</span> <strong>${esc(b.tracking)}</strong></p>`:''}${b.desc?.trim()?`<p class="box-description">${esc(b.desc).replace(/\n/g,'<br>')}</p>`:''}${tabs}${colorLegend()}${body}`}
@@ -748,7 +748,7 @@ async function saveChargesDraft(){
 /* Cargos agrupados por cupidito: los estados de pago siguen siendo por producto. */
 function renderCargosAgrupados(products,admin){
  const groups=new Map();
- for(const p of products){const c=publishedCharges[p.id];if(!c)continue;
+ for(const p of [...products].sort((a,b)=>{const aa=/^JAPON-JP(\d+)-FILA(\d+)$/i.exec(a.referenciaExcel||'');const bb=/^JAPON-JP(\d+)-FILA(\d+)$/i.exec(b.referenciaExcel||'');if(aa&&bb){const diff=Number(aa[1])-Number(bb[1]);return diff||Number(aa[2])-Number(bb[2]);}return (a.ordenCarga??0)-(b.ordenCarga??0)})){const c=publishedCharges[p.id];if(!c)continue;
   const key=nmz(p.buyer)||'(sin cupidito)';
   if(!groups.has(key))groups.set(key,{name:p.buyer||'Sin cupidito',items:[],ems:0,aduana:0,pendiente:0});
   const g=groups.get(key);g.items.push({p,c});
@@ -757,20 +757,20 @@ function renderCargosAgrupados(products,admin){
   if(!c.aduana_pagada)g.pendiente+=Number(c.aduana)||0;
  }
  if(!groups.size)return '<div class="empty">Esta caja todavía no tiene cargos publicados.</div>';
- const all=[...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,'es'));
+ const all=[...groups.values()]; // Orden de primera aparición en la masterlist, no alfabético.
  const total=all.reduce((n,g)=>n+g.pendiente,0);
  const status=(amount,paid)=>Number(amount)>0?(paid?'Pagado':'Pendiente'):'Sin cargo';
  return `<div class="card" style="margin:12px 0 18px"><strong>${all.length} cupidito(s) · ${products.length} productos</strong><p>EMS: ${money(all.reduce((n,g)=>n+g.ems,0))} · Aduana: ${money(all.reduce((n,g)=>n+g.aduana,0))}</p><strong>Total pendiente: ${money(total)}</strong></div><div class="lst">${all.map(g=>`<details class="card" data-cargo-cupidito="${esc(nmz(g.name))}" style="padding:16px"><summary style="cursor:pointer"><strong>${esc(g.name)}</strong> · ${g.items.length} producto(s)<div style="margin-top:6px;color:var(--t2)">EMS ${money(g.ems)} · Aduana ${money(g.aduana)}</div><strong>Pendiente: ${money(g.pendiente)}</strong></summary><div style="margin-top:14px;display:grid;gap:12px">${g.items.map(({p,c})=>`<div style="padding:12px;border:1px solid var(--bd);border-radius:12px"><strong>${esc(p.desc||'Producto')}</strong>${[['ems','ems_pagado','EMS'],['aduana','aduana_pagada','Aduana']].map(([field,col,label])=>`<div class="row sp" style="margin-top:9px"><span>${label}: ${money(c[field])} · ${status(c[field],c[col])}</span>${admin&&Number(c[field])>0?`<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col]?'1':'0'}">${c[col]?'Marcar pendiente':'Marcar pagado'}</button>`:''}</div>`).join('')}</div>`).join('')}</div></details>`).join('')}</div>`;
 }
 
 /* Filtro local: no reconstruye la lista ni altera la posición de lectura. */
-function filtrarCargosAdmin(){
- const q=nmz(S.cargoSearch||'');let visibles=0;
+function filtrarCargosAdmin(publico=false){
+ const q=nmz(publico?(S.publicCargoSearch||''):(S.cargoSearch||''));let visibles=0;
  for(const item of $$('#app details[data-cargo-cupidito]')){
   const show=!q||item.dataset.cargoCupidito.includes(q);
   item.hidden=!show;if(show)visibles++;
  }
- const count=$('#cargoSearchCount');if(count)count.textContent=q?visibles+' cupidito(s) encontrados':'';
+ const count=$(publico?'#publicCargoSearchCount':'#cargoSearchCount');if(count)count.textContent=q?visibles+' cupidito(s) encontrados':'';
 }
 async function sincronizarCargosPublicados(){
  const r=await fetch(AUTH_URL+'/rest/v1/cargos_productos?select=producto_id,ems,aduana,otros,ems_pagado,aduana_pagada,otros_pagados&limit=10000',{headers:{apikey:AUTH_PUBLISHABLE_KEY},cache:'no-store'});
@@ -905,7 +905,7 @@ async function route(){const h=location.hash.slice(1)||'/',p=h.split('/').filter
  // El botón vuelve al nivel anterior dentro de Dearcupid, sin salir del sitio.
  const back=p[0]==='admin'?(p[2]?'#/admin/cupiditos':p[1]?'#/admin':'#/'):p[0]==='box'?(p[2]?'#/box/'+p[1]:'#/cat/'+(box(p[1])?.cat||'c1')):p[0]==='cat'||p[0]==='categorias'||p[0]==='buscar'?'#/':'#/';
  $('#hl').href=back;
- document.body.classList.toggle('home',!p.length);app.innerHTML=html;if(p[0]==='admin'&&p[1]==='cargos')filtrarCargosAdmin();app.style.animation='none';app.offsetWidth;app.style.animation='';hydrate();
+ document.body.classList.toggle('home',!p.length);app.innerHTML=html;if(p[0]==='admin'&&p[1]==='cargos')filtrarCargosAdmin();if(p[0]==='box'&&p[2]==='cargos')filtrarCargosAdmin(true);app.style.animation='none';app.offsetWidth;app.style.animation='';hydrate();
  $$('nav a[data-n]').forEach(a=>{const n=a.dataset.n,on=n==='home'&&!p.length||n==='categorias'&&p[0]==='categorias'||n==='admin'&&p[0]==='admin'||n==='env'&&p[0]==='cat'&&isEnv(p[1]);on?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')});
  if(S.fromNav){scrollTo(0,0);app.focus({preventScroll:true})}}
 const rerender=()=>route();
@@ -1474,7 +1474,7 @@ document.addEventListener('submit',async e=>{const f=e.target.dataset.f;if(!f)re
   }
  }
 });
-document.addEventListener('input',e=>{const t=e.target;if(t.dataset.theme){setThemeField(t.dataset.theme,t.value);const o=$('#to-'+t.dataset.theme);if(o)o.textContent=t.value+(themeRange.find(x=>x[0]===t.dataset.theme)?.[5]||'');}if(t.id==='shipq'){$('#shiplist').innerHTML=shipRows(D.envios.filter(x=>((x.buyer||x.name||'')+' '+(x.carrier||'')+' '+(x.tracking||x.reference||'')).toLowerCase().includes(t.value.toLowerCase())))}if(t.id==='hq')homeFind();if(t.id==='buyer')buyerSug();if(t.id==='cq')$('#cl').innerHTML=cupRows(CUP,t.value);if(t.id==='cargoSearch'){S.cargoSearch=t.value;filtrarCargosAdmin();}if(t.id==='q'){S.q=t.value;S.page=1;relist()}if(t.id==='lsz'){const v=+t.value;publicLogoWidth=v;applyLogoW();$('#lszv').textContent=v+'px';$('#lpv').style.width=v+'px'}});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.theme){setThemeField(t.dataset.theme,t.value);const o=$('#to-'+t.dataset.theme);if(o)o.textContent=t.value+(themeRange.find(x=>x[0]===t.dataset.theme)?.[5]||'');}if(t.id==='shipq'){$('#shiplist').innerHTML=shipRows(D.envios.filter(x=>((x.buyer||x.name||'')+' '+(x.carrier||'')+' '+(x.tracking||x.reference||'')).toLowerCase().includes(t.value.toLowerCase())))}if(t.id==='hq')homeFind();if(t.id==='buyer')buyerSug();if(t.id==='cq')$('#cl').innerHTML=cupRows(CUP,t.value);if(t.id==='cargoSearch'){S.cargoSearch=t.value;filtrarCargosAdmin();}if(t.id==='publicCargoSearch'){S.publicCargoSearch=t.value;filtrarCargosAdmin(true);}if(t.id==='q'){S.q=t.value;S.page=1;relist()}if(t.id==='lsz'){const v=+t.value;publicLogoWidth=v;applyLogoW();$('#lszv').textContent=v+'px';$('#lpv').style.width=v+'px'}});
 document.addEventListener('change',async e=>{const t=e.target;if(t.id==='themePreset'&&t.value){T={...T,...themePresets[t.value]};applyTheme();saveTheme();rerender();return}if(t.id==='customFontFile'&&t.files[0]){await uploadCustomFont(t.files[0]);return}if(t.id==='themeFile'&&t.files[0]){await importTheme(t.files[0]);return}
  if(t.id==='fl'){S.lg=t.value;S.page=1;relist()}if(t.id==='fp'){S.pay=t.value;S.page=1;relist()}if(t.id==='so'){S.sort=t.value;relist()}if(t.id==='cb'){S.cb=t.value;rerender()}if(t.id==='ab'){S.ab=t.value;S.page=1;rerender()}
  if(t.id==='pf'){const f=t.files[0],er=$('#er');if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)){er.textContent='Formato no válido. Usa JPG, PNG o WebP.';t.value='';return}if(f.size>8*1048576){er.textContent='La foto pesa más de 8 MB.';t.value='';return}er.textContent='';pend.blob=await compress(f,pend.max||1200);pend.rm=false;setPv(URL.createObjectURL(pend.blob))}
