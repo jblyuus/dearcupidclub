@@ -952,11 +952,12 @@ async function importarJP1(){
 }
 document.addEventListener('click',e=>{if(e.target?.id==='jpImportConfirm')importarJP1();});
 
-/* ===== Compradores JP #1: revisión segura sin escritura ===== */
+/* ===== Compradores JP #1: revisión y asignación confirmada ===== */
+let jp1AsociacionesPendientes=null;
 async function previsualizarCompradoresJP1(file){
  const status=$('#jpPreviewStatus'),out=$('#jpPreviewResults');
  if(!status||!out)return;
- status.textContent='Revisando compradores del archivo…';out.innerHTML='';
+ status.textContent='Revisando compradores del archivo…';out.innerHTML='';jp1AsociacionesPendientes=null;
  try{
   if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
   if(file.size>2*1024*1024)throw Error('El archivo es demasiado grande.');
@@ -981,17 +982,70 @@ async function previsualizarCompradoresJP1(file){
    if(p.cupidito_id){issues.push({fila:x.fila,name,reason:'Ya tiene comprador; no se modificará'});continue}
    const matches=byName.get(norm(name))||[];
    if(matches.length>1){issues.push({fila:x.fila,name,reason:'Hay varios cupiditos con este nombre; requiere revisión'});continue}
-   proposed.push({fila:x.fila,name,exists:matches.length===1});
+   proposed.push({fila:x.fila,name,ref:x.referencia_excel,exists:matches.length===1});
   }
+  jp1AsociacionesPendientes={proposed,filename:file.name};
   status.textContent=`${proposed.length} asociaciones propuestas · ${issues.length} casos para revisar · ningún cambio realizado`;
   out.innerHTML=`<p><strong>Solo vista previa.</strong> No se ha creado ningún cupidito ni modificado ningún producto. Los nombres vacíos permanecerán sin asignar.</p>
   <h3 style="margin:18px 0 8px">Compradores por asociar</h3>
   <div style="max-height:340px;overflow:auto"><table><thead><tr><th>Fila</th><th>Comprador original</th><th>Acción futura</th></tr></thead><tbody>${proposed.map(x=>`<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${x.exists?'Vincular cupidito existente':'Crear cupidito y vincular'}</td></tr>`).join('')||'<tr><td colspan="3">Ninguna asociación pendiente</td></tr>'}</tbody></table></div>
   <h3 style="margin:18px 0 8px">Para revisar o conservar</h3><div style="max-height:200px;overflow:auto"><table><thead><tr><th>Fila</th><th>Nombre</th><th>Motivo</th></tr></thead><tbody>${issues.map(x=>`<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${esc(x.reason)}</td></tr>`).join('')||'<tr><td colspan="3">Ningún caso</td></tr>'}</tbody></table></div>
-  <p style="color:var(--t2)">La asignación se habilitará después de que revises esta lista.</p>`;
+  <div style="margin-top:16px;padding:16px;border:1px solid var(--bd);border-radius:14px">
+  <p>Solo se asignarán las filas mostradas arriba. No se cambiarán productos que ya tengan cupidito, ni filas vacías o marcadas para revisión.</p>
+  <button type="button" class="btn pri" id="jpAssignBuyersConfirm" ${proposed.length?'':'disabled'}>Confirmar asignación de ${proposed.length} productos</button>
+  <p id="jpAssignBuyersProgress" role="status" aria-live="polite"></p></div>`;
  }catch(e){status.textContent='No se pudo revisar compradores.';out.textContent=e.message||'Error de consulta';}
 }
 
+
+/* Escritura explícita: revalida cada registro y nunca reemplaza asignaciones. */
+async function asignarCompradoresJP1(){
+ const state=jp1AsociacionesPendientes,btn=$('#jpAssignBuyersConfirm'),progress=$('#jpAssignBuyersProgress');
+ if(!state||!btn||!progress||btn.disabled)return;
+ if(!confirm('¿Asignar los '+state.proposed.length+' productos revisados? Se crearán los cupiditos faltantes. No se tocarán los productos ya asignados.'))return;
+ btn.disabled=true;
+ let vinculados=0,omitidos=0,creados=0;
+ const norm=x=>String(x??'').trim().normalize('NFKC').toLocaleLowerCase('es-MX');
+ try{
+  const cupiditos=await jp1Request('cupiditos?select=id,nombre&limit=10000');
+  const cache=new Map();
+  for(const c of cupiditos){const key=norm(c.nombre);const arr=cache.get(key)||[];arr.push(c);cache.set(key,arr)}
+  for(const item of state.proposed){
+   progress.textContent=`Procesando ${vinculados+omitidos+1} de ${state.proposed.length}…`;
+   const rows=await jp1Request('productos?select=id,cupidito_id&referencia_excel=eq.'+encodeURIComponent(item.ref)+'&limit=2');
+   if(rows.length!==1||rows[0].cupidito_id){omitidos++;continue}
+   const key=norm(item.name);
+   if(!key||key==='stock'){omitidos++;continue}
+   let matches=cache.get(key)||[];
+   if(matches.length>1){omitidos++;continue}
+   if(!matches.length){
+    // Volver a consultar antes de crear para evitar duplicados en reintentos.
+    const all=await jp1Request('cupiditos?select=id,nombre&limit=10000');
+    matches=all.filter(c=>norm(c.nombre)===key);
+    if(matches.length>1){omitidos++;continue}
+    if(!matches.length){
+     const inserted=await jp1Request('cupiditos',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({nombre:item.name})});
+     if(!Array.isArray(inserted)||inserted.length!==1||!inserted[0].id)throw Error('No se confirmó la creación de '+item.name);
+     matches=inserted;creados++;
+    }
+    cache.set(key,matches);
+   }
+   // Filtro cupidito_id=is.null evita sobrescribir una asignación concurrente.
+   const updated=await jp1Request('productos?id=eq.'+encodeURIComponent(rows[0].id)+'&cupidito_id=is.null',{
+    method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({cupidito_id:matches[0].id})
+   });
+   if(!Array.isArray(updated)||updated.length!==1){omitidos++;continue}
+   vinculados++;
+  }
+  progress.textContent=`Terminado: ${vinculados} productos asociados, ${creados} cupiditos creados, ${omitidos} omitidos.`;
+  jp1AsociacionesPendientes=null;
+  toast('Compradores de JP #1 asociados ♡');
+  try{await sincronizarProductosSupabase()}catch(e){console.warn('Recarga:',e)}
+ }catch(e){
+  progress.textContent=`Proceso detenido: ${vinculados} vinculados, ${creados} cupiditos creados, ${omitidos} omitidos. ${e.message}. Vuelve a revisar el JSON antes de reintentar.`;
+ }
+}
+document.addEventListener('click',e=>{if(e.target?.id==='jpAssignBuyersConfirm')asignarCompradoresJP1()});
 
 /* Vista previa de totales calculados: no modifica pagos ni registros. */
 async function vistaPreviaTotalesCupiditos(){
