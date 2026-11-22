@@ -1674,7 +1674,17 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]
  case'eship':eShip(id);break;
  case'dship':confirmDlg('¿Eliminar este envío nacional de Supabase?',async()=>{await eliminarEnvioSupabase(id);toast('Envío eliminado de Supabase');rerender()});break;
  case'eprod':prodForm(id,a.dataset.u?{buyer:a.dataset.u,plat:a.dataset.p,box:a.dataset.b}:undefined);break;
- case'dprod':confirmDlg('Se eliminará este producto y su foto.',async()=>{const p=D.prods.find(x=>x.id===id);if(p.imgId){try{await imgStore.del(p.imgId)}catch(e){}freeUrl(p.imgId)}D.prods=D.prods.filter(x=>x.id!==id);save();toast('Producto eliminado');rerender()});break;
+ case'dprod':{
+  const producto=D.prods.find(x=>x.id===id);
+  if(!producto){toast('No se encontró el producto. Actualiza la página.',1);break}
+  confirmDlg('¿Eliminar definitivamente «'+producto.desc+'» de Supabase? Esta acción no se puede deshacer. No se eliminarán otros productos ni la caja.',async()=>{
+   const result=await jp1Request('productos?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=representation'}});
+   if(!Array.isArray(result)||result.length!==1||result[0].id!==id)throw Error('Supabase no confirmó la eliminación de exactamente un producto.');
+   await sincronizarProductosSupabase();
+   toast('Producto eliminado de Supabase ♡');
+   await rerender();
+  });break;
+ }
  case'ecat':eCat(id);break;case'ebox':eBox(id);break;case'ecg':eCg(a.dataset.b,a.dataset.u);break;
  case'dcat':if(D.boxes.some(b=>b.cat===id))return toast('Elimina o mueve primero las cajas de esta categoría.',1);confirmDlg('Se eliminará la categoría.',()=>{const c0=cat(id);if(c0&&c0.imgId){imgStore.del(c0.imgId).catch(()=>{});freeUrl(c0.imgId)}D.cats=D.cats.filter(c=>c.id!==id);save();toast('Categoría eliminada');rerender()});break;
  case'unusedCupiditos':try{
