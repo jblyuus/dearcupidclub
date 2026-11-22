@@ -380,10 +380,19 @@ function resetTheme(){T={...themeDefaults};applyTheme();saveTheme();rerender()}
 function exportTheme(){const blob=new Blob([JSON.stringify({format:'dearcupid-theme-v1',settings:T},null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='dearcupid-diseno.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 async function importTheme(file){try{if(file.size>100000)throw Error('El archivo es demasiado grande');const obj=JSON.parse(await file.text());if(obj.format!=='dearcupid-theme-v1'||!obj.settings||typeof obj.settings!=='object')throw Error('No es un diseño compatible');const clean={...themeDefaults};for(const [k,v] of Object.entries(obj.settings)){if(!(k in clean)||typeof v!==typeof clean[k])continue;if(typeof v==='string'&&v.length>150)continue;clean[k]=v}for(const k of Object.keys(themeColorLabels).concat(['particleColor','particleSecond','particleThird']))if(!/^#[0-9a-f]{6}$/i.test(clean[k]))throw Error('Un color no es válido');T=clean;applyTheme();saveTheme();rerender();toast('Diseño importado')}catch(e){toast(e.message||'No se pudo importar',1)}}
 /* ===== Estado de vistas ===== */
-let S={q:'',lg:'',pay:'',sort:'name',view:innerWidth>800?'table':'gallery',page:1,box:''};const PER=8;
+let S={q:'',lg:'',pay:'',sort:'original',view:innerWidth>800?'table':'gallery',page:1,box:''};const PER=8;
 function pager(t,p){const n=Math.ceil(t/PER);if(n<2)return'';return`<nav class="pg" aria-label="Paginación">${Array.from({length:n},(_,i)=>`<button class="btn sm" data-act="page" data-p="${i+1}" ${i+1===p?'aria-current="page"':''}>${i+1}</button>`).join('')}</nav>`}
-function filt(list){const q=S.q.toLowerCase();let r=list.filter(p=>(!q||p.buyer.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q))&&(S.lg===''||p.logi==S.lg));
- const f={name:(a,b)=>a.buyer.localeCompare(b.buyer),pa:(a,b)=>a.price-b.price,pd:(a,b)=>b.price-a.price,prod:(a,b)=>a.desc.localeCompare(b.desc)}[S.sort];return r.sort(f)}
+function filt(list){
+ const q=S.q.trim().toLocaleLowerCase('es');
+ return list.filter(p=>!q||(p.buyer||'').toLocaleLowerCase('es').includes(q)).sort((a,b)=>{
+  // JP #1 se ordena por el número de fila original del JSON/Excel.
+  const aa=/^JAPON-JP(\d+)-FILA(\d+)$/i.exec(a.referenciaExcel||'');
+  const bb=/^JAPON-JP(\d+)-FILA(\d+)$/i.exec(b.referenciaExcel||'');
+  if(aa&&bb){const caja=Number(aa[1])-Number(bb[1]);if(caja)return caja;return Number(aa[2])-Number(bb[2]);}
+  // Para registros ajenos al importador se conserva el orden recibido.
+  return (a.ordenCarga??0)-(b.ordenCarga??0);
+ });
+}
 const productPhoto=p=>{const url=validProductImage(p.imagenUrl);return url?`<span class="ph"><img src="${esc(url)}" alt="${esc(p.desc)}" loading="lazy" referrerpolicy="no-referrer"></span>`:ph(p.imgId,p.desc)};
 function validProductImage(value){try{const u=new URL(value);return u.origin===R2_WORKER&&/^\/images\/productos\/[a-f0-9-]{36}\.(png|jpg|webp|gif)$/.test(u.pathname)?u.href:''}catch(e){return''}}
 const pcard=p=>`<article class="card pc"><button class="im" data-act="zoom" data-id="${esc(p.imgId||'')}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ampliar foto de ${esc(p.desc)}">${productPhoto(p)}</button><div class="bd"><strong>${esc(p.desc)}</strong><span>${esc(p.buyer)} <small style="color:var(--t2)">· ${esc(p.plat)}</small></span><strong>${money(p.price)}</strong><div class="row">${bLogi(p.logi)}</div><small style="color:var(--t2)">EMS: ${pm(p.ems)} · Aduana: ${pm(p.adu)}</small></div></article>`;
@@ -393,7 +402,7 @@ function plist(list,admin){const f=filt(list),pages=Math.max(1,Math.ceil(f.lengt
  if(!f.length)return`<div class="empty"><p><strong>Sin resultados</strong></p><p>Prueba con otro username, producto o filtro.</p><button class="btn" data-act="clear">Limpiar filtros</button></div>`;
  return`<p class="sr" aria-live="polite">${f.length} productos</p><div class="lst">${sl.map(p=>prow(p,admin)).join('')}</div>${pager(f.length,S.page)}`}
 const opts=(a,sel)=>a.map((x,i)=>`<option value="${i}" ${sel==i?'selected':''}>${esc(x)}</option>`).join('');
-const controls=()=>`<div class="bar"><div><label for="q">Buscar username o producto</label><input id="q" type="search" value="${esc(S.q)}" placeholder="Username o producto"></div><div><label for="fl">Estatus logístico</label><select id="fl"><option value="">Todos</option>${opts(LOGI,S.lg)}</select></div><div><label for="so">Ordenar</label><select id="so">${[['name','Comprador A-Z'],['prod','Producto A-Z'],['pa','Precio ↑'],['pd','Precio ↓']].map(([v,t])=>`<option value="${v}" ${S.sort===v?'selected':''}>${t}</option>`).join('')}</select></div></div>`;
+const controls=()=>`<div class="bar" style="grid-template-columns:minmax(220px,480px)"><div><label for="q">Buscar por cupidito</label><input id="q" type="search" value="${esc(S.q)}" placeholder="Nombre o username del cupidito"></div></div>`;
 /* ===== Vistas ===== */
 const bc=a=>''; // Migas de pan ocultas: se utiliza el botón Volver.
 async function vHome(){return `<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><form class="sb" role="search" data-f="find"><label class="sr" for="hq">Buscar por username</label><input id="hq" placeholder="Buscar por username"><button class="btn pri">Buscar</button></form></section>${catGrid()}`}
@@ -457,7 +466,7 @@ function eShip(id){const x=D.envios.find(v=>v.id===id)||{};
  cargarCupiditosParaBorradores().then(()=>{if($('#shipBuyerSuggestions'))sugerenciasCupiditosEnvio($('#buyer')?.value||'')}).catch(e=>console.warn('No se cargaron las sugerencias',e));
 }
 const nf=()=>`<div class="empty"><h2>No encontramos esa página</h2><a class="btn" href="#/">Volver al inicio</a></div>`;
-function vBox(id,tab,u){const b=box(id);if(!b)return nf();const c=cat(b.cat);if(S.box!==id){S={...S,q:'',lg:'',pay:'',sort:'name',page:1,box:id}}if(u){S.q=u;S.page=1}
+function vBox(id,tab,u){const b=box(id);if(!b)return nf();const c=cat(b.cat);if(S.box!==id){S={...S,q:'',lg:'',pay:'',sort:'original',page:1,box:id}}if(u){S.q=u;S.page=1}
  const tabs=`<div class="tabs" role="tablist"><a href="#/box/${id}" ${tab?'':'aria-current="page"'}>Masterlist</a><a href="#/box/${id}/cargos" ${tab?'aria-current="page"':''}>Cargos</a></div>`;
  let body;if(tab){const ps=D.prods.filter(p=>p.box===id&&publishedCharges[p.id]);
  const status=(amount,paid)=>Number(amount)>0?(paid?'<span class="b">Pagado</span>':'<span class="b">Pendiente</span>'):'—';
@@ -484,7 +493,7 @@ async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">
  if(tab==='cajas')b=`<div class="row sp"><h2>Cajas</h2><button class="btn pri" data-act="ebox">Nueva caja</button></div><table style="margin-top:16px"><thead><tr><th>Caja</th><th>Estado</th><th>Productos</th><th>Fechas</th><th>Acciones</th></tr></thead><tbody>${D.boxes.map(x=>`<tr><td data-l="Caja">${esc(cat(x.cat)?.name)} · ${esc(x.name)}</td><td data-l="Estado">${bBox(x.st)}</td><td data-l="Productos">${cnt(x.id)}</td><td data-l="Fechas">${x.created}${x.closed?' → '+x.closed:''}</td><td data-l="Acciones"><button class="btn sm pri" data-act="boxprods" data-id="${x.id}">Productos</button> <button class="btn sm" data-act="ebox" data-id="${x.id}">Editar</button> <button class="btn sm" data-act="tbox" data-id="${x.id}">${x.st===0?'Cerrar':'Reabrir'}</button> <button class="btn sm dng" data-act="dbox" data-id="${x.id}">Eliminar</button></td></tr>`).join('')}</tbody></table>`;
  if(tab==='borradores'){let drafts=[];try{drafts=await listarBorradoresCaja()}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}b+='<div class="row sp"><h2>Borradores privados</h2><button class="btn pri" data-act="newPrivateBox">Crear caja privada ♡</button></div><p style="color:var(--t2)">Solo visibles para administradores. Puedes continuar editándolos en otro momento.</p><div class="lst">'+(drafts.map(x=>{const v=x.contenido?.caja||{},n=x.contenido?.productos?.length||0;return '<div class="row2"><div class="mn"><strong>'+esc(v.name||'Caja sin nombre')+'</strong><span class="meta">'+n+' productos · '+esc(cat(v.cat)?.name||'Sin categoría')+'</span></div><button class="btn sm" data-act="editPrivateBox" data-id="'+esc(x.caja_id)+'">Continuar</button></div>'}).join('')||'<div class="empty">Todavía no hay borradores privados.</div>')+'</div>';}
  if(tab==='productos'){if(!D.boxes.length)b=`<h2>Productos</h2><div class="empty"><p><strong>Primero crea una caja</strong></p><p>Los productos se agregan dentro de una caja.</p><button class="btn pri" data-act="ebox">Crear caja</button></div>`;else{if(S.ab&&!box(S.ab))S.ab='';b=`<div class="row sp"><h2>Productos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><div style="max-width:360px;margin:14px 0"><label for="ab">Caja</label><select id="ab"><option value="">Todas las cajas</option>${D.boxes.map(x=>`<option value="${x.id}" ${x.id===S.ab?'selected':''}>${esc(cat(x.cat).name)} · ${esc(x.name)}</option>`).join('')}</select></div>${controls()}<div id="list">${plist(D.prods.filter(p=>!S.ab||p.box===S.ab),1)}</div>`}}
- if(tab==='importar-japon')b=`<h2>Importar Japón · importación controlada ♡</h2><p>Primero revisaremos JP #1. Después podrás confirmar la creación de productos sin subir fotografías. Selecciona el archivo <strong>japon_jp1_preparacion.json</strong> que descargaste.</p><div class="card"><label for="jpPreviewFile">Archivo JSON de preparación</label><input id="jpPreviewFile" type="file" accept=".json,application/json"><p id="jpPreviewStatus" aria-live="polite" style="color:var(--t2)">Esperando archivo…</p><div id="jpPreviewResults"></div></div><p style="color:var(--t2)">Solo se crearán productos nuevos después de tu confirmación. No se modificarán los existentes ni se subirán fotografías.</p>`;
+ if(tab==='importar-japon')b=`<h2>Importar Japón · importación controlada ♡</h2><p>Primero revisaremos JP #1. Después podrás confirmar la creación de productos sin subir fotografías. Selecciona el archivo <strong>japon_jp1_preparacion.json</strong> que descargaste.</p><div class="card"><label for="jpPreviewFile">Archivo JSON de preparación</label><input id="jpPreviewFile" type="file" accept=".json,application/json"><button type="button" class="btn" id="jpBuyerPreviewBtn" style="margin-top:12px">Revisar compradores del JSON (sin guardar)</button><button type="button" class="btn" id="jpChargesPreviewBtn" style="margin-top:12px;margin-left:8px">Revisar EMS y aduana (sin guardar)</button><div id="jpChargesPreviewResult" role="status" aria-live="polite"></div><p id="jpPreviewStatus" aria-live="polite" style="color:var(--t2)">Esperando archivo…</p><div id="jpPreviewResults"></div></div><p style="color:var(--t2)">Solo se crearán productos nuevos después de tu confirmación. No se modificarán los existentes ni se subirán fotografías.</p>`;
  if(tab==='cupiditos'){if(sub){const key=nmz(decodeURIComponent(sub)),ps=D.prods.filter(p=>nmz(p.buyer)===key);if(!ps.length)b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a></nav><div class="empty">Este username ya no tiene productos.</div>`;else{const name=ps[0].buyer,plat=ps[0].plat,bx=[...new Set(ps.map(p=>p.box))].map(box).filter(Boolean);b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a> › <span aria-current="page">${esc(name)}</span></nav><div class="row sp"><div><h2>${esc(name)}</h2><p style="color:var(--t2);margin:4px 0 0">${esc(plat)} · ${ps.length} producto${ps.length>1?'s':''} en ${bx.length} caja${bx.length>1?'s':''}</p></div><button class="btn pri" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}">Agregar producto</button></div>`+bx.map(x=>`<section class="card" style="margin-top:16px"><div class="row sp"><div><strong>${esc(cat(x.cat)?.name)} · ${esc(x.name)}</strong> ${bBox(x.st)}</div><button class="btn sm" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}" data-b="${x.id}">Agregar aquí</button></div><div class="lst" style="margin-top:12px">${ps.filter(p=>p.box===x.id).map(p=>prow(p,1)).join('')}</div></section>`).join('')}}else{const seen={};D.prods.forEach(p=>{const k=nmz(p.buyer);if(!seen[k])seen[k]=p.buyer});CUP=Object.values(seen).sort((a,c)=>a.localeCompare(c));b=`<div class="row sp"><h2>Cupiditos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><p style="color:var(--t2)">Usuarios con al menos un producto en una caja (${CUP.length}). Toca uno para ver sus cajas.</p>`+(CUP.length?`<div style="max-width:360px;margin:14px 0"><label for="cq">Buscar username</label><input id="cq" type="search" autocomplete="off"></div><div id="cl" class="lst">${cupRows(CUP)}</div>`:`<div class="empty"><p><strong>Aún no hay cupiditos</strong></p><p>Aparecen aquí cuando agregas un producto a una caja.</p></div>`)}}
  if(tab==='envios'){try{await sincronizarEnviosSupabase(true)}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}}
  if(tab==='envios')b+=`<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p style="color:var(--t2)">Registra los paquetes nacionales enviados desde la administradora a cada cupidito. No utilizan cajas.</p>${shipRows(D.envios,true)}`;
@@ -814,7 +823,7 @@ async function sincronizarCajasSupabase(){
 /* Productos públicos: nunca consultar borradores desde las páginas públicas. */
 async function sincronizarProductosSupabase(){
  const headers={apikey:AUTH_PUBLISHABLE_KEY};
- const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url&limit=10000',{headers,cache:'no-store'});
+ const r=await fetch(AUTH_URL+'/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,created_at&limit=10000',{headers,cache:'no-store'});
  if(!r.ok)throw Error('No se pudieron cargar los productos públicos ('+r.status+').');
  const productos=await r.json();
  let names={};
@@ -825,7 +834,8 @@ async function sincronizarProductosSupabase(){
   for(const x of rows){const id=x.id||x.cupidito_id;if(id)names[id]=x.nombre||x.username||x.alias||''}
  }
  const states=['comprado','asegurado','en dirección coreana','en dirección japonesa','en camino a méxico','en méxico','entregado','stock'];
- D.prods=productos.map(p=>({
+ D.prods=productos.map((p,i)=>({
+  referenciaExcel:p.referencia_excel||'',ordenCarga:i,
   id:p.id,box:p.caja_id,buyer:names[p.cupidito_id]||'Cupidito',desc:p.nombre||p.descripcion||'',
   plat:p.plataforma||'',price:Number(p.precio)||0,logi:Math.max(0,states.indexOf(String(p.estado||'comprado').toLowerCase())),
   ems:0,adu:0,imgId:'',imagenUrl:validProductImage(p.imagen_url),pay:0
@@ -884,6 +894,30 @@ async function previsualizarJP1(file){
  }catch(e){status.textContent='No se pudo completar la vista previa.';out.textContent=e.message||'Error al leer archivo';}
 }
 document.addEventListener('change',e=>{if(e.target.id==='jpPreviewFile'&&e.target.files[0])previsualizarJP1(e.target.files[0]);});
+/* Vista previa de EMS y aduana; no escribe datos. */
+async function previsualizarImportesJP1(file){
+ const out=$('#jpChargesPreviewResult');if(!out)return;
+ out.textContent='Comparando importes con Supabase…';
+ try{
+  if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+  const data=JSON.parse(await file.text());
+  if(data.origen!=='JP #1'||data.modo!=='preparacion_sin_importar'||!Array.isArray(data.productos))throw Error('Selecciona el JSON de preparación de JP #1.');
+  const rows=await jp1Request('productos?select=referencia_excel,nombre,ems,aduana&referencia_excel=like.JAPON-JP1-*');
+  const byRef=new Map(rows.map(x=>[x.referencia_excel,x]));
+  const differences=[],same=[],missing=[];
+  for(const x of data.productos){
+   if(!/^JAPON-JP1-FILA[0-9]+$/.test(x.referencia_excel||''))throw Error('Referencia inesperada.');
+   const p=byRef.get(x.referencia_excel);
+   if(!p){missing.push(x);continue;}
+   const ems=jp1Dinero(x.ems),aduana=jp1Dinero(x.aduana);
+   const record={x,p,ems,aduana};
+   if(Math.abs((Number(p.ems)||0)-ems)>.001||Math.abs((Number(p.aduana)||0)-aduana)>.001)differences.push(record);else same.push(record);
+  }
+  out.innerHTML=`<p><strong>Solo lectura:</strong> ${same.length} productos coinciden · ${differences.length} necesitan corrección · ${missing.length} no encontrados. No se modificó nada.</p><div style="max-height:350px;overflow:auto"><table><thead><tr><th>Producto</th><th>EMS actual → JSON</th><th>Aduana actual → JSON</th></tr></thead><tbody>${differences.map(({x,p,ems,aduana})=>`<tr><td>${esc(x.descripcion)}</td><td>${pm(Number(p.ems)||0)} → ${pm(ems)}</td><td>${pm(Number(p.aduana)||0)} → ${pm(aduana)}</td></tr>`).join('')}</tbody></table></div><p style="color:var(--t2)">Esta revisión compara la tabla productos. Los cargos publicados se guardan por separado y todavía no se actualizan automáticamente.</p>`;
+ }catch(e){out.textContent='No se pudo completar la revisión: '+(e.message||e)}
+}
+document.addEventListener('click',e=>{if(e.target?.id==='jpChargesPreviewBtn'){const f=$('#jpPreviewFile')?.files?.[0];if(!f){toast('Primero selecciona japon_jp1_preparacion.json',1);return}previsualizarImportesJP1(f)}});
+document.addEventListener('click',e=>{if(e.target?.id==='jpBuyerPreviewBtn'){const f=$('#jpPreviewFile')?.files?.[0];if(!f){toast('Primero selecciona japon_jp1_preparacion.json',1);return}previsualizarCompradoresJP1(f)}});
 
 async function importarJP1(){
  const state=jp1PendientesImportacion,btn=$('#jpImportConfirm'),progress=$('#jpImportProgress');
@@ -917,6 +951,47 @@ async function importarJP1(){
  }catch(e){progress.textContent='Importación detenida. '+creados+' creados y '+omitidos+' omitidos. '+e.message+' Puedes volver a analizar el JSON para reintentar sin sobrescribir.';}
 }
 document.addEventListener('click',e=>{if(e.target?.id==='jpImportConfirm')importarJP1();});
+
+/* ===== Compradores JP #1: revisión segura sin escritura ===== */
+async function previsualizarCompradoresJP1(file){
+ const status=$('#jpPreviewStatus'),out=$('#jpPreviewResults');
+ if(!status||!out)return;
+ status.textContent='Revisando compradores del archivo…';out.innerHTML='';
+ try{
+  if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+  if(file.size>2*1024*1024)throw Error('El archivo es demasiado grande.');
+  const data=JSON.parse(await file.text());
+  if(data.origen!=='JP #1'||data.modo!=='preparacion_sin_importar'||!Array.isArray(data.productos))throw Error('Selecciona el JSON de preparación de JP #1.');
+  const norm=x=>String(x??'').trim().normalize('NFKC').toLocaleLowerCase('es-MX');
+  const rows=data.productos.filter(x=>x.hoja==='JP #1'&&/^JAPON-JP1-FILA[0-9]+$/.test(x.referencia_excel||''));
+  if(rows.length!==data.productos.length||new Set(rows.map(x=>x.referencia_excel)).size!==rows.length)throw Error('El JSON tiene referencias inesperadas o duplicadas.');
+  const [products,cupiditos]=await Promise.all([
+   jp1Request('productos?select=id,referencia_excel,cupidito_id&referencia_excel=like.JAPON-JP1-*'),
+   jp1Request('cupiditos?select=id,nombre')
+  ]);
+  const byRef=new Map(products.map(x=>[x.referencia_excel,x]));
+  const byName=new Map();for(const c of cupiditos){const k=norm(c.nombre);if(k){const arr=byName.get(k)||[];arr.push(c);byName.set(k,arr)}}
+  const proposed=[],issues=[];
+  for(const x of rows){
+   const name=String(x.comprador??'').trim();
+   if(!name)continue;
+   if(norm(name)==='stock'){issues.push({fila:x.fila,name,reason:'Stock no se asignará como comprador automáticamente'});continue}
+   const p=byRef.get(x.referencia_excel);
+   if(!p){issues.push({fila:x.fila,name,reason:'Producto no encontrado en Supabase'});continue}
+   if(p.cupidito_id){issues.push({fila:x.fila,name,reason:'Ya tiene comprador; no se modificará'});continue}
+   const matches=byName.get(norm(name))||[];
+   if(matches.length>1){issues.push({fila:x.fila,name,reason:'Hay varios cupiditos con este nombre; requiere revisión'});continue}
+   proposed.push({fila:x.fila,name,exists:matches.length===1});
+  }
+  status.textContent=`${proposed.length} asociaciones propuestas · ${issues.length} casos para revisar · ningún cambio realizado`;
+  out.innerHTML=`<p><strong>Solo vista previa.</strong> No se ha creado ningún cupidito ni modificado ningún producto. Los nombres vacíos permanecerán sin asignar.</p>
+  <h3 style="margin:18px 0 8px">Compradores por asociar</h3>
+  <div style="max-height:340px;overflow:auto"><table><thead><tr><th>Fila</th><th>Comprador original</th><th>Acción futura</th></tr></thead><tbody>${proposed.map(x=>`<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${x.exists?'Vincular cupidito existente':'Crear cupidito y vincular'}</td></tr>`).join('')||'<tr><td colspan="3">Ninguna asociación pendiente</td></tr>'}</tbody></table></div>
+  <h3 style="margin:18px 0 8px">Para revisar o conservar</h3><div style="max-height:200px;overflow:auto"><table><thead><tr><th>Fila</th><th>Nombre</th><th>Motivo</th></tr></thead><tbody>${issues.map(x=>`<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${esc(x.reason)}</td></tr>`).join('')||'<tr><td colspan="3">Ningún caso</td></tr>'}</tbody></table></div>
+  <p style="color:var(--t2)">La asignación se habilitará después de que revises esta lista.</p>`;
+ }catch(e){status.textContent='No se pudo revisar compradores.';out.textContent=e.message||'Error de consulta';}
+}
+
 
 /* ===== Eventos ===== */
 document.addEventListener('change',async e=>{
