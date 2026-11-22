@@ -150,6 +150,9 @@ const money=n=>'$'+Number(n||0).toLocaleString('es-MX')+' MXN';
 const uid=p=>p+Math.random().toString(36).slice(2,9);
 const LOGI=['Comprado','Asegurado','En dirección coreana','En dirección japonesa','En camino a México','En México','Entregado','Stock'],LI=['①','②','③','④','⑤','⑥','✓','▣'];
 const PAY=['Pendiente','Pagado'],PI=['○','●'],BOX=['Abierta','Cerrada','En tránsito','Finalizada'],BI=['◌','▣','➜','✓'],PLAT=['Facebook','Instagram','Otra'];
+// Al registrar un comprador nuevo, @ indica Instagram; sin @, Facebook.
+const plataformaCupidito=nombre=>String(nombre||'').trim().startsWith('@')?'Instagram':'Facebook';
+function sugerirPlataformaCupidito(input){const selector=$('#dlg [name="plat"]');if(input&&selector&&input.value.trim())selector.value=plataformaCupidito(input.value)}
 const badge=(i,l,ic,k)=>`<span class="b ${k?'k'+i:''}"><span aria-hidden="true">${ic[i]}</span>${esc(l[i])}</span>`;
 /* Colores de referencia del Excel de Isa; no se cambian los estados guardados. */
 const COLOR_CODES=[
@@ -516,8 +519,8 @@ function buyerSug(){const el=$('#bsug');if(!el)return;const nm=t=>t.trim().repla
 const m={},pl={};D.prods.forEach(p=>{if(nm(p.buyer).includes(q)){const b=box(p.box);if(!b)return;const o=m[p.buyer]=m[p.buyer]||{};o[b.id]=(o[b.id]||0)+1;pl[p.buyer]=p.plat}});const ns=Object.keys(m);
 el.innerHTML=ns.length?`<p class="meta">Ya existen en cajas. Toca uno para usar ese username:</p>`+ns.slice(0,6).map(n=>`<button type="button" class="sug" data-act="usebuyer" data-u="${esc(n)}" data-p="${esc(pl[n])}"><strong>${esc(n)}</strong><small>${Object.entries(m[n]).map(([id,c])=>esc(cat(box(id).cat).name)+' · '+esc(box(id).name)+' ('+c+')').join(' | ')}</small></button>`).join(''):`<p class="meta">Username nuevo: aún no aparece en ninguna caja.</p>`}
 function prodForm(id,pre){const p=D.prods.find(x=>x.id===id)||{...pre},ne=!id;if(!D.boxes.length){toast('Primero crea una caja.',1);return eBox()}pend={blob:null,rm:false,old:p.imgId||''};
- dlg(ne?'Nuevo producto':'Editar producto',`<div class="f">${fld('buyer','Username del comprador',p.buyer,'text','required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel('plat','Plataforma',PLAT.map(x=>`<option ${p.plat===x?'selected':''}>${x}</option>`).join(''))}${sel('box','Caja',D.boxes.map(b=>`<option value="${b.id}" ${p.box===b.id||S.ab===b.id&&ne?'selected':''}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(''))}</div><div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld('price','Precio (MXN)',p.price,'number','min="0" step="0.01" required')}${sel('logi','Estatus logístico',opts(LOGI,p.logi??0))}</div><div class="f2">${fld('ems','EMS (MXN, 0 = pendiente)',p.ems??0,'number','min="0" step="0.01"')}${fld('adu','Aduana (MXN, 0 = pendiente)',p.adu??0,'number','min="0" step="0.01"')}</div>${imgField(p.imgId)}${err}${foot}</div>`,async fd=>{
-  const o={buyer:fd.buyer.trim(),plat:fd.plat,box:fd.box,desc:fd.desc.trim(),price:+fd.price,logi:+fd.logi,ems:+fd.ems||0,adu:+fd.adu||0};
+ dlg(ne?'Nuevo producto':'Editar producto',`<div class="f">${fld('buyer','Username del comprador',p.buyer,'text','required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel('plat','Plataforma',PLAT.map(x=>`<option ${(p.plat||plataformaCupidito(p.buyer))===x?'selected':''}>${x}</option>`).join(''))}${sel('box','Caja',D.boxes.map(b=>`<option value="${b.id}" ${p.box===b.id||S.ab===b.id&&ne?'selected':''}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(''))}</div><div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld('price','Precio (MXN)',p.price,'number','min="0" step="0.01" required')}${sel('logi','Estatus logístico',opts(LOGI,p.logi??0))}</div><div class="f2">${fld('ems','EMS (MXN, 0 = pendiente)',p.ems??0,'number','min="0" step="0.01"')}${fld('adu','Aduana (MXN, 0 = pendiente)',p.adu??0,'number','min="0" step="0.01"')}</div>${imgField(p.imgId)}${err}${foot}</div>`,async fd=>{
+  const o={buyer:fd.buyer.trim(),plat:fd.plat||plataformaCupidito(fd.buyer),box:fd.box,desc:fd.desc.trim(),price:+fd.price,logi:+fd.logi,ems:+fd.ems||0,adu:+fd.adu||0};
   if(!o.buyer)return'Escribe el username del comprador.';if(!(o.price>=0)||fd.price==='')return'Ingresa un precio válido.';
   // La tabla Supabase es la fuente de verdad; nunca anunciar éxito solo por localStorage.
   try{
@@ -662,9 +665,9 @@ async function draftProductForm(index){
  // Conserva los cambios escritos en la caja mientras se abre el formulario de producto.
  const f=$('#dlg form');if(f){const fd=Object.fromEntries(new FormData(f));privateWork.contenido.caja={name:String(fd.name||'').trim(),desc:String(fd.desc||'').trim(),tracking:String(fd.tracking||'').trim(),cat:fd.cat,st:+fd.st,closed:''}}
  const p=privateWork.contenido.productos[index]||{};
- dlg(index>=0?'Editar producto del borrador':'Agregar producto al borrador',`<div class="f">${fld('nombre','Nombre o descripción del producto',p.nombre||'','text','required')}${fld('buyer','Username del cupidito',p.buyer||'','text','autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel('plat','Plataforma',PLAT.map(x=>`<option ${p.plat===x?'selected':''}>${x}</option>`).join(''))}<div class="f2">${fld('precio','Precio',p.precio??'','number','min="0" step="0.01"')}${sel('moneda','Moneda',['MXN','KRW','JPY','USD'].map(x=>`<option ${p.moneda===x?'selected':''}>${x}</option>`).join(''))}</div>${sel('estado','Estado',LOGI.map((x,i)=>`<option value="${i}" ${p.logi===i?'selected':''}>${esc(x)}</option>`).join(''))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion||'')}</textarea></div><p class="note">Las imágenes se integrarán cuando Cloudflare R2 esté conectado. No se perderán imágenes porque todavía no se admiten en este editor.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,async fd=>{
+ dlg(index>=0?'Editar producto del borrador':'Agregar producto al borrador',`<div class="f">${fld('nombre','Nombre o descripción del producto',p.nombre||'','text','required')}${fld('buyer','Username del cupidito',p.buyer||'','text','autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel('plat','Plataforma',PLAT.map(x=>`<option ${(p.plat||plataformaCupidito(p.buyer))===x?'selected':''}>${x}</option>`).join(''))}<div class="f2">${fld('precio','Precio',p.precio??'','number','min="0" step="0.01"')}${sel('moneda','Moneda',['MXN','KRW','JPY','USD'].map(x=>`<option ${p.moneda===x?'selected':''}>${x}</option>`).join(''))}</div>${sel('estado','Estado',LOGI.map((x,i)=>`<option value="${i}" ${p.logi===i?'selected':''}>${esc(x)}</option>`).join(''))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion||'')}</textarea></div><p class="note">Las imágenes se integrarán cuando Cloudflare R2 esté conectado. No se perderán imágenes porque todavía no se admiten en este editor.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,async fd=>{
  if(!fd.nombre.trim())return 'Escribe el nombre del producto.';
- const o={...p,id:p.id||crypto.randomUUID(),nombre:fd.nombre.trim(),buyer:fd.buyer.trim(),plat:fd.plat,precio:fd.precio===''?null:Number(fd.precio),moneda:fd.moneda,logi:+fd.estado,descripcion:fd.descripcion.trim()};
+ const o={...p,id:p.id||crypto.randomUUID(),nombre:fd.nombre.trim(),buyer:fd.buyer.trim(),plat:fd.plat||plataformaCupidito(fd.buyer),precio:fd.precio===''?null:Number(fd.precio),moneda:fd.moneda,logi:+fd.estado,descripcion:fd.descripcion.trim()};
  if(o.precio!==null&&(!Number.isFinite(o.precio)||o.precio<0))return 'Precio inválido.';
  if(index>=0)privateWork.contenido.productos[index]=o;else privateWork.contenido.productos.push(o);
  await persistPrivateWork();
@@ -1094,7 +1097,7 @@ async function previsualizarCompradoresJP1(file){
   status.textContent=`${proposed.length} asociaciones propuestas · ${issues.length} casos para revisar · ningún cambio realizado`;
   out.innerHTML=`<p><strong>Solo vista previa.</strong> No se ha creado ningún cupidito ni modificado ningún producto. Los nombres vacíos permanecerán sin asignar.</p>
   <h3 style="margin:18px 0 8px">Compradores por asociar</h3>
-  <div style="max-height:340px;overflow:auto"><table><thead><tr><th>Fila</th><th>Comprador original</th><th>Acción futura</th></tr></thead><tbody>${proposed.map(x=>`<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${x.exists?'Vincular cupidito existente':'Crear cupidito y vincular'}</td></tr>`).join('')||'<tr><td colspan="3">Ninguna asociación pendiente</td></tr>'}</tbody></table></div>
+  <div style="max-height:340px;overflow:auto"><table><thead><tr><th>Fila</th><th>Comprador original</th><th>Acción futura</th></tr></thead><tbody>${proposed.map(x=>`<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${x.exists?'Vincular cupidito existente':'Crear cupidito y vincular'} · ${plataformaCupidito(x.name)}</td></tr>`).join('')||'<tr><td colspan="3">Ninguna asociación pendiente</td></tr>'}</tbody></table></div>
   <h3 style="margin:18px 0 8px">Para revisar o conservar</h3><div style="max-height:200px;overflow:auto"><table><thead><tr><th>Fila</th><th>Nombre</th><th>Motivo</th></tr></thead><tbody>${issues.map(x=>`<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${esc(x.reason)}</td></tr>`).join('')||'<tr><td colspan="3">Ningún caso</td></tr>'}</tbody></table></div>
   <div style="margin-top:16px;padding:16px;border:1px solid var(--bd);border-radius:14px">
   <p>Solo se asignarán las filas mostradas arriba. No se cambiarán productos que ya tengan cupidito, ni filas vacías o marcadas para revisión.</p>
@@ -1138,7 +1141,7 @@ async function asignarCompradoresJP1(){
    }
    // Filtro cupidito_id=is.null evita sobrescribir una asignación concurrente.
    const updated=await jp1Request('productos?id=eq.'+encodeURIComponent(rows[0].id)+'&cupidito_id=is.null',{
-    method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({cupidito_id:matches[0].id})
+    method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({cupidito_id:matches[0].id,plataforma:plataformaCupidito(item.name)})
    });
    if(!Array.isArray(updated)||updated.length!==1){omitidos++;continue}
    vinculados++;
@@ -1190,7 +1193,7 @@ document.addEventListener('change',async e=>{
  try{await publicarTamanoLogo(v);toast('Tamaño del logo publicado para todos ♡')}
  catch(err){toast(err.message||'No se pudo publicar el tamaño.',1)}
 });
-document.addEventListener('input',e=>{if(e.target?.matches('#dlg [name="buyer"]')&&privateWork)sugerenciasCupiditos(e.target.value)});
+document.addEventListener('input',e=>{if(e.target?.matches('#dlg [name="buyer"]')){sugerirPlataformaCupidito(e.target);if(privateWork)sugerenciasCupiditos(e.target.value)}});
 document.addEventListener('input',e=>{if(e.target?.id==='buyer'&&$('#shipBuyerSuggestions'))sugerenciasCupiditosEnvio(e.target.value)});
 document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]');if(!a)return;const ac=a.dataset.act,id=a.dataset.id;if(ac!=='terms'&&a.tagName==='A')e.preventDefault();
  if(ac==='logout'){adminReady=false;adminSession=null;toast('Sesión cerrada');location.hash='#/';return}
@@ -1248,7 +1251,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]
   case'draftChooseCupidito':{
    const c=draftCupiditos[Number(a.dataset.cupiditoIndex)];
    if(c){const input=$('#dlg [name="buyer"]');if(input)input.value=c.nombre;
-    if(c.plat){const plat=$('#dlg [name="plat"]');if(plat&&[...plat.options].some(o=>o.value===c.plat))plat.value=c.plat}
+    {const plat=$('#dlg [name="plat"]');const value=c.plat||plataformaCupidito(c.nombre);if(plat&&[...plat.options].some(o=>o.value===value))plat.value=value}
     sugerenciasCupiditos('');}
    break;
   }
