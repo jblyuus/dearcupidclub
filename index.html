@@ -1210,7 +1210,13 @@ document.addEventListener('submit',async e=>{const f=e.target.dataset.f;if(!f)re
   try{
     const r=await onSub(fd);
     if(r){if(er)er.textContent=String(r);else toast(String(r),1);return;}
-    $('#dlg').close();await rerender();
+    // Mantener la posición de lectura al guardar desde un modal.
+    const previousScrollY=window.scrollY;
+    $('#dlg').close();
+    S.fromNav=0; // No es una navegación: no desplazar al inicio.
+    await rerender();
+    window.scrollTo({top:previousScrollY,left:0,behavior:'instant'});
+    requestAnimationFrame(()=>window.scrollTo({top:previousScrollY,left:0,behavior:'instant'}));
   }catch(error){
     console.error('Error al guardar:',error);
     const message=error?.message||'No se pudo guardar. Inténtalo de nuevo.';
