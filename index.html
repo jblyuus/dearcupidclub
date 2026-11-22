@@ -851,8 +851,8 @@ async function previsualizarJP1(file){
   if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
   if(file.size>2*1024*1024)throw Error('El archivo JSON es demasiado grande.');
   const data=JSON.parse(await file.text());
-  if(data.origen!=='JP #1'||data.modo!=='preparacion_sin_importar'||!Array.isArray(data.productos)||!Array.isArray(data.pendientes))throw Error('Selecciona japon_jp1_preparacion.json, no el JSON original.');
-  const productos=data.productos;
+  if(data.origen!=='JP #1'||data.modo!=='preparacion_sin_importar'||!Array.isArray(data.productos)||!Array.isArray(data.revision_manual??data.pendientes))throw Error('El archivo no tiene la estructura de preparación de JP #1.');
+  const productos=data.productos,pendientes=data.revision_manual??data.pendientes;
   if(productos.length>100||productos.some(x=>x.hoja!=='JP #1'||!/^JAPON-JP1-FILA[0-9]+$/.test(x.referencia_excel||'')))throw Error('Hay registros inesperados en el archivo.');
   const refs=productos.map(x=>x.referencia_excel);
   if(new Set(refs).size!==refs.length)throw Error('El archivo contiene referencias duplicadas.');
@@ -860,8 +860,8 @@ async function previsualizarJP1(file){
   if(!r.ok)throw Error('No se pudo consultar productos ('+r.status+').');
   const existentes=await r.json(),byRef=new Map(existentes.map(x=>[x.referencia_excel,x]));
   const nuevos=productos.filter(x=>!byRef.has(x.referencia_excel)),ya=productos.filter(x=>byRef.has(x.referencia_excel));
-  status.textContent=`${productos.length} productos identificados · ${nuevos.length} nuevos · ${ya.length} existentes · ${data.pendientes.length} filas pendientes de revisión`;
-  out.innerHTML=`<p><strong>Sin cambios realizados.</strong> Los productos existentes no se sobrescribirán.</p><h3 style="margin:18px 0 8px">Ya existentes</h3><p>${ya.length?ya.map(x=>esc(x.referencia_excel)+' · '+esc(x.descripcion)).join('<br>'):'Ninguno'}</p><h3 style="margin:18px 0 8px">Por crear (vista previa)</h3><div style="max-height:330px;overflow:auto"><table><thead><tr><th>Fila</th><th>Producto</th><th>Comprador original</th></tr></thead><tbody>${nuevos.map(x=>`<tr><td>${x.fila}</td><td>${esc(x.descripcion)}</td><td>${esc(x.comprador||'Sin asignar')}</td></tr>`).join('')}</tbody></table></div><h3 style="margin:18px 0 8px">Revisión manual</h3><p>${data.pendientes.map(x=>'Fila '+x.fila+' · sin descripción/precio').join('<br>')||'Ninguna'}</p>`;
+  status.textContent=`${productos.length} productos identificados · ${nuevos.length} nuevos · ${ya.length} existentes · ${pendientes.length} filas pendientes de revisión`;
+  out.innerHTML=`<p><strong>Sin cambios realizados.</strong> Los productos existentes no se sobrescribirán.</p><h3 style="margin:18px 0 8px">Ya existentes</h3><p>${ya.length?ya.map(x=>esc(x.referencia_excel)+' · '+esc(x.descripcion)).join('<br>'):'Ninguno'}</p><h3 style="margin:18px 0 8px">Por crear (vista previa)</h3><div style="max-height:330px;overflow:auto"><table><thead><tr><th>Fila</th><th>Producto</th><th>Comprador original</th></tr></thead><tbody>${nuevos.map(x=>`<tr><td>${x.fila}</td><td>${esc(x.descripcion)}</td><td>${esc(x.comprador||'Sin asignar')}</td></tr>`).join('')}</tbody></table></div><h3 style="margin:18px 0 8px">Revisión manual</h3><p>${pendientes.map(x=>'Fila '+x.fila+' · sin descripción/precio').join('<br>')||'Ninguna'}</p>`;
  }catch(e){status.textContent='No se pudo completar la vista previa.';out.textContent=e.message||'Error al leer archivo';}
 }
 document.addEventListener('change',e=>{if(e.target.id==='jpPreviewFile'&&e.target.files[0])previsualizarJP1(e.target.files[0]);});
