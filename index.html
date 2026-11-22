@@ -136,10 +136,30 @@ header{background:var(--sf)}
 .color-legend-item{display:flex;align-items:center;gap:9px;font-size:.9rem}
 .color-legend-dot{width:23px;height:23px;border:1px solid #d8d0d5;border-radius:7px;flex-shrink:0}
 
+
+/* Ajustes visuales de inicio para presentación a Isa (sin tocar datos ni otras vistas). */
+.home main{padding-bottom:105px}
+.home .hero{padding-bottom:0}
+.home .hero .lg{margin-bottom:0}
+/* El PNG del logo incluye aire transparente; acercamos visualmente el título. */
+.home .hero h1{position:relative;margin-top:-54px}
+.home .isa-watermark{font-size:.82rem;font-weight:400;letter-spacing:.09em;color:#bda8b3;opacity:.78;margin:5px auto 0}
+.home .hero p{margin:14px auto 21px}
+.home .carrd-caption{font-size:.84rem;color:var(--t2);font-weight:400;margin:0 auto 9px}
+.home .menu{margin-top:12px}
+.home footer{margin-top:0}
+footer a{color:inherit;text-underline-offset:3px}
+footer a:hover{color:var(--ib)}
+@media(max-width:600px){
+ .home main{padding-bottom:90px}
+ .home .hero h1{margin-top:-65px}
+ .home .hero p{margin-top:13px}
+ .home .menu{margin-top:10px}
+}
 </style></head><body>
 <header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/1a5fc7bc-baf6-40c6-b66d-275017eb574e" data-n="env">Envíos</a></nav></div></header>
 <main class="w" id="app" tabindex="-1" aria-live="polite"><div class="sk"></div></main>
-<footer><div class="w">dearcupid club ݁ ⋆ · <a href="#" data-act="terms">Términos y condiciones</a></div></footer>
+<footer><div class="w">dearcupid club ݁ ⋆ · hecho por <a href="https://www.instagram.com/blyuus?fqnt=cWtmb3B5M2x6Yjhk&amp;utm_source=qr" target="_blank" rel="noopener noreferrer">@blyuus</a></div></footer>
 <dialog id="dlg"></dialog><div id="toast" role="status" aria-live="polite"></div>
 <script>
 'use strict';
@@ -420,7 +440,7 @@ function homeFind(){
  (!boxes.length&&!shipments.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
 }
 const bannerHtml=async()=>{const u=await currentImage('banner');return u?`<div class="bn"><img src="${u}" alt="Banner de dearcupid club"></div>`:''};
-async function vHome2(){return`${await bannerHtml()}<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><a class="carrd" href="https://dearcupidclub.carrd.co" target="_blank" rel="noopener">dearcupidclub.carrd.co <span aria-hidden="true">↗</span></a><form class="sb" role="search" data-f="find" style="margin:24px auto 0"><label class="sr" for="hq">Buscar por username</label><input id="hq" type="search" placeholder="Busca tu username" autocomplete="off"><button class="btn pri">Buscar</button></form><div id="hres" aria-live="polite"></div></section><nav class="menu" aria-label="Secciones">${D.cats.map(c=>`<a href="#/cat/${c.id}">${cIc(c)}<span>${esc(c.name)}<small>${esc(c.desc)}</small></span></a>`).join('')}</nav>`}
+async function vHome2(){return`${await bannerHtml()}<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><div class="isa-watermark">@sejeongmeal</div><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><div class="carrd-caption">info, envíos &amp; términos y condiciones:</div><a class="carrd" href="https://dearcupidclub.carrd.co" target="_blank" rel="noopener">dearcupidclub.carrd.co <span aria-hidden="true">↗</span></a><form class="sb" role="search" data-f="find" style="margin:18px auto 0"><label class="sr" for="hq">Buscar por username</label><input id="hq" type="search" placeholder="Busca tu username" autocomplete="off"><button class="btn pri">Buscar</button></form><div id="hres" aria-live="polite"></div></section><nav class="menu" aria-label="Secciones">${D.cats.map(c=>`<a href="#/cat/${c.id}">${cIc(c)}<span>${esc(c.name)}<small>${esc(c.desc)}</small></span></a>`).join('')}</nav>`}
 const catGrid=()=>`<h2 class="s" style="margin-top:0">Categorías</h2><div class="grid">${D.cats.map(c=>`<a class="card" href="#/cat/${c.id}">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p></a>`).join('')}</div>`;
 const vCats=()=>bc([['Inicio','#/'],['Categorías']])+catGrid();
 function vCat(id){const c=cat(id);if(!c)return nf();if(isEnv(id))return vEnvios();const bs=D.boxes.filter(b=>b.cat===id);return bc([['Inicio','#/'],[c.name]])+`<h1>${esc(c.name)}</h1><p style="color:var(--t2)">${esc(c.desc)}</p><div class="grid" style="margin-top:20px">${bs.map(b=>`<a class="card" href="#/box/${b.id}"><h3>${esc(b.name)}</h3>${b.desc?.trim()?`<p>${esc(b.desc)}</p>`:''}<p>${cnt(b.id)} productos</p><div style="margin-top:10px">${bBox(b.st)}</div><p>Creada: ${b.created}${b.closed?' · Cierre: '+b.closed:''}</p></a>`).join('')||'<div class="empty">Aún no hay cajas en esta categoría.</div>'}</div>`}
