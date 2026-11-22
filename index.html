@@ -256,6 +256,8 @@ async function cargarImagenesPublicas(){
  if(!r.ok)throw Error('No se pudieron cargar las imágenes públicas ('+r.status+').');
  const rows=await r.json(),data=rows[0]?.imagenes||{};
  publicImages={logo:validPublicImage(data.logo),banner:validPublicImage(data.banner)};
+ publicLogoWidth=Number.isFinite(Number(data.logoWidth))&&Number(data.logoWidth)>=100&&Number(data.logoWidth)<=420?Number(data.logoWidth):270;
+ applyLogoW();
 }
 async function currentImage(kind){return publicImages[kind]||await imgUrl(kind)}
 async function uploadR2Image(file,folder){
@@ -280,7 +282,20 @@ async function publishPublicImage(kind,url){
  publicImages[kind]=url||'';
 }
 /* ===== Logo ===== */
-const logoW=()=>{try{return Math.min(420,Math.max(100,+localStorage.getItem('dc_logo_w')||270))}catch(e){return 270}};const applyLogoW=()=>document.documentElement.style.setProperty('--logo-w',logoW()+'px');
+let publicLogoWidth=270;
+const logoW=()=>publicLogoWidth;
+async function publicarTamanoLogo(value){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como Isa.');
+ const headers={apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token};
+ const get=await fetch(AUTH_URL+'/rest/v1/configuracion?select=imagenes&id=eq.1&limit=1',{headers,cache:'no-store'});
+ if(!get.ok)throw Error('No se pudo consultar el tamaño del logo.');
+ const rows=await get.json();if(rows.length!==1)throw Error('No se encontró la configuración.');
+ const imagenes={...(rows[0].imagenes||{}),logoWidth:value};
+ const r=await fetch(AUTH_URL+'/rest/v1/configuracion?id=eq.1',{method:'PATCH',headers:{...headers,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({imagenes,actualizado_en:new Date().toISOString()})});
+ if(!r.ok)throw Error('No se pudo guardar el tamaño ('+r.status+').');
+ const result=await r.json();if(result.length!==1)throw Error('Supabase no confirmó el tamaño.');
+}
+const applyLogoW=()=>document.documentElement.style.setProperty('--logo-w',logoW()+'px');
 async function setLogo(){applyLogoW();const h=$('#hl');h.innerHTML='<span aria-hidden="true">←</span><span>Volver</span>';h.href='#/'}
 const logoHtml=async()=>{const u=await currentImage('logo');return u?`<div class="lg"><img src="${u}" alt="Logo de Dearcupid Club"></div>`:`<div class="lg" style="justify-content:center">♡</div>`};
 /* ===== Editor de apariencia ===== */
@@ -826,6 +841,12 @@ const rerender=()=>route();
 function relist(){const l=$('#list');if(l){const adm=location.hash.startsWith('#/admin');l.innerHTML=plist(adm?D.prods.filter(p=>!S.ab||p.box===S.ab):D.prods.filter(p=>p.box===S.box),adm);hydrate()}}
 addEventListener('hashchange',()=>{S.fromNav=1;route()});
 /* ===== Eventos ===== */
+document.addEventListener('change',async e=>{
+ if(e.target.id!=='lsz')return;
+ const v=Number(e.target.value);
+ try{await publicarTamanoLogo(v);toast('Tamaño del logo publicado para todos ♡')}
+ catch(err){toast(err.message||'No se pudo publicar el tamaño.',1)}
+});
 document.addEventListener('input',e=>{if(e.target?.matches('#dlg [name="buyer"]')&&privateWork)sugerenciasCupiditos(e.target.value)});
 document.addEventListener('input',e=>{if(e.target?.id==='buyer'&&$('#shipBuyerSuggestions'))sugerenciasCupiditosEnvio(e.target.value)});
 document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]');if(!a)return;const ac=a.dataset.act,id=a.dataset.id;if(ac!=='terms'&&a.tagName==='A')e.preventDefault();
@@ -914,7 +935,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]
  case'bannerup':{const f=$('#bf').files[0],be=$('#be');if(!f){be.textContent='Selecciona una imagen.';break}if(!['image/jpeg','image/png','image/webp'].includes(f.type)){be.textContent='Formato no válido. Usa JPG, PNG o WebP.';break}if(f.size>5*1048576){be.textContent='La imagen pesa más de 5 MB.';break}try{const file=await compress(f,1600);const url=await uploadR2Image(file,'banner');await publishPublicImage('banner',url);toast('Banner publicado para todos ♡');rerender()}catch(x){be.textContent=x.message||'No se pudo publicar el banner.'}break}
  case'bannerdel':try{await publishPublicImage('banner','');await imgStore.del('banner');freeUrl('banner');toast('Banner retirado de la página');rerender()}catch(x){toast(x.message||'No se pudo eliminar.',1)}break;
  case'usebuyer':{$('#buyer').value=a.dataset.u;const pe=$('#plat');if(pe&&[...pe.options].some(o=>o.value===a.dataset.p))pe.value=a.dataset.p;$('#bsug').innerHTML='';$('#buyer').focus();break}
- case'logoreset':try{localStorage.removeItem('dc_logo_w')}catch(x){}applyLogoW();rerender();break;
+ case'logoreset':try{await publicarTamanoLogo(270);publicLogoWidth=270;applyLogoW();rerender();toast('Tamaño restablecido para todos ♡')}catch(x){toast(x.message||'No se pudo guardar el tamaño.',1)}break;
  case'logoup':{const f=$('#lf').files[0],le=$('#le');if(!f){le.textContent='Selecciona un archivo PNG.';break}if(f.type!=='image/png'){le.textContent='El logo debe ser PNG.';break}if(f.size>2*1048576){le.textContent='El logo pesa más de 2 MB.';break}try{const url=await uploadR2Image(f,'logo');await publishPublicImage('logo',url);await setLogo();toast('Logo publicado para todos ♡');rerender()}catch(x){le.textContent=x.message||'No se pudo publicar el logo.'}break}
  case'logodel':try{await publishPublicImage('logo','');await imgStore.del('logo');freeUrl('logo');await setLogo();toast('Logo retirado de la página');rerender()}catch(x){toast(x.message||'No se pudo eliminar.',1)}break;}});
 document.addEventListener('submit',async e=>{const f=e.target.dataset.f;if(!f)return;e.preventDefault();
@@ -943,7 +964,7 @@ document.addEventListener('submit',async e=>{const f=e.target.dataset.f;if(!f)re
   }
  }
 });
-document.addEventListener('input',e=>{const t=e.target;if(t.dataset.theme){setThemeField(t.dataset.theme,t.value);const o=$('#to-'+t.dataset.theme);if(o)o.textContent=t.value+(themeRange.find(x=>x[0]===t.dataset.theme)?.[5]||'');}if(t.id==='shipq'){$('#shiplist').innerHTML=shipRows(D.envios.filter(x=>((x.buyer||x.name||'')+' '+(x.carrier||'')+' '+(x.tracking||x.reference||'')).toLowerCase().includes(t.value.toLowerCase())))}if(t.id==='hq')homeFind();if(t.id==='buyer')buyerSug();if(t.id==='cq')$('#cl').innerHTML=cupRows(CUP,t.value);if(t.id==='q'){S.q=t.value;S.page=1;relist()}if(t.id==='lsz'){const v=+t.value;try{localStorage.setItem('dc_logo_w',v)}catch(x){}applyLogoW();$('#lszv').textContent=v+'px';$('#lpv').style.width=v+'px'}});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.theme){setThemeField(t.dataset.theme,t.value);const o=$('#to-'+t.dataset.theme);if(o)o.textContent=t.value+(themeRange.find(x=>x[0]===t.dataset.theme)?.[5]||'');}if(t.id==='shipq'){$('#shiplist').innerHTML=shipRows(D.envios.filter(x=>((x.buyer||x.name||'')+' '+(x.carrier||'')+' '+(x.tracking||x.reference||'')).toLowerCase().includes(t.value.toLowerCase())))}if(t.id==='hq')homeFind();if(t.id==='buyer')buyerSug();if(t.id==='cq')$('#cl').innerHTML=cupRows(CUP,t.value);if(t.id==='q'){S.q=t.value;S.page=1;relist()}if(t.id==='lsz'){const v=+t.value;publicLogoWidth=v;applyLogoW();$('#lszv').textContent=v+'px';$('#lpv').style.width=v+'px'}});
 document.addEventListener('change',async e=>{const t=e.target;if(t.id==='themePreset'&&t.value){T={...T,...themePresets[t.value]};applyTheme();saveTheme();rerender();return}if(t.id==='customFontFile'&&t.files[0]){await uploadCustomFont(t.files[0]);return}if(t.id==='themeFile'&&t.files[0]){await importTheme(t.files[0]);return}
  if(t.id==='fl'){S.lg=t.value;S.page=1;relist()}if(t.id==='fp'){S.pay=t.value;S.page=1;relist()}if(t.id==='so'){S.sort=t.value;relist()}if(t.id==='cb'){S.cb=t.value;rerender()}if(t.id==='ab'){S.ab=t.value;S.page=1;rerender()}
  if(t.id==='pf'){const f=t.files[0],er=$('#er');if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)){er.textContent='Formato no válido. Usa JPG, PNG o WebP.';t.value='';return}if(f.size>8*1048576){er.textContent='La foto pesa más de 8 MB.';t.value='';return}er.textContent='';pend.blob=await compress(f,pend.max||1200);pend.rm=false;setPv(URL.createObjectURL(pend.blob))}
