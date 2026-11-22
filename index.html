@@ -374,7 +374,7 @@ function save(){D.updated=new Date().toISOString();try{localStorage.setItem(KEY,
 async function cargarCategoriasSupabase() {
   try {
     const respuesta = await fetch(
-      AUTH_URL + '/rest/v1/categorias?select=id,nombre,orden,activa&order=orden.asc',
+      AUTH_URL + '/rest/v1/categorias?select=id,nombre,descripcion,orden,activa&order=orden.asc',
       {
         headers: {
           apikey: AUTH_PUBLISHABLE_KEY
@@ -390,7 +390,7 @@ async function cargarCategoriasSupabase() {
     D.cats = categorias.map(c => ({
   id: c.id,
   name: c.nombre,
-  desc: '',
+  desc: c.descripcion||'',
   icon: '♡',
   orden: c.orden
 }));
@@ -617,7 +617,7 @@ const ordenCajas=(a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es'
 function vCat(id){const c=cat(id);if(!c)return nf();if(isEnv(id))return vEnvios();const bs=D.boxes.filter(b=>b.cat===id).sort(ordenCajas);return bc([['Inicio','#/'],[c.name]])+`<h1>${esc(c.name)}</h1><p style="color:var(--t2)">${esc(c.desc)}</p><div class="grid" style="margin-top:20px">${bs.map(b=>`<a class="card" href="#/box/${b.id}"><h3>${esc(b.name)}</h3>${b.desc?.trim()?`<p>${esc(b.desc)}</p>`:''}<p>${cnt(b.id)} productos</p><div style="margin-top:10px">${bBox(b.st)}</div><p>Creada: ${b.created}${b.closed?' · Cierre: '+b.closed:''}</p></a>`).join('')||'<div class="empty">Aún no hay cajas en esta categoría.</div>'}</div>`}
 const SHIP_ST=['Preparando','Enviado','En tránsito','En reparto','Entregado','Incidencia'];
 const CARRIERS=['Correos de México','Estafeta','DHL','FedEx','Paquetexpress','LaMensajeria','Otra'];
-function vEnvios(){const rows=[...D.envios].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return bc([['Inicio','#/'],['Envíos']])+`<h1>envíos</h1><p style="color:var(--t2);max-width:850px">hola! en este apartado encontrarás el registro de los envíos nacionales hechos desde la casa de la administradora hasta el domicilio de cada cupidito, cualquier duda por favor no dudes en comunicarte conmigo ♡</p><div class="bar" style="margin-top:22px"><div><label for="shipq">Buscar por username, paquetería o guía</label><input id="shipq" type="search" placeholder="Buscar envío" autocomplete="off"></div></div><div id="shiplist">${shipRows(rows)}</div>`}
+function vEnvios(){const rows=[...D.envios].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));return bc([['Inicio','#/'],['Envíos']])+`<h1>envíos</h1><div class="bar" style="margin-top:22px"><div><label for="shipq">Buscar por username, paquetería o guía</label><input id="shipq" type="search" placeholder="Buscar envío" autocomplete="off"></div></div><div id="shiplist">${shipRows(rows)}</div>`}
 /* Los envíos publicados se consultan siempre desde Supabase. */
 const shipStatusIndex=value=>{const i=SHIP_ST.findIndex(x=>x.toLowerCase()===String(value||'').toLowerCase());return i<0?0:i};
 const shipPublicImage=url=>{try{const u=new URL(url);return ['https:','http:'].includes(u.protocol)?u.href:''}catch(e){return''}};
@@ -697,7 +697,7 @@ async function conteosCajasAdmin(){
 }
 async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">${AT.map(([k,t])=>`<a href="#/admin/${k}" ${k===tab?'aria-current="page"':''}>${t}</a>`).join('')}</div>`;let b='';
  if(tab==='resumen'){const tot=D.prods.reduce((s,p)=>s+p.price,0);b=`<div class="grid">${[['Productos',D.prods.length],['Cajas',D.boxes.length],['Compradores',new Set(D.prods.map(p=>p.buyer)).size],['Valor total',money(tot)],['Cajas abiertas',D.boxes.filter(x=>x.st===0).length]].map(([l,v])=>`<div class="card"><div class="stat">${v}</div><p>${l}</p></div>`).join('')}</div>`}
- if(tab==='categorias')b=`<div class="row sp"><h2>Categorías</h2><button class="btn pri" data-act="ecat">Nueva categoría</button></div><div class="grid" style="margin-top:16px">${D.cats.map(c=>`<div class="card">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><div class="row" style="margin-top:12px"><button class="btn sm" data-act="ecat" data-id="${c.id}">Editar</button><button class="btn sm dng" data-act="dcat" data-id="${c.id}">Eliminar</button></div></div>`).join('')}</div>`;
+ if(tab==='categorias')b=`<div class="row sp"><h2>Categorías</h2><span class="note">Edita las descripciones públicas de cada categoría ♡</span></div><div class="grid" style="margin-top:16px">${D.cats.map(c=>`<div class="card">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><div class="row" style="margin-top:12px"><button class="btn sm" data-act="ecat" data-id="${c.id}">Editar descripción</button><button class="btn sm dng" data-act="dcat" data-id="${c.id}">Eliminar</button></div></div>`).join('')}</div>`;
  if(tab==='cajas'){let conteosAdmin=null,conteosError='';try{conteosAdmin=await conteosCajasAdmin()}catch(ex){conteosError=ex.message}b=`<div class="row sp"><h2>Cajas</h2><button class="btn pri" data-act="ebox">Nueva caja</button></div>${conteosError?`<p class="err">No se pudieron verificar los productos en Supabase: ${esc(conteosError)}. La eliminación queda bloqueada hasta poder comprobarlos.</p>`:""}<table style="margin-top:16px"><thead><tr><th>Caja</th><th>Estado</th><th>Productos</th><th>Fechas</th><th>Acciones</th></tr></thead><tbody>${[...D.boxes].sort((a,b)=>String(cat(a.cat)?.name||'').localeCompare(String(cat(b.cat)?.name||''),'es')||ordenCajas(a,b)).map(x=>`<tr><td data-l="Caja">${esc(cat(x.cat)?.name)} · ${esc(x.name)}</td><td data-l="Estado">${bBox(x.st)}</td><td data-l="Productos">${conteosAdmin?conteosAdmin.get(x.id)||0:"Sin verificar"}</td><td data-l="Fechas">${x.created}${x.closed?' → '+x.closed:''}</td><td data-l="Acciones"><button class="btn sm pri" data-act="boxprods" data-id="${x.id}">Productos</button> <button class="btn sm" data-act="ebox" data-id="${x.id}">Editar</button> <button class="btn sm" data-act="tbox" data-id="${x.id}">${x.st===0?'Cerrar':'Reabrir'}</button> <button class="btn sm dng" data-act="dbox" data-id="${x.id}" ${!conteosAdmin?"disabled":""}>Eliminar</button></td></tr>`).join('')}</tbody></table>`;}
  if(tab==='borradores'){let drafts=[];try{drafts=await listarBorradoresCaja()}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}b+='<div class="row sp"><h2>Borradores privados</h2><button class="btn pri" data-act="newPrivateBox">Crear caja privada ♡</button></div><p style="color:var(--t2)">Solo visibles para administradores. Puedes continuar editándolos en otro momento.</p><div class="lst">'+(drafts.map(x=>{const v=x.contenido?.caja||{},n=x.contenido?.productos?.length||0;return '<div class="row2"><div class="mn"><strong>'+esc(v.name||'Caja sin nombre')+'</strong><span class="meta">'+n+' productos · '+esc(cat(v.cat)?.name||'Sin categoría')+'</span></div><button class="btn sm" data-act="editPrivateBox" data-id="'+esc(x.caja_id)+'">Continuar</button></div>'}).join('')||'<div class="empty">Todavía no hay borradores privados.</div>')+'</div>';}
  if(tab==='productos'){if(!D.boxes.length)b=`<h2>Productos</h2><div class="empty"><p><strong>Primero crea una caja</strong></p><p>Los productos se agregan dentro de una caja.</p><button class="btn pri" data-act="ebox">Crear caja</button></div>`;else{if(S.ab&&!box(S.ab))S.ab='';b=`<div class="row sp"><h2>Productos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><div style="max-width:360px;margin:14px 0"><label for="ab">Caja</label><select id="ab"><option value="">Todas las cajas</option>${[...D.boxes].sort(ordenCajas).map(x=>`<option value="${x.id}" ${x.id===S.ab?'selected':''}>${esc(cat(x.cat).name)} · ${esc(x.name)}</option>`).join('')}</select></div>${controls()}<div id="list">${plist(D.prods.filter(p=>!S.ab||p.box===S.ab),1)}</div>`}}
@@ -755,7 +755,23 @@ function prodForm(id,pre){const p=D.prods.find(x=>x.id===id)||{...pre},ne=!id;if
   }catch(e){console.error('Error guardando producto en Supabase:',e);return 'No se guardó el producto: '+(e.message||String(e));}
  });
  if(p.imgId)imgUrl(p.imgId).then(u=>u&&setPv(u))}
-function eCat(id){const c=cat(id)||{};pend={blob:null,rm:false,old:c.imgId||'',max:256};dlg(id?'Editar categoría':'Nueva categoría',`<div class="f">${fld('name','Nombre',c.name,'text','required')}${fld('desc','Descripción breve',c.desc)}${imgField(c.imgId,'Imagen del icono')}${err}${foot}</div>`,async fd=>{if(!fd.name.trim())return'Escribe un nombre.';const t=c.id?c:{id:uid('c'),icon:'✿'};let imgId=t.imgId||'';try{if(pend.blob){imgId=imgId||uid('cimg');await imgStore.put(imgId,pend.blob);freeUrl(imgId)}else if(pend.rm&&imgId){await imgStore.del(imgId);freeUrl(imgId);imgId=''}}catch(e){toast('El icono no se pudo guardar.',1)}Object.assign(t,{name:fd.name.trim(),desc:fd.desc.trim(),imgId});if(!c.id)D.cats.push(t);save();toast('Categoría guardada');return 0});if(c.imgId)imgUrl(c.imgId).then(u=>u&&setPv(u))}
+async function guardarDescripcionCategoria(id,descripcion){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+ const r=await fetch(AUTH_URL+'/rest/v1/categorias?id=eq.'+encodeURIComponent(id),{
+  method:'PATCH',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json',Prefer:'return=representation'},
+  body:JSON.stringify({descripcion:descripcion||null}),cache:'no-store'
+ });
+ if(!r.ok)throw Error('Supabase no guardó la descripción: '+(await r.text()).slice(0,250));
+ const rows=await r.json();if(rows.length!==1)throw Error('No se actualizó la categoría. Comprueba los permisos de Supabase.');
+ return rows[0];
+}
+function eCat(id){
+ const c=cat(id);if(!c)return toast('No se encontró la categoría.',1);
+ dlg('Editar descripción pública · '+c.name,`<div class="f"><p class="note">Se mostrará a todos los visitantes. El texto se guarda en Supabase.</p><div><label for="catdesc">Descripción de la categoría</label><textarea id="catdesc" name="desc" maxlength="1500" rows="4" placeholder="Escribe la descripción que verán los cupiditos">${esc(c.desc||'')}</textarea></div>${err}<div class="row"><button class="btn pri">Guardar descripción pública</button><button type="button" class="btn" data-act="close">Cancelar</button></div></div>`,async fd=>{
+  try{await guardarDescripcionCategoria(c.id,fd.desc.trim());c.desc=fd.desc.trim();save();toast('Descripción pública actualizada ♡');return 0}
+  catch(e){return e.message||String(e)}
+ });
+}
 /* Borradores privados de los datos de una caja (no publicados). */
 async function borradorRequest(path,options={}){
  if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador para usar borradores.');
