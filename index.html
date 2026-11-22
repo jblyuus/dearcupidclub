@@ -224,6 +224,23 @@ main{padding-top:22px;padding-bottom:24px}
  .home footer{margin-top:4px!important}
  footer{margin-top:8px!important;padding:18px 0 28px!important}
 }
+
+/* Banner completo y contenido más arriba — no se alteran datos ni funcionalidades. */
+.home .bn{
+ position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+ width:100%!important;height:auto!important;margin:0!important;
+ overflow:visible!important;z-index:0!important;
+ -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 72%,transparent 100%)!important;
+ mask-image:linear-gradient(to bottom,#000 0%,#000 72%,transparent 100%)!important;
+}
+.home .bn img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;object-position:center!important}
+.home .hero{padding-top:0!important;margin-top:-65px!important;z-index:1!important}
+.home .hero .lg{position:relative;z-index:1}
+.home .hero h1{margin-top:-48px!important}
+@media(max-width:600px){
+ .home .hero{padding-top:0!important;margin-top:-40px!important}
+ .home .hero h1{margin-top:-55px!important}
+}
 </style></head><body>
 <header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/1a5fc7bc-baf6-40c6-b66d-275017eb574e" data-n="env">Envíos</a></nav></div></header>
 <main class="w" id="app" tabindex="-1" aria-live="polite"><div class="sk"></div></main>
@@ -862,9 +879,9 @@ function renderCargosAgrupados(products,admin){
  }
  if(!groups.size)return '<div class="empty">Esta caja todavía no tiene cargos publicados.</div>';
  const all=[...groups.values()]; // Orden de primera aparición en la masterlist, no alfabético.
- const total=all.reduce((n,g)=>n+g.pendiente,0);
+ const total=admin?all.reduce((n,g)=>n+g.pendiente,0):0;
  const status=(amount,paid)=>Number(amount)>0?(paid?'Pagado':'Pendiente'):'Sin cargo';
- return `<div class="card" style="margin:12px 0 18px"><strong>${all.length} cupidito(s) · ${products.length} productos</strong><p>EMS: ${money(all.reduce((n,g)=>n+g.ems,0))} · Aduana: ${money(all.reduce((n,g)=>n+g.aduana,0))}</p><strong>Total pendiente: ${money(total)}</strong></div><div class="lst">${all.map(g=>`<details class="card" data-cargo-cupidito="${esc(nmz(g.name))}" style="padding:16px"><summary style="cursor:pointer"><strong>${esc(g.name)}</strong> · ${g.items.length} producto(s)<div style="margin-top:6px;color:var(--t2)">EMS ${money(g.ems)} · Aduana ${money(g.aduana)}</div><strong>Pendiente: ${money(g.pendiente)}</strong></summary><div style="margin-top:14px;display:grid;gap:12px">${g.items.map(({p,c})=>`<div style="padding:12px;border:1px solid var(--bd);border-radius:12px"><strong>${esc(p.desc||'Producto')}</strong>${[['ems','ems_pagado','EMS'],['aduana','aduana_pagada','Aduana']].map(([field,col,label])=>`<div class="row sp" style="margin-top:9px"><span>${label}: ${money(c[field])} · ${status(c[field],c[col])}</span>${admin&&Number(c[field])>0?`<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col]?'1':'0'}">${c[col]?'Marcar pendiente':'Marcar pagado'}</button>`:''}</div>`).join('')}</div>`).join('')}</div></details>`).join('')}</div>`;
+ return `${admin?`<div class="card" style="margin:12px 0 18px"><strong>${all.length} cupidito(s) · ${products.length} productos</strong><p>EMS: ${money(all.reduce((n,g)=>n+g.ems,0))} · Aduana: ${money(all.reduce((n,g)=>n+g.aduana,0))}</p><strong>Total pendiente: ${money(total)}</strong></div>`:""}<div class="lst">${all.map(g=>`<details class="card" data-cargo-cupidito="${esc(nmz(g.name))}" style="padding:16px"><summary style="cursor:pointer"><strong>${esc(g.name)}</strong> · ${g.items.length} producto(s)<div style="margin-top:6px;color:var(--t2)">EMS ${money(g.ems)} · Aduana ${money(g.aduana)}</div><strong>Pendiente: ${money(g.pendiente)}</strong></summary><div style="margin-top:14px;display:grid;gap:12px">${g.items.map(({p,c})=>`<div style="padding:12px;border:1px solid var(--bd);border-radius:12px"><strong>${esc(p.desc||'Producto')}</strong>${[['ems','ems_pagado','EMS'],['aduana','aduana_pagada','Aduana']].map(([field,col,label])=>`<div class="row sp" style="margin-top:9px"><span>${label}: ${money(c[field])} · ${status(c[field],c[col])}</span>${admin&&Number(c[field])>0?`<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col]?'1':'0'}">${c[col]?'Marcar pendiente':'Marcar pagado'}</button>`:''}</div>`).join('')}</div>`).join('')}</div></details>`).join('')}</div>`;
 }
 
 /* Filtro local: no reconstruye la lista ni altera la posición de lectura. */
