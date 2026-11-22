@@ -486,7 +486,7 @@ function vFind(q){
  (!l.length&&!ships.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
 }
 /* ===== Admin ===== */
-const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['importar-japon','Importar Japón'],['fotos-jp1','Fotos JP #1'],['fotos-jp2','Fotos JP #2'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
+const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['importar-japon','Importar Japón'],['fotos-jp1','Fotos JP #1'],['fotos-jp2','Fotos JP #2'],['fotos-jp3','Fotos JP #3'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
 const nmz=t=>String(t).trim().replace(/^@/,'').toLowerCase();let CUP=[];
 const cupRows=(ns,q='')=>{const k=nmz(q),l=ns.filter(n=>nmz(n).includes(k));return l.length?l.map(n=>`<a class="row2 cup" href="#/admin/cupiditos/${encodeURIComponent(n)}"><div class="mn"><strong>${esc(n)}</strong></div><span aria-hidden="true">›</span></a>`).join(''):'<div class="empty">Sin resultados.</div>'};
 async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">${AT.map(([k,t])=>`<a href="#/admin/${k}" ${k===tab?'aria-current="page"':''}>${t}</a>`).join('')}</div>`;let b='';
@@ -498,13 +498,14 @@ async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">
  if(tab==='importar-japon')b=`<h2>Importar Japón · importación controlada ♡</h2><p>Primero revisaremos JP #1. Después podrás confirmar la creación de productos sin subir fotografías. Selecciona el archivo <strong>japon_jp1_preparacion.json</strong> que descargaste.</p><div class="card"><label for="jpPreviewFile">Archivo JSON de preparación</label><input id="jpPreviewFile" type="file" accept=".json,application/json"><button type="button" class="btn" id="jpBuyerPreviewBtn" style="margin-top:12px">Revisar compradores del JSON (sin guardar)</button><button type="button" class="btn" id="jpTotalsPreviewBtn" style="margin-top:12px;margin-right:8px">Vista previa de cargos por cupidito (sin guardar)</button><div id="jpTotalsPreviewResult" role="status" aria-live="polite"></div><button type="button" class="btn" id="jpChargesPreviewBtn" style="margin-top:12px;margin-left:8px">Revisar EMS y aduana (sin guardar)</button><div id="jpChargesPreviewResult" role="status" aria-live="polite"></div><p id="jpPreviewStatus" aria-live="polite" style="color:var(--t2)">Esperando archivo…</p><div id="jpPreviewResults"></div></div><p style="color:var(--t2)">Solo se crearán productos nuevos después de tu confirmación. No se modificarán los existentes ni se subirán fotografías.</p>`;
  if(tab==='fotos-jp1')b=`<h2>Fotografías de JP #1 ♡</h2><p>Importa las 57 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jpPhotosFiles">Fotografías JP__1_fila_N.jpg</label><input type="file" id="jpPhotosFiles" accept=".jpg,.jpeg,image/jpeg" multiple><p id="jpPhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jpPhotosPreview"></div><button type="button" class="btn pri" id="jpPhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jpPhotosProgress" role="status" aria-live="polite"></p></div>`;
  if(tab==='fotos-jp2')b=`<h2>Fotografías de JP #2 ♡</h2><p>Importa las 71 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jp2PhotosFiles">Fotografías JP__2_fila_N.jpg</label><input type="file" id="jp2PhotosFiles" accept=".jpg,.jpeg,image/jpeg" multiple><p id="jp2PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jp2PhotosPreview"></div><button type="button" class="btn pri" id="jp2PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jp2PhotosProgress" role="status" aria-live="polite"></p></div>`;
+ if(tab==='fotos-jp3')b=`<h2>Fotografías de JP #3 ♡</h2><p>Importa las 83 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jp3PhotosFiles">Fotografías JP__3_fila_N.jpg</label><input type="file" id="jp3PhotosFiles" accept=".jpg,.jpeg,image/jpeg" multiple><p id="jp3PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jp3PhotosPreview"></div><button type="button" class="btn pri" id="jp3PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jp3PhotosProgress" role="status" aria-live="polite"></p></div>`;
  if(tab==='cupiditos'){if(sub){const key=nmz(decodeURIComponent(sub)),ps=D.prods.filter(p=>nmz(p.buyer)===key);if(!ps.length)b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a></nav><div class="empty">Este username ya no tiene productos.</div>`;else{const name=ps[0].buyer,plat=ps[0].plat,bx=[...new Set(ps.map(p=>p.box))].map(box).filter(Boolean);b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a> › <span aria-current="page">${esc(name)}</span></nav><div class="row sp"><div><h2>${esc(name)}</h2><p style="color:var(--t2);margin:4px 0 0">${esc(plat)} · ${ps.length} producto${ps.length>1?'s':''} en ${bx.length} caja${bx.length>1?'s':''}</p></div><button class="btn pri" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}">Agregar producto</button></div>`+bx.map(x=>`<section class="card" style="margin-top:16px"><div class="row sp"><div><strong>${esc(cat(x.cat)?.name)} · ${esc(x.name)}</strong> ${bBox(x.st)}</div><button class="btn sm" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}" data-b="${x.id}">Agregar aquí</button></div><div class="lst" style="margin-top:12px">${ps.filter(p=>p.box===x.id).map(p=>prow(p,1)).join('')}</div></section>`).join('')}}else{const seen={};D.prods.forEach(p=>{const k=nmz(p.buyer);if(!seen[k])seen[k]=p.buyer});CUP=Object.values(seen).sort((a,c)=>a.localeCompare(c));b=`<div class="row sp"><h2>Cupiditos</h2><button class="btn pri" data-act="eprod">Agregar producto</button></div><p style="color:var(--t2)">Usuarios con al menos un producto en una caja (${CUP.length}). Toca uno para ver sus cajas.</p>`+(CUP.length?`<div style="max-width:360px;margin:14px 0"><label for="cq">Buscar username</label><input id="cq" type="search" autocomplete="off"></div><div id="cl" class="lst">${cupRows(CUP)}</div>`:`<div class="empty"><p><strong>Aún no hay cupiditos</strong></p><p>Aparecen aquí cuando agregas un producto a una caja.</p></div>`)}}
  if(tab==='envios'){try{await sincronizarEnviosSupabase(true)}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}}
  if(tab==='envios')b+=`<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p style="color:var(--t2)">Registra los paquetes nacionales enviados desde la administradora a cada cupidito. No utilizan cajas.</p>${shipRows(D.envios,true)}`;
   if(tab==='cargos'){
    const bid=S.cb&&box(S.cb)?S.cb:D.boxes[0]?.id;
    const ps=bid?D.prods.filter(p=>p.box===bid):[];
-   b=`<h2>Cargos por cupidito ♡</h2><p style="color:var(--t2)">Solo se cobran EMS y aduana. Los precios de productos ya están pagados. Los estados se guardan individualmente en Supabase.</p><div style="max-width:340px;margin:14px 0"><label for="cb">Caja publicada</label><select id="cb">${D.boxes.map(x=>`<option value="${esc(x.id)}" ${x.id===bid?'selected':''}>${esc(cat(x.cat)?.name||'Categoría')} · ${esc(x.name)}</option>`).join('')}</select></div>${bid?`<div class="row" style="margin:12px 0"><button type="button" class="btn" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>`:''}${renderCargosAgrupados(ps,true)}`;
+   b=`<h2>Cargos por cupidito ♡</h2><p style="color:var(--t2)">Solo se cobran EMS y aduana. Los precios de productos ya están pagados. Los estados se guardan individualmente en Supabase.</p><div style="max-width:340px;margin:14px 0"><label for="cb">Caja publicada</label><select id="cb">${D.boxes.map(x=>`<option value="${esc(x.id)}" ${x.id===bid?'selected':''}>${esc(cat(x.cat)?.name||'Categoría')} · ${esc(x.name)}</option>`).join('')}</select></div>${bid?`<div class="row" style="margin:12px 0"><button type="button" class="btn" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>`:''}<div style="max-width:420px;margin:14px 0"><label for="cargoSearch">Buscar cargos por cupidito</label><input id="cargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.cargoSearch||'')}"></div><p id="cargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${renderCargosAgrupados(ps,true)}`;
   }
  if(tab==='personalizar'){const u=await currentImage('logo'),bu=await currentImage('banner');b=`<h2>Personalizar página</h2>${customUi()}<div class="card" style="max-width:520px;margin-top:14px"><h3>Logo (PNG)</h3><div class="f"><div class="drop">${u?`<img src="${u}" alt="Vista previa del logo actual">`:'<p style="color:var(--t2);margin:0">Aún no hay logo. Selecciona un PNG de hasta 2 MB.</p>'}<label for="lf">Archivo PNG</label><input type="file" id="lf" accept="image/png"></div>${u?`<div><label for="lsz">Tamaño del logo en la página principal: <strong id="lszv">${logoW()}px</strong></label><input type="range" id="lsz" min="100" max="420" step="10" value="${logoW()}"><div class="prev"><img id="lpv" src="${u}" alt="Vista previa del tamaño del logo" style="width:${logoW()}px"></div><button type="button" class="btn sm" data-act="logoreset">Restablecer tamaño</button></div>`:''}<div class="row"><button class="btn" data-act="logoup">${u?'Cambiar logo':'Guardar logo'}</button>${u?'<button class="btn dng" data-act="logodel">Eliminar logo</button>':''}</div><p class="err" id="le" role="alert"></p></div></div><div class="card" style="max-width:520px;margin-top:16px"><h3>Banner de inicio</h3><p>Aparece arriba en la página principal y se desvanece en su parte superior. JPG, PNG o WebP, máx. 5 MB.</p><div class="f"><div class="drop">${bu?'<img src="'+bu+'" alt="Vista previa del banner actual">':'<p style="color:var(--t2);margin:0">Aún no hay banner.</p>'}<label for="bf">Imagen del banner</label><input type="file" id="bf" accept="image/jpeg,image/png,image/webp"></div><div class="row"><button class="btn" data-act="bannerup">${bu?'Cambiar banner':'Guardar banner'}</button>${bu?'<button class="btn dng" data-act="bannerdel">Eliminar banner</button>':''}</div><p class="err" id="be" role="alert"></p></div></div>`}
  return bc([['Inicio','#/'],['Panel administrativo']])+`<div class="row sp"><h1>Panel administrativo</h1><button type="button" class="btn sm" data-act="logout">Cerrar sesión</button></div>${tabs}${b}`}
@@ -759,7 +760,17 @@ function renderCargosAgrupados(products,admin){
  const all=[...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,'es'));
  const total=all.reduce((n,g)=>n+g.pendiente,0);
  const status=(amount,paid)=>Number(amount)>0?(paid?'Pagado':'Pendiente'):'Sin cargo';
- return `<div class="card" style="margin:12px 0 18px"><strong>${all.length} cupidito(s) · ${products.length} productos</strong><p>EMS: ${money(all.reduce((n,g)=>n+g.ems,0))} · Aduana: ${money(all.reduce((n,g)=>n+g.aduana,0))}</p><strong>Total pendiente: ${money(total)}</strong></div><div class="lst">${all.map(g=>`<details class="card" style="padding:16px"><summary style="cursor:pointer"><strong>${esc(g.name)}</strong> · ${g.items.length} producto(s)<div style="margin-top:6px;color:var(--t2)">EMS ${money(g.ems)} · Aduana ${money(g.aduana)}</div><strong>Pendiente: ${money(g.pendiente)}</strong></summary><div style="margin-top:14px;display:grid;gap:12px">${g.items.map(({p,c})=>`<div style="padding:12px;border:1px solid var(--bd);border-radius:12px"><strong>${esc(p.desc||'Producto')}</strong>${[['ems','ems_pagado','EMS'],['aduana','aduana_pagada','Aduana']].map(([field,col,label])=>`<div class="row sp" style="margin-top:9px"><span>${label}: ${money(c[field])} · ${status(c[field],c[col])}</span>${admin&&Number(c[field])>0?`<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col]?'1':'0'}">${c[col]?'Marcar pendiente':'Marcar pagado'}</button>`:''}</div>`).join('')}</div>`).join('')}</div></details>`).join('')}</div>`;
+ return `<div class="card" style="margin:12px 0 18px"><strong>${all.length} cupidito(s) · ${products.length} productos</strong><p>EMS: ${money(all.reduce((n,g)=>n+g.ems,0))} · Aduana: ${money(all.reduce((n,g)=>n+g.aduana,0))}</p><strong>Total pendiente: ${money(total)}</strong></div><div class="lst">${all.map(g=>`<details class="card" data-cargo-cupidito="${esc(nmz(g.name))}" style="padding:16px"><summary style="cursor:pointer"><strong>${esc(g.name)}</strong> · ${g.items.length} producto(s)<div style="margin-top:6px;color:var(--t2)">EMS ${money(g.ems)} · Aduana ${money(g.aduana)}</div><strong>Pendiente: ${money(g.pendiente)}</strong></summary><div style="margin-top:14px;display:grid;gap:12px">${g.items.map(({p,c})=>`<div style="padding:12px;border:1px solid var(--bd);border-radius:12px"><strong>${esc(p.desc||'Producto')}</strong>${[['ems','ems_pagado','EMS'],['aduana','aduana_pagada','Aduana']].map(([field,col,label])=>`<div class="row sp" style="margin-top:9px"><span>${label}: ${money(c[field])} · ${status(c[field],c[col])}</span>${admin&&Number(c[field])>0?`<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col]?'1':'0'}">${c[col]?'Marcar pendiente':'Marcar pagado'}</button>`:''}</div>`).join('')}</div>`).join('')}</div></details>`).join('')}</div>`;
+}
+
+/* Filtro local: no reconstruye la lista ni altera la posición de lectura. */
+function filtrarCargosAdmin(){
+ const q=nmz(S.cargoSearch||'');let visibles=0;
+ for(const item of $$('#app details[data-cargo-cupidito]')){
+  const show=!q||item.dataset.cargoCupidito.includes(q);
+  item.hidden=!show;if(show)visibles++;
+ }
+ const count=$('#cargoSearchCount');if(count)count.textContent=q?visibles+' cupidito(s) encontrados':'';
 }
 async function sincronizarCargosPublicados(){
  const r=await fetch(AUTH_URL+'/rest/v1/cargos_productos?select=producto_id,ems,aduana,otros,ems_pagado,aduana_pagada,otros_pagados&limit=10000',{headers:{apikey:AUTH_PUBLISHABLE_KEY},cache:'no-store'});
@@ -798,7 +809,13 @@ async function cambiarEstadoCargo(productoId,col,marcarPagado){
  const rows=await r.json();
  if(rows.length!==1)throw Error('No se confirmó la actualización del pago.');
  await sincronizarCargosPublicados();
+ const y=window.scrollY;
+ const abiertos=$$('#app details[data-cargo-cupidito][open]').map(el=>el.dataset.cargoCupidito);
+ S.fromNav=0;
  await route();
+ for(const el of $$('#app details[data-cargo-cupidito]'))if(abiertos.includes(el.dataset.cargoCupidito))el.open=true;
+ window.scrollTo({top:y,left:0,behavior:'instant'});
+ requestAnimationFrame(()=>window.scrollTo({top:y,left:0,behavior:'instant'}));
  toast(marcarPagado?'Cargo marcado como pagado ♡':'Cargo marcado como pendiente ♡');
 }
 function eCg(bid,u){const c=(D.cargos[bid]||{})[u]||{},x=charges(bid).find(k=>k.buyer===u);dlg('Cargos de '+u,`<p style="color:var(--t2)">Suma de productos: EMS ${pm(x.ems)} · Aduana ${pm(x.adu)}</p><div class="f"><div class="f2">${fld('emsAdj','Ajuste EMS (MXN)',c.emsAdj||0,'number','step="0.01"')}${sel('emsSt','Pago EMS',opts(PAY,c.emsSt??0))}</div><div class="f2">${fld('aduAdj','Ajuste aduana (MXN)',c.aduAdj||0,'number','step="0.01"')}${sel('aduSt','Pago aduana',opts(PAY,c.aduSt??0))}</div>${err}${foot}</div>`,fd=>{(D.cargos[bid]=D.cargos[bid]||{})[u]={emsAdj:+fd.emsAdj||0,aduAdj:+fd.aduAdj||0,emsSt:+fd.emsSt,aduSt:+fd.aduSt};save();toast('Cargos actualizados');return 0})}
@@ -888,7 +905,7 @@ async function route(){const h=location.hash.slice(1)||'/',p=h.split('/').filter
  // El botón vuelve al nivel anterior dentro de Dearcupid, sin salir del sitio.
  const back=p[0]==='admin'?(p[2]?'#/admin/cupiditos':p[1]?'#/admin':'#/'):p[0]==='box'?(p[2]?'#/box/'+p[1]:'#/cat/'+(box(p[1])?.cat||'c1')):p[0]==='cat'||p[0]==='categorias'||p[0]==='buscar'?'#/':'#/';
  $('#hl').href=back;
- document.body.classList.toggle('home',!p.length);app.innerHTML=html;app.style.animation='none';app.offsetWidth;app.style.animation='';hydrate();
+ document.body.classList.toggle('home',!p.length);app.innerHTML=html;if(p[0]==='admin'&&p[1]==='cargos')filtrarCargosAdmin();app.style.animation='none';app.offsetWidth;app.style.animation='';hydrate();
  $$('nav a[data-n]').forEach(a=>{const n=a.dataset.n,on=n==='home'&&!p.length||n==='categorias'&&p[0]==='categorias'||n==='admin'&&p[0]==='admin'||n==='env'&&p[0]==='cat'&&isEnv(p[1]);on?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')});
  if(S.fromNav){scrollTo(0,0);app.focus({preventScroll:true})}}
 const rerender=()=>route();
@@ -1130,6 +1147,76 @@ async function jp2PhotosUpload(){
 }
 document.addEventListener('change',e=>{if(e.target.id==='jp2PhotosFiles')jp2PhotosPreview([...e.target.files])});
 document.addEventListener('click',e=>{if(e.target.id==='jp2PhotosUpload')jp2PhotosUpload()});
+
+
+/* ===== Fotografías JP #3: importación protegida y reanudable ===== */
+const JP3_BOX_ID='42866b92-7154-42c5-8627-517bb6294c95';
+let jp3PhotosPlan=null,jp3PhotosBusy=false;
+async function jp3PhotosPreview(files){
+ const status=$('#jp3PhotosStatus'),out=$('#jp3PhotosPreview'),button=$('#jp3PhotosUpload');
+ if(!status||!out||!button)return;
+ button.disabled=true;jp3PhotosPlan=null;out.innerHTML='';status.textContent='Comparando imágenes con los productos publicados…';
+ try{
+  if(!await refreshAdmin()||!adminSession?.token)throw Error('Inicia sesión como administrador.');
+  const rows=await jp1Request('productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq.'+JP3_BOX_ID+'&limit=1000');
+  const byRef=new Map(rows.filter(p=>/^JAPON-JP3-FILA\d+$/.test(p.referencia_excel||'')).map(p=>[p.referencia_excel,p]));
+  if(byRef.size!==83)throw Error('Se esperaban 83 productos JP #3, pero hay '+byRef.size+'. No se realizará ninguna subida.');
+  const seen=new Set(),matched=[],extra=[],invalid=[];
+  for(const file of files){
+   const m=/^JP__3_fila_(\d+)\.jpe?g$/i.exec(file.name);
+   if(!m||file.size<1||file.size>5*1024*1024||!['image/jpeg',''].includes(file.type)){invalid.push(file.name);continue}
+   const ref='JAPON-JP3-FILA'+Number(m[1]);
+   if(seen.has(ref)){invalid.push('Duplicado: '+file.name);continue}
+   seen.add(ref);const product=byRef.get(ref);
+   if(!product){extra.push(file.name);continue}
+   matched.push({file,product,ref});
+  }
+  const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
+  const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
+  const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
+   (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
+   (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
+   '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
+  if(invalid.length||missing.length||matched.length!==83){status.textContent+=' Revisa los archivos antes de continuar.';return}
+  jp3PhotosPlan=pending;button.disabled=!pending.length;
+ }catch(err){status.textContent='No se pudo verificar: '+(err.message||err)}
+}
+async function jp3PhotosUpload(){
+ if(jp3PhotosBusy||!jp3PhotosPlan?.length)return;
+ if(!confirm('¿Subir '+jp3PhotosPlan.length+' fotografías a R2 y vincularlas únicamente con productos de JP #3 que todavía no tengan imagen?'))return;
+ const button=$('#jp3PhotosUpload'),progress=$('#jp3PhotosProgress');jp3PhotosBusy=true;button.disabled=true;
+ let saved=0,skipped=0;const errors=[];
+ try{
+  for(const item of jp3PhotosPlan){
+   progress.textContent='Procesando '+(saved+skipped+errors.length+1)+'/'+jp3PhotosPlan.length+' · '+item.ref;
+   try{
+    // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
+    const current=await jp1Request('productos?select=id,imagen_url,referencia_excel,caja_id&id=eq.'+encodeURIComponent(item.product.id)+'&limit=1');
+    if(current.length!==1||current[0].caja_id!==JP3_BOX_ID||current[0].referencia_excel!==item.ref)throw Error('El producto cambió.');
+    if(current[0].imagen_url){skipped++;continue}
+    const form=new FormData();form.append('file',item.file,item.file.name);form.append('folder','productos');
+    if(!await refreshAdmin()||!adminSession?.token)throw Error('Sesión expirada.');
+    const uploaded=await fetch(R2_WORKER+'/images',{method:'POST',headers:{Authorization:'Bearer '+adminSession.token},body:form});
+    const result=await uploaded.json().catch(()=>({}));
+    if(!uploaded.ok||!validProductImage(result.url))throw Error(result.error||'Error al subir a R2 ('+uploaded.status+')');
+    const patched=await jp1Request('productos?id=eq.'+encodeURIComponent(item.product.id)+'&caja_id=eq.'+JP3_BOX_ID+'&referencia_excel=eq.'+encodeURIComponent(item.ref)+'&imagen_url=is.null',{
+     method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({imagen_url:result.url})
+    });
+    if(!Array.isArray(patched)||patched.length!==1)throw Error('No se pudo asociar la URL en Supabase; revisa permisos.');
+    saved++;
+   }catch(err){errors.push(item.ref+': '+(err.message||err))}
+  }
+  progress.textContent='Terminó: '+saved+' vinculadas · '+skipped+' omitidas · '+errors.length+' con error.'+(errors.length?' '+errors.slice(0,5).join(' | '):'');
+  try{await sincronizarProductosSupabase()}catch(e){console.warn(e)}
+  toast(errors.length?'Revisa los errores de la importación':'Fotos de JP #3 guardadas ♡',!!errors.length);
+ }finally{jp3PhotosBusy=false;jp3PhotosPlan=null;button.disabled=true}
+}
+document.addEventListener('change',e=>{if(e.target.id==='jp3PhotosFiles')jp3PhotosPreview([...e.target.files])});
+document.addEventListener('click',e=>{if(e.target.id==='jp3PhotosUpload')jp3PhotosUpload()});
 
 
 /* ===== Compradores JP #1: revisión y asignación confirmada ===== */
@@ -1387,7 +1474,7 @@ document.addEventListener('submit',async e=>{const f=e.target.dataset.f;if(!f)re
   }
  }
 });
-document.addEventListener('input',e=>{const t=e.target;if(t.dataset.theme){setThemeField(t.dataset.theme,t.value);const o=$('#to-'+t.dataset.theme);if(o)o.textContent=t.value+(themeRange.find(x=>x[0]===t.dataset.theme)?.[5]||'');}if(t.id==='shipq'){$('#shiplist').innerHTML=shipRows(D.envios.filter(x=>((x.buyer||x.name||'')+' '+(x.carrier||'')+' '+(x.tracking||x.reference||'')).toLowerCase().includes(t.value.toLowerCase())))}if(t.id==='hq')homeFind();if(t.id==='buyer')buyerSug();if(t.id==='cq')$('#cl').innerHTML=cupRows(CUP,t.value);if(t.id==='q'){S.q=t.value;S.page=1;relist()}if(t.id==='lsz'){const v=+t.value;publicLogoWidth=v;applyLogoW();$('#lszv').textContent=v+'px';$('#lpv').style.width=v+'px'}});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.theme){setThemeField(t.dataset.theme,t.value);const o=$('#to-'+t.dataset.theme);if(o)o.textContent=t.value+(themeRange.find(x=>x[0]===t.dataset.theme)?.[5]||'');}if(t.id==='shipq'){$('#shiplist').innerHTML=shipRows(D.envios.filter(x=>((x.buyer||x.name||'')+' '+(x.carrier||'')+' '+(x.tracking||x.reference||'')).toLowerCase().includes(t.value.toLowerCase())))}if(t.id==='hq')homeFind();if(t.id==='buyer')buyerSug();if(t.id==='cq')$('#cl').innerHTML=cupRows(CUP,t.value);if(t.id==='cargoSearch'){S.cargoSearch=t.value;filtrarCargosAdmin();}if(t.id==='q'){S.q=t.value;S.page=1;relist()}if(t.id==='lsz'){const v=+t.value;publicLogoWidth=v;applyLogoW();$('#lszv').textContent=v+'px';$('#lpv').style.width=v+'px'}});
 document.addEventListener('change',async e=>{const t=e.target;if(t.id==='themePreset'&&t.value){T={...T,...themePresets[t.value]};applyTheme();saveTheme();rerender();return}if(t.id==='customFontFile'&&t.files[0]){await uploadCustomFont(t.files[0]);return}if(t.id==='themeFile'&&t.files[0]){await importTheme(t.files[0]);return}
  if(t.id==='fl'){S.lg=t.value;S.page=1;relist()}if(t.id==='fp'){S.pay=t.value;S.page=1;relist()}if(t.id==='so'){S.sort=t.value;relist()}if(t.id==='cb'){S.cb=t.value;rerender()}if(t.id==='ab'){S.ab=t.value;S.page=1;rerender()}
  if(t.id==='pf'){const f=t.files[0],er=$('#er');if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)){er.textContent='Formato no válido. Usa JPG, PNG o WebP.';t.value='';return}if(f.size>8*1048576){er.textContent='La foto pesa más de 8 MB.';t.value='';return}er.textContent='';pend.blob=await compress(f,pend.max||1200);pend.rm=false;setPv(URL.createObjectURL(pend.blob))}
