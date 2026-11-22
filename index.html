@@ -241,6 +241,39 @@ main{padding-top:22px;padding-bottom:24px}
  .home .hero{padding-top:0!important;margin-top:-40px!important}
  .home .hero h1{margin-top:-55px!important}
 }
+
+/* Banner horizontal compacto: ancho completo sin recortar los costados.
+   La altura visible es limitada para no desplazar el contenido. */
+.home .bn{
+ width:100%!important;
+ height:clamp(155px,18vw,245px)!important;
+ margin:0!important;
+ overflow:hidden!important;
+ position:relative!important;
+ -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 58%,transparent 100%)!important;
+ mask-image:linear-gradient(to bottom,#000 0%,#000 58%,transparent 100%)!important;
+}
+.home .bn img{
+ display:block!important;
+ width:100%!important;
+ height:100%!important;
+ max-height:none!important;
+ object-fit:cover!important;
+ object-position:center top!important;
+}
+.home .hero{
+ padding-top:0!important;
+ margin-top:-35px!important;
+ position:relative!important;
+ z-index:1!important;
+}
+.home .hero .lg{margin-bottom:0!important}
+.home .hero h1{margin-top:-48px!important}
+@media(max-width:600px){
+ .home .bn{height:clamp(135px,42vw,190px)!important}
+ .home .hero{margin-top:-25px!important;padding-top:0!important}
+ .home .hero h1{margin-top:-40px!important}
+}
 </style></head><body>
 <header><div class="w hd"><a href="#/" id="hl" aria-label="Volver a la página anterior" class="back-link" title="Volver atrás"><span aria-hidden="true">←</span><span>Volver</span></a><nav aria-label="Principal"><a href="#/" data-n="home">Inicio</a><a href="#/categorias" data-n="categorias">Categorías</a><a href="#/cat/1a5fc7bc-baf6-40c6-b66d-275017eb574e" data-n="env">Envíos</a></nav></div></header>
 <main class="w" id="app" tabindex="-1" aria-live="polite"><div class="sk"></div></main>
