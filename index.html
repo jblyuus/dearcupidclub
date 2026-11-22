@@ -245,10 +245,44 @@ const cIc=c=>`<span class="ic" aria-hidden="true"${c.imgId?` data-img="${esc(c.i
 const cat=id=>D.cats.find(c=>c.id===id),box=id=>D.boxes.find(b=>b.id===id),cnt=id=>D.prods.filter(p=>p.box===id).length;
 function charges(bid){const m={};D.prods.filter(p=>p.box===bid).forEach(p=>{const o=m[p.buyer]||(m[p.buyer]={buyer:p.buyer,ems:0,adu:0,n:0});o.ems+=+p.ems||0;o.adu+=+p.adu||0;o.n++});
  return Object.values(m).map(o=>{const c=(D.cargos[bid]||{})[o.buyer]||{};return{...o,emsAdj:+c.emsAdj||0,aduAdj:+c.aduAdj||0,emsSt:c.emsSt??0,aduSt:c.aduSt??0,emsT:o.ems+(+c.emsAdj||0),aduT:o.adu+(+c.aduAdj||0)}})}
+/* ===== Imágenes públicas: R2 + configuración compartida ===== */
+const R2_WORKER='https://dearcupid-test.yuuijmin.workers.dev';
+let publicImages={};
+function validPublicImage(value){
+ try{const u=new URL(value);return u.origin===R2_WORKER&&/^\/images\/(logo|banner)\/[a-f0-9-]{36}\.(png|jpg|webp|gif)$/.test(u.pathname)?u.href:''}catch(e){return''}
+}
+async function cargarImagenesPublicas(){
+ const r=await fetch(AUTH_URL+'/rest/v1/configuracion?select=imagenes&id=eq.1&limit=1',{headers:{apikey:AUTH_PUBLISHABLE_KEY},cache:'no-store'});
+ if(!r.ok)throw Error('No se pudieron cargar las imágenes públicas ('+r.status+').');
+ const rows=await r.json(),data=rows[0]?.imagenes||{};
+ publicImages={logo:validPublicImage(data.logo),banner:validPublicImage(data.banner)};
+}
+async function currentImage(kind){return publicImages[kind]||await imgUrl(kind)}
+async function uploadR2Image(file,folder){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('La sesión de Isa ha expirado. Vuelve a iniciar sesión.');
+ const form=new FormData();form.append('file',file,'imagen.'+(file.type==='image/png'?'png':file.type==='image/webp'?'webp':file.type==='image/gif'?'gif':'jpg'));form.append('folder',folder);
+ const r=await fetch(R2_WORKER+'/images',{method:'POST',headers:{Authorization:'Bearer '+adminSession.token},body:form});
+ const result=await r.json().catch(()=>({}));
+ if(!r.ok||!validPublicImage(result.url))throw Error(result.error||result.mensaje||'No se pudo subir la imagen a R2 ('+r.status+').');
+ return result.url;
+}
+async function publishPublicImage(kind,url){
+ if(!await refreshAdmin()||!adminSession?.token)throw Error('La sesión de Isa ha expirado.');
+ // Obtener el objeto más reciente para no sobrescribir la otra imagen.
+ const get=await fetch(AUTH_URL+'/rest/v1/configuracion?select=imagenes&id=eq.1&limit=1',{headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token},cache:'no-store'});
+ if(!get.ok)throw Error('No se pudo leer la configuración de imágenes.');
+ const rows=await get.json();if(rows.length!==1)throw Error('No existe la fila de configuración.');
+ const images={...(rows[0].imagenes||{})};
+ if(url)images[kind]=url;else delete images[kind];
+ const r=await fetch(AUTH_URL+'/rest/v1/configuracion?id=eq.1',{method:'PATCH',headers:{apikey:AUTH_PUBLISHABLE_KEY,Authorization:'Bearer '+adminSession.token,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({imagenes:images,actualizado_en:new Date().toISOString()})});
+ if(!r.ok)throw Error('No se pudo publicar en Supabase: '+(await r.text()).slice(0,180));
+ const updated=await r.json();if(updated.length!==1)throw Error('Supabase no confirmó la publicación.');
+ publicImages[kind]=url||'';
+}
 /* ===== Logo ===== */
 const logoW=()=>{try{return Math.min(420,Math.max(100,+localStorage.getItem('dc_logo_w')||270))}catch(e){return 270}};const applyLogoW=()=>document.documentElement.style.setProperty('--logo-w',logoW()+'px');
 async function setLogo(){applyLogoW();const h=$('#hl');h.innerHTML='<span aria-hidden="true">←</span><span>Volver</span>';h.href='#/'}
-const logoHtml=async()=>{const u=await imgUrl('logo');return u?`<div class="lg"><img src="${u}" alt="Logo de Dearcupid Club"></div>`:`<div class="lg" style="justify-content:center">♡</div>`};
+const logoHtml=async()=>{const u=await currentImage('logo');return u?`<div class="lg"><img src="${u}" alt="Logo de Dearcupid Club"></div>`:`<div class="lg" style="justify-content:center">♡</div>`};
 /* ===== Editor de apariencia ===== */
 const THEME_KEY='dc_theme_v1';
 const themeDefaults={bg:'#FFFAFC',sf:'#FFFFFF',p1:'#FAE8ED',p2:'#FFB2C5',p3:'#FDD5DF',p4:'#FFC2D1',ac:'#FFA2B9',ib:'#D4849F',tx:'#29262A',t2:'#6f686e',bd:'#FDD5DF',font:'system',heading:'same',fontScale:100,radius:18,shadow:6,pageWidth:1080,cardPad:20,headerAlpha:90,particles:true,particleShape:'heart',particleCount:38,particleSize:13,particleSpeed:50,particleOpacity:65,particleColor:'#FFA2B9',particleSecond:'#FDD5DF',particleThird:'#FFFFFF',particleDrift:true};
@@ -356,7 +390,7 @@ function homeFind(){
  (shipments.length?`<section class="res"><h3>Envíos nacionales</h3>${shipRows(shipments)}</section>`:'')+
  (!boxes.length&&!shipments.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
 }
-const bannerHtml=async()=>{const u=await imgUrl('banner');return u?`<div class="bn"><img src="${u}" alt="Banner de dearcupid club"></div>`:''};
+const bannerHtml=async()=>{const u=await currentImage('banner');return u?`<div class="bn"><img src="${u}" alt="Banner de dearcupid club"></div>`:''};
 async function vHome2(){return`${await bannerHtml()}<section class="hero">${await logoHtml()}<h1>dearcupid club ݁ ⋆</h1><p>Toda la información actualizada de tus pedidos y envíos, cualquier duda por favor no dudes en comunicarte conmigo. Gracias por tu confianza y preferencia, espero volver a verte por aquí ✧</p><a class="carrd" href="https://dearcupidclub.carrd.co" target="_blank" rel="noopener">dearcupidclub.carrd.co <span aria-hidden="true">↗</span></a><form class="sb" role="search" data-f="find" style="margin:24px auto 0"><label class="sr" for="hq">Buscar por username</label><input id="hq" type="search" placeholder="Busca tu username" autocomplete="off"><button class="btn pri">Buscar</button></form><div id="hres" aria-live="polite"></div></section><nav class="menu" aria-label="Secciones">${D.cats.map(c=>`<a href="#/cat/${c.id}">${cIc(c)}<span>${esc(c.name)}<small>${esc(c.desc)}</small></span></a>`).join('')}</nav>`}
 const catGrid=()=>`<h2 class="s" style="margin-top:0">Categorías</h2><div class="grid">${D.cats.map(c=>`<a class="card" href="#/cat/${c.id}">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p></a>`).join('')}</div>`;
 const vCats=()=>bc([['Inicio','#/'],['Categorías']])+catGrid();
@@ -441,7 +475,7 @@ async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">
    const ps=bid?D.prods.filter(p=>p.box===bid):[];
    b=`<h2>Cargos individuales por producto</h2><p style="color:var(--t2)">Selecciona una caja publicada y abre el editor privado. Puedes guardar los importes poco a poco en Supabase sin mostrarlos al público.</p><div style="max-width:340px;margin:14px 0"><label for="cb">Caja publicada</label><select id="cb">${D.boxes.map(x=>`<option value="${esc(x.id)}" ${x.id===bid?'selected':''}>${esc(cat(x.cat)?.name||'Categoría')} · ${esc(x.name)}</option>`).join('')}</select></div>${bid?`<div class="row" style="margin:12px 0"><button type="button" class="btn pri" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>`:''}<p style="color:var(--t2)">${ps.length} producto(s) publicado(s) en esta caja.</p>${ps.length?`<div class="lst">${ps.map(p=>{const c=publishedCharges[p.id];const pago=c?['ems','aduana','otros'].map(k=>{const col={ems:'ems_pagado',aduana:'aduana_pagada',otros:'otros_pagados'}[k],importe=Number(c[k])||0;return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px"><span>${k==='ems'?'EMS':k==='aduana'?'Aduana':'Otros'}: ${pm(importe)} · ${importe>0?(c[col]?'Pagado':'Pendiente'):'Sin cargo'}</span>${importe>0?`<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col]?'1':'0'}">${c[col]?'Marcar pendiente':'Marcar pagado'}</button>`:''}</div>`}).join(''):'<p style="color:var(--t2);font-size:.85rem">Sin cargos publicados todavía.</p>';return `<div class="row2"><div class="mn" style="width:100%"><strong>${esc(p.desc||'Producto sin descripción')}</strong><span class="meta">${esc(p.buyer)} · ${money(p.price)}</span>${pago}</div></div>`}).join('')}</div>`:'<div class="empty">Esta caja todavía no tiene productos publicados.</div>'}`;
   }
- if(tab==='personalizar'){const u=await imgUrl('logo'),bu=await imgUrl('banner');b=`<h2>Personalizar página</h2>${customUi()}<div class="card" style="max-width:520px;margin-top:14px"><h3>Logo (PNG)</h3><div class="f"><div class="drop">${u?`<img src="${u}" alt="Vista previa del logo actual">`:'<p style="color:var(--t2);margin:0">Aún no hay logo. Selecciona un PNG de hasta 2 MB.</p>'}<label for="lf">Archivo PNG</label><input type="file" id="lf" accept="image/png"></div>${u?`<div><label for="lsz">Tamaño del logo en la página principal: <strong id="lszv">${logoW()}px</strong></label><input type="range" id="lsz" min="100" max="420" step="10" value="${logoW()}"><div class="prev"><img id="lpv" src="${u}" alt="Vista previa del tamaño del logo" style="width:${logoW()}px"></div><button type="button" class="btn sm" data-act="logoreset">Restablecer tamaño</button></div>`:''}<div class="row"><button class="btn" data-act="logoup">${u?'Cambiar logo':'Guardar logo'}</button>${u?'<button class="btn dng" data-act="logodel">Eliminar logo</button>':''}</div><p class="err" id="le" role="alert"></p></div></div><div class="card" style="max-width:520px;margin-top:16px"><h3>Banner de inicio</h3><p>Aparece arriba en la página principal y se desvanece en su parte superior. JPG, PNG o WebP, máx. 5 MB.</p><div class="f"><div class="drop">${bu?'<img src="'+bu+'" alt="Vista previa del banner actual">':'<p style="color:var(--t2);margin:0">Aún no hay banner.</p>'}<label for="bf">Imagen del banner</label><input type="file" id="bf" accept="image/jpeg,image/png,image/webp"></div><div class="row"><button class="btn" data-act="bannerup">${bu?'Cambiar banner':'Guardar banner'}</button>${bu?'<button class="btn dng" data-act="bannerdel">Eliminar banner</button>':''}</div><p class="err" id="be" role="alert"></p></div></div>`}
+ if(tab==='personalizar'){const u=await currentImage('logo'),bu=await currentImage('banner');b=`<h2>Personalizar página</h2>${customUi()}<div class="card" style="max-width:520px;margin-top:14px"><h3>Logo (PNG)</h3><div class="f"><div class="drop">${u?`<img src="${u}" alt="Vista previa del logo actual">`:'<p style="color:var(--t2);margin:0">Aún no hay logo. Selecciona un PNG de hasta 2 MB.</p>'}<label for="lf">Archivo PNG</label><input type="file" id="lf" accept="image/png"></div>${u?`<div><label for="lsz">Tamaño del logo en la página principal: <strong id="lszv">${logoW()}px</strong></label><input type="range" id="lsz" min="100" max="420" step="10" value="${logoW()}"><div class="prev"><img id="lpv" src="${u}" alt="Vista previa del tamaño del logo" style="width:${logoW()}px"></div><button type="button" class="btn sm" data-act="logoreset">Restablecer tamaño</button></div>`:''}<div class="row"><button class="btn" data-act="logoup">${u?'Cambiar logo':'Guardar logo'}</button>${u?'<button class="btn dng" data-act="logodel">Eliminar logo</button>':''}</div><p class="err" id="le" role="alert"></p></div></div><div class="card" style="max-width:520px;margin-top:16px"><h3>Banner de inicio</h3><p>Aparece arriba en la página principal y se desvanece en su parte superior. JPG, PNG o WebP, máx. 5 MB.</p><div class="f"><div class="drop">${bu?'<img src="'+bu+'" alt="Vista previa del banner actual">':'<p style="color:var(--t2);margin:0">Aún no hay banner.</p>'}<label for="bf">Imagen del banner</label><input type="file" id="bf" accept="image/jpeg,image/png,image/webp"></div><div class="row"><button class="btn" data-act="bannerup">${bu?'Cambiar banner':'Guardar banner'}</button>${bu?'<button class="btn dng" data-act="bannerdel">Eliminar banner</button>':''}</div><p class="err" id="be" role="alert"></p></div></div>`}
  return bc([['Inicio','#/'],['Panel administrativo']])+`<div class="row sp"><h1>Panel administrativo</h1><button type="button" class="btn sm" data-act="logout">Cerrar sesión</button></div>${tabs}${b}`}
 /* ===== Modal y formularios ===== */
 let onSub=null,pend={blob:null,rm:false,old:''};
@@ -877,12 +911,12 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]
 
  case'rmimg':pend.blob=null;pend.rm=true;$('#pf').value='';setPv(null);break;
  case'boxprods':S.ab=id;S.page=1;S.q='';S.lg='';S.pay='';location.hash='#/admin/productos';break;
- case'bannerup':{const f=$('#bf').files[0],be=$('#be');if(!f){be.textContent='Selecciona una imagen.';break}if(!['image/jpeg','image/png','image/webp'].includes(f.type)){be.textContent='Formato no válido. Usa JPG, PNG o WebP.';break}if(f.size>5*1048576){be.textContent='La imagen pesa más de 5 MB.';break}try{await imgStore.put('banner',await compress(f,1600));freeUrl('banner');toast('Banner actualizado');rerender()}catch(x){be.textContent='No se pudo guardar el banner.'}break}
- case'bannerdel':try{await imgStore.del('banner');freeUrl('banner');toast('Banner eliminado');rerender()}catch(x){toast('No se pudo eliminar.',1)}break;
+ case'bannerup':{const f=$('#bf').files[0],be=$('#be');if(!f){be.textContent='Selecciona una imagen.';break}if(!['image/jpeg','image/png','image/webp'].includes(f.type)){be.textContent='Formato no válido. Usa JPG, PNG o WebP.';break}if(f.size>5*1048576){be.textContent='La imagen pesa más de 5 MB.';break}try{const file=await compress(f,1600);const url=await uploadR2Image(file,'banner');await publishPublicImage('banner',url);toast('Banner publicado para todos ♡');rerender()}catch(x){be.textContent=x.message||'No se pudo publicar el banner.'}break}
+ case'bannerdel':try{await publishPublicImage('banner','');await imgStore.del('banner');freeUrl('banner');toast('Banner retirado de la página');rerender()}catch(x){toast(x.message||'No se pudo eliminar.',1)}break;
  case'usebuyer':{$('#buyer').value=a.dataset.u;const pe=$('#plat');if(pe&&[...pe.options].some(o=>o.value===a.dataset.p))pe.value=a.dataset.p;$('#bsug').innerHTML='';$('#buyer').focus();break}
  case'logoreset':try{localStorage.removeItem('dc_logo_w')}catch(x){}applyLogoW();rerender();break;
- case'logoup':{const f=$('#lf').files[0],le=$('#le');if(!f){le.textContent='Selecciona un archivo PNG.';break}if(f.type!=='image/png'){le.textContent='El logo debe ser PNG.';break}if(f.size>2*1048576){le.textContent='El logo pesa más de 2 MB.';break}try{await imgStore.put('logo',f);freeUrl('logo');await setLogo();toast('Logo actualizado');rerender()}catch(x){le.textContent='No se pudo guardar el logo.'}break}
- case'logodel':try{await imgStore.del('logo');freeUrl('logo');await setLogo();toast('Logo eliminado');rerender()}catch(x){toast('No se pudo eliminar.',1)}break}});
+ case'logoup':{const f=$('#lf').files[0],le=$('#le');if(!f){le.textContent='Selecciona un archivo PNG.';break}if(f.type!=='image/png'){le.textContent='El logo debe ser PNG.';break}if(f.size>2*1048576){le.textContent='El logo pesa más de 2 MB.';break}try{const url=await uploadR2Image(f,'logo');await publishPublicImage('logo',url);await setLogo();toast('Logo publicado para todos ♡');rerender()}catch(x){le.textContent=x.message||'No se pudo publicar el logo.'}break}
+ case'logodel':try{await publishPublicImage('logo','');await imgStore.del('logo');freeUrl('logo');await setLogo();toast('Logo retirado de la página');rerender()}catch(x){toast(x.message||'No se pudo eliminar.',1)}break;}});
 document.addEventListener('submit',async e=>{const f=e.target.dataset.f;if(!f)return;e.preventDefault();
  if(f==='login'){const er=$('#loginError');try{await loginAdmin(e.target.elements.email.value,e.target.elements.password.value);toast('Sesión iniciada');await route()}catch(x){if(er)er.textContent=x.message||'No se pudo iniciar sesión.'}return}
  if(f!=='find'&&f!=='login'&&!adminReady)return;
@@ -969,6 +1003,7 @@ rm.addEventListener?.('change',start);
 /* ===== Inicio ===== */
 (async()=>{loadTheme();load();try{await cargarAparienciaPublica()}catch(e){console.warn(e);toast('No se pudo cargar la apariencia compartida.',1)}try{await imgStore.open()}catch(e){toast('IndexedDB no disponible: las fotos no se guardarán.',1);imgStore.get=imgStore.put=imgStore.del=imgStore.clear=async()=>null}
 await loadCustomFont();
+try{await cargarImagenesPublicas()}catch(e){console.warn(e);toast('No se pudieron cargar las imágenes públicas; se usarán las locales.',1)}
 await setLogo();
 await cargarCategoriasSupabase();
 await sincronizarCajasSupabase();
