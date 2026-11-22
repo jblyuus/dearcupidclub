@@ -519,8 +519,28 @@ function prodForm(id,pre){const p=D.prods.find(x=>x.id===id)||{...pre},ne=!id;if
  dlg(ne?'Nuevo producto':'Editar producto',`<div class="f">${fld('buyer','Username del comprador',p.buyer,'text','required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel('plat','Plataforma',PLAT.map(x=>`<option ${p.plat===x?'selected':''}>${x}</option>`).join(''))}${sel('box','Caja',D.boxes.map(b=>`<option value="${b.id}" ${p.box===b.id||S.ab===b.id&&ne?'selected':''}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(''))}</div><div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld('price','Precio (MXN)',p.price,'number','min="0" step="0.01" required')}${sel('logi','Estatus logístico',opts(LOGI,p.logi??0))}</div><div class="f2">${fld('ems','EMS (MXN, 0 = pendiente)',p.ems??0,'number','min="0" step="0.01"')}${fld('adu','Aduana (MXN, 0 = pendiente)',p.adu??0,'number','min="0" step="0.01"')}</div>${imgField(p.imgId)}${err}${foot}</div>`,async fd=>{
   const o={buyer:fd.buyer.trim(),plat:fd.plat,box:fd.box,desc:fd.desc.trim(),price:+fd.price,logi:+fd.logi,ems:+fd.ems||0,adu:+fd.adu||0};
   if(!o.buyer)return'Escribe el username del comprador.';if(!(o.price>=0)||fd.price==='')return'Ingresa un precio válido.';
-  let imgId=p.imgId||'';try{if(pend.blob){imgId=imgId||uid('img');await imgStore.put(imgId,pend.blob);freeUrl(imgId)}else if(pend.rm&&imgId){await imgStore.del(imgId);freeUrl(imgId);imgId=''}}catch(e){return 'No se pudo guardar la fotografía. Intenta con una imagen más pequeña.'}
-  o.imgId=imgId;o.pay=1;if(ne)D.prods.unshift({id:uid('p'),...o});else Object.assign(p,o);save();toast(ne?'Producto creado':'Producto actualizado');return 0});
+  // La tabla Supabase es la fuente de verdad; nunca anunciar éxito solo por localStorage.
+  try{
+   if(pend.blob||pend.rm)return 'Las fotos de productos aún no están conectadas al guardado de Supabase. Guarda primero los datos sin cambiar la foto.';
+   const normalizar=t=>String(t||'').trim().replace(/^@/,'').normalize('NFKC').toLocaleLowerCase('es-MX');
+   const cupiditos=await jp1Request('cupiditos?select=id,nombre&limit=10000');
+   let matches=cupiditos.filter(c=>normalizar(c.nombre)===normalizar(o.buyer));
+   if(matches.length>1)return 'Hay varios cupiditos con ese nombre. Revisa los duplicados antes de guardar.';
+   if(!matches.length){
+    matches=await jp1Request('cupiditos',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({nombre:o.buyer})});
+    if(!Array.isArray(matches)||matches.length!==1||!matches[0].id)throw Error('No se confirmó la creación del cupidito.');
+   }
+   const caja=box(o.box);
+   if(!caja)throw Error('La caja seleccionada no existe.');
+   const payload={cupidito_id:matches[0].id,caja_id:caja.id,categoria_id:caja.cat,nombre:o.desc||'Producto sin descripción',descripcion:o.desc||'',precio:o.price,moneda:'MXN',estado:LOGI[o.logi]||LOGI[0],plataforma:o.plat,ems:o.ems,aduana:o.adu};
+   const endpoint=ne?'productos':'productos?id=eq.'+encodeURIComponent(p.id);
+   const rows=await jp1Request(endpoint,{method:ne?'POST':'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
+   if(!Array.isArray(rows)||rows.length!==1||!rows[0].id)throw Error('Supabase no confirmó que se guardara exactamente un producto.');
+   await sincronizarProductosSupabase();
+   toast(ne?'Producto creado en Supabase ♡':'Producto actualizado en Supabase ♡');
+   return 0;
+  }catch(e){console.error('Error guardando producto en Supabase:',e);return 'No se guardó el producto: '+(e.message||String(e));}
+ });
  if(p.imgId)imgUrl(p.imgId).then(u=>u&&setPv(u))}
 function eCat(id){const c=cat(id)||{};pend={blob:null,rm:false,old:c.imgId||'',max:256};dlg(id?'Editar categoría':'Nueva categoría',`<div class="f">${fld('name','Nombre',c.name,'text','required')}${fld('desc','Descripción breve',c.desc)}${imgField(c.imgId,'Imagen del icono')}${err}${foot}</div>`,async fd=>{if(!fd.name.trim())return'Escribe un nombre.';const t=c.id?c:{id:uid('c'),icon:'✿'};let imgId=t.imgId||'';try{if(pend.blob){imgId=imgId||uid('cimg');await imgStore.put(imgId,pend.blob);freeUrl(imgId)}else if(pend.rm&&imgId){await imgStore.del(imgId);freeUrl(imgId);imgId=''}}catch(e){toast('El icono no se pudo guardar.',1)}Object.assign(t,{name:fd.name.trim(),desc:fd.desc.trim(),imgId});if(!c.id)D.cats.push(t);save();toast('Categoría guardada');return 0});if(c.imgId)imgUrl(c.imgId).then(u=>u&&setPv(u))}
 /* Borradores privados de los datos de una caja (no publicados). */
