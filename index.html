@@ -1037,11 +1037,11 @@ async function jpPhotosPreview(files){
   const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
   const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
   const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
-  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo (pueden subirse después).';
   out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
    (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
    (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
-   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p>Sin fotografía por ahora: '+missing.length+' productos. Puedes añadirlas en otra actualización.</p>':'')+
    '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
    '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
   if(invalid.length||missing.length||matched.length!==57){status.textContent+=' Revisa los archivos antes de continuar.';return}
@@ -1106,11 +1106,11 @@ async function jp2PhotosPreview(files){
   const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
   const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
   const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
-  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo (pueden subirse después).';
   out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
    (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
    (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
-   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p>Sin fotografía por ahora: '+missing.length+' productos. Puedes añadirlas en otra actualización.</p>':'')+
    '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
    '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
   if(invalid.length||missing.length||matched.length!==71){status.textContent+=' Revisa los archivos antes de continuar.';return}
@@ -1176,11 +1176,11 @@ async function jp3PhotosPreview(files){
   const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
   const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
   const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
-  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo (pueden subirse después).';
   out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
    (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
    (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
-   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p>Sin fotografía por ahora: '+missing.length+' productos. Puedes añadirlas en otra actualización.</p>':'')+
    '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
    '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
   if(invalid.length||missing.length||matched.length!==83){status.textContent+=' Revisa los archivos antes de continuar.';return}
@@ -1235,7 +1235,7 @@ async function jp4PhotosPreview(files){
   if(byRef.size!==47)throw Error('Se esperaban 47 productos JP #4, pero hay '+byRef.size+'. No se realizará ninguna subida.');
   const seen=new Set(),matched=[],extra=[],invalid=[];
   for(const file of files){
-   const m=/^JP__4(?:[._]5|_\.5)?_fila_(\d+)\.(?:jpe?g|png)$/i.exec(file.name);
+   const m=/^JP__4(?:__?5|[._]5|_\.5)?_fila_(\d+)\.(?:jpe?g|png)$/i.exec(file.name);
    if(!m||file.size<1||file.size>5*1024*1024||!['image/jpeg','image/png',''].includes(file.type)){invalid.push(file.name);continue}
    const fila=Number(m[1]);if(fila<4||fila>50){extra.push(file.name);continue}
    const ref='JAPON-JP4-FILA'+fila;
@@ -1247,14 +1247,14 @@ async function jp4PhotosPreview(files){
   const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
   const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
   const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
-  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo (pueden subirse después).';
   out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
    (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
    (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
-   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p>Sin fotografía por ahora: '+missing.length+' productos. Puedes añadirlas en otra actualización.</p>':'')+
    '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
    '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
-  if(invalid.length||missing.length||matched.length!==47){status.textContent+=' Revisa los archivos antes de continuar.';return}
+  if(invalid.length||extra.length){status.textContent+=' Revisa los archivos inválidos o ajenos a esta caja.';return} if(!matched.length){status.textContent+=' No hay imágenes correspondientes a esta caja.';return}
   jp4PhotosPlan=pending;button.disabled=!pending.length;
  }catch(err){status.textContent='No se pudo verificar: '+(err.message||err)}
 }
@@ -1306,7 +1306,7 @@ async function jp45PhotosPreview(files){
   if(byRef.size!==44)throw Error('Se esperaban 44 productos JP #4.5, pero hay '+byRef.size+'. No se realizará ninguna subida.');
   const seen=new Set(),matched=[],extra=[],invalid=[];
   for(const file of files){
-   const m=/^JP__4(?:[._]5|_\.5)?_fila_(\d+)\.(?:jpe?g|png)$/i.exec(file.name);
+   const m=/^JP__4(?:__?5|[._]5|_\.5)?_fila_(\d+)\.(?:jpe?g|png)$/i.exec(file.name);
    if(!m||file.size<1||file.size>5*1024*1024||!['image/jpeg','image/png',''].includes(file.type)){invalid.push(file.name);continue}
    const fila=Number(m[1]);if(fila<54||fila>97){extra.push(file.name);continue}
    const ref='JAPON-JP4-FILA'+fila;
@@ -1318,14 +1318,14 @@ async function jp45PhotosPreview(files){
   const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
   const existing=matched.filter(x=>validProductImage(x.product.imagen_url));
   const pending=matched.filter(x=>!validProductImage(x.product.imagen_url));
-  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo.';
+  status.textContent=matched.length+' imágenes relacionadas · '+existing.length+' ya tienen fotografía · '+pending.length+' por subir · '+missing.length+' sin archivo (pueden subirse después).';
   out.innerHTML='<p><strong>Vista previa, sin cambios realizados.</strong></p>'+
    (extra.length?'<p>Archivos adicionales excluidos: '+extra.map(esc).join(', ')+'</p>':'')+
    (invalid.length?'<p class="err">Archivos inválidos o repetidos: '+invalid.map(esc).join(', ')+'</p>':'')+
-   (missing.length?'<p class="err">Faltan imágenes para: '+missing.map(esc).join(', ')+'</p>':'')+
+   (missing.length?'<p>Sin fotografía por ahora: '+missing.length+' productos. Puedes añadirlas en otra actualización.</p>':'')+
    '<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>'+
    '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.split('FILA')[1])-Number(b.ref.split('FILA')[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(validProductImage(x.product.imagen_url)?'Ya tiene foto':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
-  if(invalid.length||missing.length||matched.length!==44){status.textContent+=' Revisa los archivos antes de continuar.';return}
+  if(invalid.length||extra.length){status.textContent+=' Revisa los archivos inválidos o ajenos a esta caja.';return} if(!matched.length){status.textContent+=' No hay imágenes correspondientes a esta caja.';return}
   jp45PhotosPlan=pending;button.disabled=!pending.length;
  }catch(err){status.textContent='No se pudo verificar: '+(err.message||err)}
 }
