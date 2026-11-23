@@ -702,7 +702,7 @@ function vFind(q){
  (!l.length&&!ships.length?'<div class="empty">No encontramos pedidos ni envíos con ese username.</div>':'');
 }
 /* ===== Admin ===== */
-const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['importar-japon','Importar Japón'],['fotos-jp1','Fotos JP #1'],['fotos-jp2','Fotos JP #2'],['fotos-jp3','Fotos JP #3'],['fotos-jp4','Fotos JP #4'],['fotos-jp45','Fotos JP #4.5'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
+const AT=[['cupiditos','Cupiditos'],['resumen','Resumen'],['categorias','Categorías'],['cajas','Cajas'],['borradores','Borradores privados'],['productos','Productos'],['importar-japon','Importar Japón'],['fotos-jp1','Fotos JP #1'],['fotos-jp2','Fotos JP #2'],['fotos-jp3','Fotos JP #3'],['fotos-jp4','Fotos JP #4'],['fotos-jp45','Fotos JP #4.5'],['fotos-kr1','Fotos KR #1'],['fotos-kr2','Fotos KR #2'],['envios','Envíos'],['cargos','Cargos'],['personalizar','Personalizar página']];
 const nmz=t=>String(t).trim().replace(/^@/,'').toLowerCase();let CUP=[];
 const cupRows=(ns,q='')=>{const k=nmz(q),l=ns.filter(n=>nmz(n).includes(k));return l.length?l.map(n=>`<a class="row2 cup" href="#/admin/cupiditos/${encodeURIComponent(n)}"><div class="mn"><strong>${esc(n)}</strong></div><span aria-hidden="true">›</span></a>`).join(''):'<div class="empty">Sin resultados.</div>'};
 async function conteosCajasAdmin(){
@@ -729,6 +729,7 @@ async function vAdmin(tab,sub){tab=tab||'resumen';const tabs=`<div class="tabs">
  if(tab==='fotos-jp3')b=`<h2>Fotografías de JP #3 ♡</h2><p>Importa las 83 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG o PNG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jp3PhotosFiles">Fotografías JP__3_fila_N.jpg / .png</label><input type="file" id="jp3PhotosFiles" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple><p id="jp3PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jp3PhotosPreview"></div><button type="button" class="btn pri" id="jp3PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jp3PhotosProgress" role="status" aria-live="polite"></p></div>`;
 
  if(tab==='fotos-jp4'||tab==='fotos-jp45'){const half=tab==='fotos-jp45',key=half?'jp45':'jp4',label=half?'JP #4.5':'JP #4',qty=half?44:47;b=`<h2>Fotografías de ${label} ♡</h2><p>Importa las ${qty} fotografías JPG o PNG sin modificar precios, compradores ni pagos. Las imágenes provienen de la hoja combinada JP #4/.5; se separan por su número de fila original.</p><div class="card"><label for="${key}PhotosFiles">Fotografías de ${label} (JPG o PNG)</label><input type="file" id="${key}PhotosFiles" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple><p id="${key}PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="${key}PhotosPreview"></div><button type="button" class="btn pri" id="${key}PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="${key}PhotosProgress" role="status" aria-live="polite"></p></div>`;}
+ if(tab==='fotos-kr1'||tab==='fotos-kr2'){const n=tab==='fotos-kr1'?1:2;b=`<h2>Fotografías KR #${n} ♡</h2><p>Descomprime el ZIP de KR #${n} y selecciona todas las imágenes. Primero se comprobarán las referencias, sin modificar datos.</p><div class="card"><label for="krPhotosFiles">Imágenes KR #${n}</label><input type="file" id="krPhotosFiles" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" multiple><p id="krPhotosStatus" role="status">Selecciona las imágenes para revisar coincidencias.</p><div id="krPhotosPreview"></div><button type="button" class="btn pri" id="krPhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="krPhotosProgress" role="status"></p></div>`;}
  if(tab==='cupiditos'){if(sub){const key=nmz(decodeURIComponent(sub)),ps=D.prods.filter(p=>nmz(p.buyer)===key);if(!ps.length)b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a></nav><div class="empty">Este username ya no tiene productos.</div>`;else{const name=ps[0].buyer,plat=ps[0].plat,bx=[...new Set(ps.map(p=>p.box))].map(box).filter(Boolean);b=`<nav class="bc" aria-label="Ruta"><a href="#/admin/cupiditos">Cupiditos</a> › <span aria-current="page">${esc(name)}</span></nav><div class="row sp"><div><h2>${esc(name)}</h2><p style="color:var(--t2);margin:4px 0 0">${esc(plat)} · ${ps.length} producto${ps.length>1?'s':''} en ${bx.length} caja${bx.length>1?'s':''}</p></div><button class="btn pri" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}">Agregar producto</button></div>`+bx.map(x=>`<section class="card" style="margin-top:16px"><div class="row sp"><div><strong>${esc(cat(x.cat)?.name)} · ${esc(x.name)}</strong> ${bBox(x.st)}</div><button class="btn sm" data-act="eprod" data-u="${esc(name)}" data-p="${esc(plat)}" data-b="${x.id}">Agregar aquí</button></div><div class="lst" style="margin-top:12px">${ps.filter(p=>p.box===x.id).map(p=>prow(p,1)).join('')}</div></section>`).join('')}}else{const seen={};D.prods.forEach(p=>{const k=nmz(p.buyer);if(!seen[k])seen[k]=p.buyer});CUP=Object.values(seen).sort((a,c)=>a.localeCompare(c));b=`<div class="row sp"><h2>Cupiditos</h2><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="unusedCupiditos">Eliminar cupiditos de prueba</button><button class="btn pri" data-act="eprod">Agregar producto</button></div></div><p style="color:var(--t2)">Usuarios con al menos un producto en una caja (${CUP.length}). Toca uno para ver sus cajas.</p>`+(CUP.length?`<div style="max-width:360px;margin:14px 0"><label for="cq">Buscar username</label><input id="cq" type="search" autocomplete="off"></div><div id="cl" class="lst">${cupRows(CUP)}</div>`:`<div class="empty"><p><strong>Aún no hay cupiditos</strong></p><p>Aparecen aquí cuando agregas un producto a una caja.</p></div>`)}}
  if(tab==='envios'){try{await sincronizarEnviosSupabase(true)}catch(e){b='<p class="err">'+esc(e.message)+'</p>'}}
  if(tab==='envios')b+=`<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p style="color:var(--t2)">Registra los paquetes nacionales enviados desde la administradora a cada cupidito. No utilizan cajas.</p>${shipRows(D.envios,true)}`;
@@ -1395,6 +1396,77 @@ async function jp2PhotosUpload(){
 document.addEventListener('change',e=>{if(e.target.id==='jp2PhotosFiles')jp2PhotosPreview([...e.target.files])});
 document.addEventListener('click',e=>{if(e.target.id==='jp2PhotosUpload')jp2PhotosUpload()});
 
+
+
+/* ===== Fotografías Corea: vista previa y subida controlada ===== */
+const KR_PHOTO_BOXES={1:'61237dd2-85e7-4112-85aa-9c6589541084',2:'27e30699-3288-40c8-86df-ecb40a7a74c4'};
+let krPhotoPlan=null,krPhotoBusy=false;
+function krPhotoNumber(){return location.hash.includes('fotos-kr2')?2:1}
+async function krPhotoPreview(files){
+ const status=$('#krPhotosStatus'),out=$('#krPhotosPreview'),button=$('#krPhotosUpload');if(!status||!out||!button)return;
+ button.disabled=true;krPhotoPlan=null;out.innerHTML='';status.textContent='Verificando productos en Supabase…';
+ try{
+  const n=krPhotoNumber(),bid=KR_PHOTO_BOXES[n];
+  const rows=await jp1Request('productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq.'+bid+'&limit=1000');
+  const expected=n===1?122:136;
+  const byRef=new Map(rows.map(p=>[p.referencia_excel,p]));
+  if(rows.length!==expected||byRef.size!==expected||rows.some(p=>!new RegExp('^KR #'+n+' fila [0-9]+$').test(p.referencia_excel||'')))throw Error('Las referencias de Supabase no coinciden con las '+expected+' esperadas. No se subirá nada.');
+  const seen=new Set(),matched=[],extra=[],invalid=[];
+  for(const file of files){
+   const m=new RegExp('^KR_#'+n+'_fila_([0-9]+)_col_3\\.(png|jpe?g|webp|gif)$','i').exec(file.name);
+   if(!m){invalid.push(file.name);continue}
+   const ref='KR #'+n+' fila '+Number(m[1]);
+   if(seen.has(ref)){invalid.push('Fila repetida: '+file.name);continue}
+   seen.add(ref);
+   const product=byRef.get(ref);
+   if(!product){extra.push(file.name);continue}
+   const type={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif'}[m[2].toLowerCase()];
+   if(file.size<1||file.size>5*1024*1024||(file.type&&file.type!==type)){invalid.push('Archivo inválido: '+file.name);continue}
+   matched.push({file,product,ref});
+  }
+  const missing=[...byRef.keys()].filter(ref=>!seen.has(ref));
+  const pending=matched.filter(x=>!x.product.imagen_url),existing=matched.length-pending.length;
+  status.textContent=matched.length+' coincidencias · '+pending.length+' por subir · '+existing+' con imagen · '+extra.length+' fotos sin producto · '+missing.length+' productos sin foto.';
+  out.innerHTML='<p><strong>Vista previa: todavía no se ha subido nada.</strong></p>'+
+   (extra.length?'<p>Fotografías sin producto (se omitirán): '+extra.map(esc).join(', ')+'</p>':'')+
+   (invalid.length?'<p class="err">Archivos inválidos: '+invalid.map(esc).join(', ')+'</p>':'')+
+   '<p>Los productos sin foto se mantendrán sin foto. Nunca se reemplazarán URLs existentes.</p>'+
+   '<div style="max-height:290px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Estado</th></tr></thead><tbody>'+matched.sort((a,b)=>Number(a.ref.match(/fila (\d+)/)[1])-Number(b.ref.match(/fila (\d+)/)[1])).map(x=>'<tr><td>'+esc(x.ref)+'</td><td>'+esc(x.product.nombre)+'</td><td>'+(x.product.imagen_url?'Ya tiene imagen':'Lista para subir')+'</td></tr>').join('')+'</tbody></table></div>';
+  if(invalid.length||!matched.length){status.textContent+=' Corrige los archivos inválidos antes de continuar.';return}
+  krPhotoPlan={n,bid,items:pending};button.disabled=!pending.length;
+ }catch(err){status.textContent='Error: '+(err.message||err)}
+}
+async function krPhotoUpload(){
+ if(krPhotoBusy||!krPhotoPlan?.items.length)return;
+ const {n,bid,items}=krPhotoPlan;
+ if(n!==krPhotoNumber())return;
+ if(!confirm('¿Subir '+items.length+' imágenes de KR #'+n+' a R2 y vincularlas a sus productos?'))return;
+ const button=$('#krPhotosUpload'),progress=$('#krPhotosProgress');krPhotoBusy=true;button.disabled=true;
+ let saved=0,skipped=0;const errors=[];
+ try{
+  for(const item of items){
+   progress.textContent='Procesando '+(saved+skipped+errors.length+1)+'/'+items.length+' · '+item.ref;
+   try{
+    const current=await jp1Request('productos?select=id,imagen_url,referencia_excel,caja_id&id=eq.'+encodeURIComponent(item.product.id)+'&limit=1');
+    if(current.length!==1||current[0].caja_id!==bid||current[0].referencia_excel!==item.ref)throw Error('Producto cambiado, omitido.');
+    if(current[0].imagen_url){skipped++;continue}
+    const form=new FormData();form.append('file',item.file,item.file.name);form.append('folder','productos');
+    if(!await refreshAdmin()||!adminSession?.token)throw Error('Sesión administrativa expirada.');
+    const response=await fetch(R2_WORKER+'/images',{method:'POST',headers:{Authorization:'Bearer '+adminSession.token},body:form});
+    const uploaded=await response.json().catch(()=>({}));
+    if(!response.ok||!validProductImage(uploaded.url))throw Error(uploaded.error||'Error de R2 ('+response.status+')');
+    const patched=await jp1Request('productos?id=eq.'+encodeURIComponent(item.product.id)+'&caja_id=eq.'+bid+'&referencia_excel=eq.'+encodeURIComponent(item.ref)+'&imagen_url=is.null',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({imagen_url:uploaded.url})});
+    if(!Array.isArray(patched)||patched.length!==1)throw Error('La imagen llegó a R2, pero no pudo asociarse en Supabase.');
+    saved++;
+   }catch(err){errors.push(item.ref+': '+(err.message||err))}
+  }
+  progress.textContent='Finalizado: '+saved+' vinculadas · '+skipped+' omitidas · '+errors.length+' errores.'+(errors.length?' '+errors.slice(0,5).join(' | '):'');
+  try{await sincronizarProductosSupabase()}catch(e){console.warn(e)}
+  toast(errors.length?'Revisa los errores de KR #'+n:'Fotos de KR #'+n+' guardadas ♡',!!errors.length);
+ }finally{krPhotoBusy=false;krPhotoPlan=null;button.disabled=true}
+}
+document.addEventListener('change',e=>{if(e.target.id==='krPhotosFiles')krPhotoPreview([...e.target.files])});
+document.addEventListener('click',e=>{if(e.target.id==='krPhotosUpload')krPhotoUpload()});
 
 /* ===== Fotografías JP #3: importación protegida y reanudable ===== */
 const JP3_BOX_ID='42866b92-7154-42c5-8627-517bb6294c95';
