@@ -5977,6 +5977,23 @@
       const pocaRanges = {12:[4,43],13:[4,43],14:[4,43],15:[4,43],16:[46,85],17:[88,127],18:[4,43],19:[4,43],20:[4,34]};
       const pocaBoxName = n => `POCA ${n}${n >= 15 && n <= 17 ? " · PICK PACK" : ""}`;
       const pocaRef = (n,row) => `${n >= 15 && n <= 17 ? "CAJAS PICK PACK" : "POCA " + n} fila ${row}`;
+      // Apps Script puede guardar JPEG con extensión .png. Detectar los bytes reales.
+      async function pocaNormalizeImage(file) {
+        const b = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+        const starts = (...v) => v.every((x,i) => b[i] === x);
+        let ext, type;
+        if (starts(255,216,255)) { ext="jpg"; type="image/jpeg"; }
+        else if (starts(137,80,78,71,13,10,26,10)) { ext="png"; type="image/png"; }
+        else if (starts(71,73,70,56,55,97) || starts(71,73,70,56,57,97)) { ext="gif"; type="image/gif"; }
+        else if (starts(82,73,70,70) && b[8]===87 && b[9]===69 && b[10]===66 && b[11]===80) { ext="webp"; type="image/webp"; }
+        else throw Error("Formato de imagen no reconocido");
+        const normalized = new File([file], file.name.replace(/\.[^.]+$/, "."+ext), {type,lastModified:file.lastModified});
+        // Comprobar que el navegador puede decodificar la imagen antes de subirla.
+        const url = URL.createObjectURL(normalized);
+        try { await new Promise((resolve,reject)=>{const img=new Image();img.onload=resolve;img.onerror=()=>reject(Error("Imagen dañada"));img.src=url;}); }
+        finally { URL.revokeObjectURL(url); }
+        return normalized;
+      }
       async function pocaPreview(files) {
         const selector = $("#pocaPhotoGroup"), status = $("#pocaPhotoStatus"), out = $("#pocaPhotoPreview"), button = $("#pocaPhotoUpload");
         if (!selector || !status || pocaBusy) return;
@@ -6010,9 +6027,11 @@
             if (!n || (group === "pick" ? !!m[2] : Number(m[2])!==n)) { extra.push(file.name); continue; }
             const ref=pocaRef(n,row), record=refs.get(ref);
             if (!record) { extra.push(file.name); continue; }
-            const mime={png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",webp:"image/webp",gif:"image/gif"}[m[4].toLowerCase()];
-            if (seen.has(ref)||file.size<1||file.size>5*1024*1024||(file.type&&file.type!==mime)) { invalid.push(file.name); continue; }
-            seen.add(ref); matched.push({...record,ref,file,row});
+            if (seen.has(ref)||file.size<1||file.size>5*1024*1024) { invalid.push(file.name); continue; }
+            let normalized;
+            try { normalized=await pocaNormalizeImage(file); }
+            catch(e) { invalid.push(file.name+" ("+e.message+")"); continue; }
+            seen.add(ref); matched.push({...record,ref,file:normalized,row});
             const c=counts.get(n); c.matched++; if(record.product.imagen_url)c.existing++; else c.pending++;
           }
           if (version!==pocaPreviewVersion || !status.isConnected || selector.value!==group) return;
