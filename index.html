@@ -2962,10 +2962,16 @@
           ? money(p.price)
           : "";
       const pcard = (p) =>
-        `<article class="card pc"><button class="im" data-act="zoom" data-id="${esc(p.imgId || "")}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ver imagen grande de ${esc(p.desc)}" title="Haz clic para ampliar la imagen">${productPhoto(p)}</button><div class="bd"><strong>${esc(p.desc)}</strong><span>${esc(p.buyer)} <small style="color:var(--t2)">· ${esc(p.plat)}</small></span>${publicPrice(p) ? `<strong>${publicPrice(p)}</strong>` : ""}<div class="row">${bLogi(p.logi)}</div><small style="color:var(--t2)">EMS: ${pm(p.ems)} · Aduana: ${pm(p.adu)}</small></div></article>`;
-      const pm = (n) => (+n > 0 ? money(n) : "Pendiente");
+        `<article class="card pc"><button class="im" data-act="zoom" data-id="${esc(p.imgId || "")}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ver imagen grande de ${esc(p.desc)}" title="Haz clic para ampliar la imagen">${productPhoto(p)}</button><div class="bd"><strong>${esc(p.desc)}</strong><span>${esc(p.buyer)} <small style="color:var(--t2)">· ${esc(p.plat)}</small></span>${publicPrice(p) ? `<strong>${publicPrice(p)}</strong>` : ""}<div class="row">${bLogi(p.logi)}</div><small style="color:var(--t2)">EMS: ${pm(p.ems, p.emsEstado)} · Aduana: ${pm(p.adu, p.aduEstado)}</small></div></article>`;
+      const pm = (n, estado) => {
+        const e = String(estado || "").trim().toLowerCase();
+        if (e === "pagado") return "Pagado";
+        if (["sin cobro", "sin cargo", "cero", "0", "confirmado 0"].includes(e)) return money(0);
+        if (e === "pendiente") return "Pendiente";
+        return +n > 0 ? money(n) : "Pendiente";
+      };
       const prow = (p, admin) =>
-        `<article class="row2"><button class="th" data-act="zoom" data-id="${esc(p.imgId || "")}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ver imagen grande de ${esc(p.desc)}" title="Haz clic para ampliar la imagen">${productPhoto(p)}</button><div class="mn"><strong>${esc(p.desc)}</strong><span class="meta">${esc(p.buyer)} · ${esc(p.plat)}${admin && box(p.box) ? " · " + esc(box(p.box).name) : ""}</span><div class="bs">${bLogi(p.logi)}<span class="b">EMS: ${pm(p.ems)}</span><span class="b">Aduana: ${pm(p.adu)}</span></div>${admin ? `<div class="ac"><button class="btn sm" data-act="eprod" data-id="${p.id}">Editar</button><button class="btn sm dng" data-act="dprod" data-id="${p.id}">Eliminar</button></div>` : ""}</div><div class="pr">${admin ? money(p.price) : publicPrice(p)}</div></article>`;
+        `<article class="row2"><button class="th" data-act="zoom" data-id="${esc(p.imgId || "")}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ver imagen grande de ${esc(p.desc)}" title="Haz clic para ampliar la imagen">${productPhoto(p)}</button><div class="mn"><strong>${esc(p.desc)}</strong><span class="meta">${esc(p.buyer)} · ${esc(p.plat)}${admin && box(p.box) ? " · " + esc(box(p.box).name) : ""}</span><div class="bs">${bLogi(p.logi)}<span class="b">EMS: ${pm(p.ems, p.emsEstado)}</span><span class="b">Aduana: ${pm(p.adu, p.aduEstado)}</span></div>${admin ? `<div class="ac"><button class="btn sm" data-act="eprod" data-id="${p.id}">Editar</button><button class="btn sm dng" data-act="dprod" data-id="${p.id}">Eliminar</button></div>` : ""}</div><div class="pr">${admin ? money(p.price) : publicPrice(p)}</div></article>`;
       function plist(list, admin) {
         const f = filt(list),
           pages = Math.max(1, Math.ceil(f.length / PER));
@@ -4389,8 +4395,19 @@
           return '<div class="empty">Esta caja todavía no tiene cargos publicados.</div>';
         const all = [...groups.values()]; // Orden de primera aparición en la masterlist, no alfabético.
         const total = admin ? all.reduce((n, g) => n + g.pendiente, 0) : 0;
-        const status = (amount, paid) =>
-          Number(amount) > 0 ? (paid ? "Pagado" : "Pendiente") : "Sin cargo";
+        const status = (amount, paid, explicit) => {
+          const e = String(explicit || "").trim().toLowerCase();
+          if (e === "pagado" || paid) return "Pagado";
+          if (["sin cobro", "sin cargo", "cero", "0", "confirmado 0"].includes(e)) return "Sin cobro";
+          if (e === "pendiente") return "Pendiente";
+          return Number(amount) > 0 ? "Pendiente" : "Sin cargo";
+        };
+        const chargeLabel = (amount, paid, explicit) => {
+          const e = String(explicit || "").trim().toLowerCase();
+          if (e === "pagado" && Number(amount) === 0) return "Pagado";
+          if (["sin cobro", "sin cargo", "cero", "0", "confirmado 0"].includes(e)) return money(0) + " · Sin cobro";
+          return money(amount) + " · " + status(amount, paid, explicit);
+        };
         return `${admin ? `<div class="card" style="margin:12px 0 18px"><strong>${all.length} cupidito(s) · ${products.length} productos</strong><p>EMS: ${money(all.reduce((n, g) => n + g.ems, 0))} · Aduana: ${money(all.reduce((n, g) => n + g.aduana, 0))}</p><strong>Total pendiente: ${money(total)}</strong></div>` : ""}<div class="lst">${all
           .map(
             (g) =>
@@ -4403,7 +4420,7 @@
                     ]
                       .map(
                         ([field, col, label]) =>
-                          `<div class="row sp" style="margin-top:9px"><span>${label}: ${money(c[field])} · ${status(c[field], c[col])}</span>${admin && Number(c[field]) > 0 ? `<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col] ? "1" : "0"}">${c[col] ? "Marcar pendiente" : "Marcar pagado"}</button>` : ""}</div>`,
+                          `<div class="row sp" style="margin-top:9px"><span>${label}: ${chargeLabel(c[field], c[col], field === "ems" ? p.emsEstado : p.aduEstado)}</span>${admin && Number(c[field]) > 0 ? `<button type="button" class="btn sm" data-act="toggleChargePaid" data-id="${esc(p.id)}" data-charge-col="${col}" data-paid="${c[col] ? "1" : "0"}">${c[col] ? "Marcar pendiente" : "Marcar pagado"}</button>` : ""}</div>`,
                       )
                       .join("")}</div>`,
                 )
@@ -4752,7 +4769,7 @@
         const headers = { apikey: AUTH_PUBLISHABLE_KEY };
         const r = await fetch(
           AUTH_URL +
-            "/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,ems,aduana,created_at&order=created_at.asc,id.asc&limit=10000",
+            "/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,ems,aduana,ems_estado,aduana_estado,created_at&order=created_at.asc,id.asc&limit=10000",
           { headers, cache: "no-store" },
         );
         if (!r.ok)
@@ -4803,6 +4820,8 @@
           ),
           ems: Number(p.ems) || 0,
           adu: Number(p.aduana) || 0,
+          emsEstado: p.ems_estado || "",
+          aduEstado: p.aduana_estado || "",
           imgId: "",
           imagenUrl: validProductImage(p.imagen_url),
           pay: 0,
