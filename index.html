@@ -2899,14 +2899,31 @@
         if (n < 2) return "";
         return `<nav class="pg" aria-label="Paginación">${Array.from({ length: n }, (_, i) => `<button class="btn sm" data-act="page" data-p="${i + 1}" ${i + 1 === p ? 'aria-current="page"' : ""}>${i + 1}</button>`).join("")}</nav>`;
       }
-      // Respeta las filas originales del Excel en las cajas importadas de Corea y Japón.
+      // Respeta las filas originales del Excel en Corea, Japón y Pocamarket.
       function filaOriginalProducto(p) {
         const ref = String(p.referenciaExcel || "").trim();
         const kr = /^KR\s*#([12])\s+fila\s+(\d+)$/i.exec(ref);
         if (kr) return { tipo: "KR", caja: Number(kr[1]), fila: Number(kr[2]) };
         const jp = /^JAPON-JP(\d+)-FILA(\d+)$/i.exec(ref);
         if (jp) return { tipo: "JP", caja: Number(jp[1]), fila: Number(jp[2]) };
+        // Ejemplos: POCA 12 fila 4; CAJAS PICK PACK fila 46.
+        // La comparación exige también el mismo ID de caja, porque las
+        // cajas 15, 16 y 17 comparten la hoja CAJAS PICK PACK.
+        const poca = /^(POCA\s*\d+|CAJAS\s+PICK\s+PACK)\s+fila\s+(\d+)$/i.exec(ref);
+        if (poca) return { tipo: "POCA", caja: poca[1].replace(/\s+/g, " ").toUpperCase(), fila: Number(poca[2]) };
         return null;
+      }
+      function compararOrdenOriginal(a, b) {
+        const aa = filaOriginalProducto(a), bb = filaOriginalProducto(b);
+        if (a.box === b.box) {
+          if (aa && bb && aa.tipo === bb.tipo && aa.caja === bb.caja)
+            return aa.fila - bb.fila || (a.ordenCarga ?? 0) - (b.ordenCarga ?? 0);
+          // Si se añade un producto manualmente, mantenerlo después de los
+          // registros importados de esa caja, sin cambiar las demás categorías.
+          if (aa && !bb && (aa.tipo === "KR" || aa.tipo === "POCA")) return -1;
+          if (bb && !aa && (bb.tipo === "KR" || bb.tipo === "POCA")) return 1;
+        }
+        return (a.ordenCarga ?? 0) - (b.ordenCarga ?? 0);
       }
       function filt(list) {
         const q = S.q.trim().toLocaleLowerCase("es");
@@ -2914,29 +2931,7 @@
           .filter(
             (p) => !q || (p.buyer || "").toLocaleLowerCase("es").includes(q),
           )
-          .sort((a, b) => {
-            const aa = filaOriginalProducto(a),
-              bb = filaOriginalProducto(b);
-            // Solo comparar filas cuando ambos productos son de la misma caja importada.
-            if (
-              aa &&
-              bb &&
-              a.box === b.box &&
-              aa.tipo === bb.tipo &&
-              aa.caja === bb.caja
-            ) {
-              return (
-                aa.fila - bb.fila || (a.ordenCarga ?? 0) - (b.ordenCarga ?? 0)
-              );
-            }
-            // Dentro de una caja de Corea, los productos nuevos sin referencia van al final.
-            if (a.box === b.box) {
-              if (aa?.tipo === "KR" && !bb) return -1;
-              if (bb?.tipo === "KR" && !aa) return 1;
-            }
-            // Otras cajas y listados combinados mantienen el orden recibido.
-            return (a.ordenCarga ?? 0) - (b.ordenCarga ?? 0);
-          });
+          .sort(compararOrdenOriginal);
       }
       const productPhoto = (p) => {
         const url = validProductImage(p.imagenUrl);
@@ -4364,15 +4359,7 @@
       /* Cargos agrupados por cupidito: los estados de pago siguen siendo por producto. */
       function renderCargosAgrupados(products, admin) {
         const groups = new Map();
-        for (const p of [...products].sort((a, b) => {
-          const aa = /^JAPON-JP(\d+)-FILA(\d+)$/i.exec(a.referenciaExcel || "");
-          const bb = /^JAPON-JP(\d+)-FILA(\d+)$/i.exec(b.referenciaExcel || "");
-          if (aa && bb) {
-            const diff = Number(aa[1]) - Number(bb[1]);
-            return diff || Number(aa[2]) - Number(bb[2]);
-          }
-          return (a.ordenCarga ?? 0) - (b.ordenCarga ?? 0);
-        })) {
+        for (const p of [...products].sort(compararOrdenOriginal)) {
           const c = publishedCharges[p.id];
           if (!c) continue;
           const key = nmz(p.buyer) || "(sin cupidito)";
@@ -4767,16 +4754,30 @@
       /* Productos públicos: nunca consultar borradores desde las páginas públicas. */
       async function sincronizarProductosSupabase() {
         const headers = { apikey: AUTH_PUBLISHABLE_KEY };
-        const r = await fetch(
-          AUTH_URL +
-            "/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,ems,aduana,ems_estado,aduana_estado,created_at&order=created_at.asc,id.asc&limit=10000",
-          { headers, cache: "no-store" },
-        );
-        if (!r.ok)
-          throw Error(
-            "No se pudieron cargar los productos públicos (" + r.status + ").",
+        const productos = [];
+        const pageSize = 500;
+        let offset = 0;
+        const seen = new Set();
+        while (true) {
+          const r = await fetch(
+            AUTH_URL +
+              "/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,ems,aduana,ems_estado,aduana_estado,created_at&order=created_at.asc,id.asc&limit=" + pageSize + "&offset=" + offset,
+            { headers, cache: "no-store" },
           );
-        const productos = await r.json();
+          if (!r.ok)
+            throw Error("No se pudieron cargar los productos públicos (" + r.status + ").");
+          const rows = await r.json();
+          if (!Array.isArray(rows)) throw Error("Respuesta de productos inválida.");
+          if (!rows.length) break;
+          for (const row of rows) {
+            if (!row.id || seen.has(row.id))
+              throw Error("La lista cambió durante la carga. Recarga la página.");
+            seen.add(row.id);
+            productos.push(row);
+          }
+          offset += rows.length;
+        }
+        console.info("Productos públicos cargados:", productos.length);
         let names = {};
         if (productos.some((p) => p.cupidito_id)) {
           const c = await fetch(
