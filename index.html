@@ -1883,7 +1883,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-act]
   case'themeReset':confirmDlg('¿Restablecer todos los colores, fuentes, tamaños y partículas?',resetTheme);break;
  case'close':$('#dlg').close();break;
  case'terms':e.preventDefault();dlg('Términos y condiciones',`<p>Para información sobre pedidos, cargos de EMS, aduanas y envíos, comunícate con la administración de Dearcupid Club.</p><button type="button" class="btn" data-act="close">Entendido</button>`);break;
- case'zoom':{const u=validProductImage(el.dataset.url)||(id&&await imgUrl(id));dlg('Foto del producto',u?`<img class="big" src="${esc(u)}" alt="Foto ampliada del producto">`:'<p>Este producto aún no tiene foto.</p>');break}
+ case'zoom':{const u=validProductImage(a.dataset.url)||(id&&await imgUrl(id));dlg('Foto del producto',u?`<img class="big" src="${esc(u)}" alt="Foto ampliada del producto">`:'<p>Este producto aún no tiene foto.</p>');break}
  case'view':S.view=a.dataset.v;rerender();break;
  case'page':S.page=+a.dataset.p;relist();scrollTo({top:0});break;
  case'clear':S={...S,q:'',lg:'',pay:'',page:1};rerender();break;
