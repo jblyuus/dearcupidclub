@@ -5976,7 +5976,7 @@
       let pocaPlan = null, pocaBusy = false, pocaPreviewVersion = 0;
       const pocaRanges = {12:[4,43],13:[4,43],14:[4,43],15:[4,43],16:[46,85],17:[88,127],18:[4,43],19:[4,43],20:[4,34]};
       const pocaBoxName = n => `POCA ${n}${n >= 15 && n <= 17 ? " · PICK PACK" : ""}`;
-      const pocaRef = (n,row) => `${n >= 15 && n <= 17 ? "CAJAS PICK PACK" : "POCA " + n} fila ${row}`;
+      const pocaRef = (n,row) => `POCA ${n} fila ${row}`;
       // Apps Script puede guardar JPEG con extensión .png. Detectar los bytes reales.
       async function pocaNormalizeImage(file) {
         const b = new Uint8Array(await file.slice(0, 16).arrayBuffer());
