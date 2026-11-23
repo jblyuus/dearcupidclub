@@ -3349,6 +3349,7 @@
         ["fotos-jp45", "Fotos JP #4.5"],
         ["fotos-kr1", "Fotos KR #1"],
         ["fotos-kr2", "Fotos KR #2"],
+        ["fotos-poca", "Fotos Pocamarket"],
         ["envios", "Envíos"],
         ["cargos", "Cargos"],
         ["personalizar", "Personalizar página"],
@@ -3499,6 +3500,9 @@
         if (tab === "fotos-kr1" || tab === "fotos-kr2") {
           const n = tab === "fotos-kr1" ? 1 : 2;
           b = `<h2>Fotografías KR #${n} ♡</h2><p>Descomprime el ZIP de KR #${n} y selecciona todas las imágenes. Primero se comprobarán las referencias, sin modificar datos.</p><div class="card"><label for="krPhotosFiles">Imágenes KR #${n}</label><input type="file" id="krPhotosFiles" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" multiple><p id="krPhotosStatus" role="status">Selecciona las imágenes para revisar coincidencias.</p><div id="krPhotosPreview"></div><button type="button" class="btn pri" id="krPhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="krPhotosProgress" role="status"></p></div>`;
+        }
+        if (tab === "fotos-poca") {
+          b = `<h2>Fotografías de Pocamarket ♡</h2><p>Selecciona una caja o PICK PACK y las imágenes descomprimidas. Los productos sin foto se conservan sin cambios.</p><div class="card"><label for="pocaPhotoGroup">Caja</label><select id="pocaPhotoGroup"><option value="12">POCA 12</option><option value="13">POCA 13</option><option value="14">POCA 14</option><option value="pick">PICK PACK · 15, 16 y 17</option><option value="18">POCA 18</option><option value="19">POCA 19</option><option value="20">POCA 20</option></select><label for="pocaPhotoFiles" style="margin-top:12px">Fotografías originales de Apps Script</label><input type="file" id="pocaPhotoFiles" multiple accept=".jpg,.jpeg,.png,.webp,.gif"><p id="pocaPhotoStatus" role="status">Selecciona las imágenes para revisar coincidencias.</p><div id="pocaPhotoPreview"></div><button type="button" class="btn pri" id="pocaPhotoUpload" disabled>Subir fotografías verificadas ♡</button><p id="pocaPhotoProgress" role="status"></p></div>`;
         }
         if (tab === "cupiditos") {
           if (sub) {
@@ -5967,6 +5971,95 @@
       document.addEventListener("click", (e) => {
         if (e.target.id === "krPhotosUpload") krPhotoUpload();
       });
+
+      /* Fotografías Pocamarket: referencias originales, sin sobrescribir. */
+      let pocaPlan = null, pocaBusy = false, pocaPreviewVersion = 0;
+      const pocaRanges = {12:[4,43],13:[4,43],14:[4,43],15:[4,43],16:[46,85],17:[88,127],18:[4,43],19:[4,43],20:[4,34]};
+      const pocaBoxName = n => `POCA ${n}${n >= 15 && n <= 17 ? " · PICK PACK" : ""}`;
+      const pocaRef = (n,row) => `${n >= 15 && n <= 17 ? "CAJAS PICK PACK" : "POCA " + n} fila ${row}`;
+      async function pocaPreview(files) {
+        const selector = $("#pocaPhotoGroup"), status = $("#pocaPhotoStatus"), out = $("#pocaPhotoPreview"), button = $("#pocaPhotoUpload");
+        if (!selector || !status || pocaBusy) return;
+        const version = ++pocaPreviewVersion, group = selector.value;
+        pocaPlan = null; button.disabled = true; out.innerHTML = "";
+        $("#pocaPhotoProgress").textContent = "";
+        status.textContent = "Verificando referencias en Supabase…";
+        try {
+          const nums = group === "pick" ? [15,16,17] : [Number(group)];
+          const categories = D.cats.filter(c => c.name.trim().toLowerCase() === "pocamarket");
+          if (categories.length !== 1) throw Error("No se encontró una categoría Pocamarket única.");
+          const refs = new Map(), counts = new Map();
+          for (const n of nums) {
+            const boxes = D.boxes.filter(b => b.cat === categories[0].id && b.name.trim() === pocaBoxName(n));
+            if (boxes.length !== 1) throw Error("No se encontró una caja única: " + pocaBoxName(n));
+            const bid = boxes[0].id, [first,last] = pocaRanges[n];
+            const rows = await jp1Request("productos?select=id,caja_id,referencia_excel,nombre,imagen_url&caja_id=eq." + encodeURIComponent(bid) + "&limit=500");
+            if (!Array.isArray(rows)) throw Error("Respuesta inválida de productos.");
+            for (let i=first;i<=last;i++) {
+              const ref = pocaRef(n,i), matches = rows.filter(p => p.referencia_excel === ref && p.caja_id === bid);
+              if (matches.length !== 1 || refs.has(ref)) throw Error("Referencia ausente o duplicada: " + ref);
+              refs.set(ref,{product:matches[0],n,bid});
+            }
+            counts.set(n,{total:last-first+1,matched:0,pending:0,existing:0});
+          }
+          const seen = new Set(), matched=[], extra=[], invalid=[];
+          for (const file of files) {
+            const m = /^(POCA_([0-9]+)|CAJAS_PICK_PACK)_fila_([0-9]+)_col_3\.(png|jpe?g|webp|gif)$/i.exec(file.name);
+            if (!m) { invalid.push(file.name); continue; }
+            const row=Number(m[3]), n=group === "pick" ? nums.find(k=>row>=pocaRanges[k][0]&&row<=pocaRanges[k][1]) : Number(group);
+            if (!n || (group === "pick" ? !!m[2] : Number(m[2])!==n)) { extra.push(file.name); continue; }
+            const ref=pocaRef(n,row), record=refs.get(ref);
+            if (!record) { extra.push(file.name); continue; }
+            const mime={png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",webp:"image/webp",gif:"image/gif"}[m[4].toLowerCase()];
+            if (seen.has(ref)||file.size<1||file.size>5*1024*1024||(file.type&&file.type!==mime)) { invalid.push(file.name); continue; }
+            seen.add(ref); matched.push({...record,ref,file,row});
+            const c=counts.get(n); c.matched++; if(record.product.imagen_url)c.existing++; else c.pending++;
+          }
+          if (version!==pocaPreviewVersion || !status.isConnected || selector.value!==group) return;
+          const pending=matched.filter(x=>!x.product.imagen_url);
+          status.textContent=`${matched.length} coincidencias · ${pending.length} por subir · ${extra.length} fuera de selección · ${invalid.length} inválidas.`;
+          out.innerHTML='<p><strong>Vista previa: no se ha subido nada.</strong></p>'+ [...counts].map(([n,c])=>`<p>${esc(pocaBoxName(n))}: ${c.matched}/${c.total} archivos seleccionados · ${c.existing} ya tienen imagen · ${c.total-c.matched} sin archivo seleccionado.</p>`).join("")+(extra.length?'<p>Se omitirán: '+extra.map(esc).join(", ")+ '</p>':"")+(invalid.length?'<p class="err">Archivos inválidos o duplicados: '+invalid.map(esc).join(", ")+ '</p>':"")+'<div style="max-height:290px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Estado</th></tr></thead><tbody>'+matched.sort((a,b)=>a.n-b.n||a.row-b.row).map(x=>`<tr><td>${esc(x.ref)}</td><td>${esc(x.product.nombre)}</td><td>${x.product.imagen_url?"Ya tiene imagen":"Lista para subir"}</td></tr>`).join("")+'</tbody></table></div>';
+          if (invalid.length) return;
+          pocaPlan={group,items:pending}; button.disabled=!pending.length;
+        } catch(e) { if(version===pocaPreviewVersion) status.textContent="Error: "+e.message; }
+      }
+      async function pocaUpload() {
+        const selector=$("#pocaPhotoGroup"), input=$("#pocaPhotoFiles"), button=$("#pocaPhotoUpload"), progress=$("#pocaPhotoProgress");
+        if(pocaBusy||!pocaPlan?.items.length||selector.value!==pocaPlan.group)return;
+        const {items}=pocaPlan;
+        if(!confirm(`¿Subir ${items.length} imágenes verificadas de Pocamarket?`))return;
+        pocaBusy=true; selector.disabled=input.disabled=button.disabled=true;
+        let saved=0,skipped=0; const errors=[];
+        try {
+          for(const item of items) {
+            progress.textContent=`Procesando ${saved+skipped+errors.length+1}/${items.length} · ${item.ref}`;
+            try {
+              const filter="id=eq."+encodeURIComponent(item.product.id)+"&caja_id=eq."+encodeURIComponent(item.bid)+"&referencia_excel=eq."+encodeURIComponent(item.ref);
+              const current=await jp1Request("productos?select=id,imagen_url&"+filter);
+              if(!Array.isArray(current)||current.length!==1)throw Error("Producto cambiado o no encontrado.");
+              if(current[0].imagen_url){skipped++;continue;}
+              if(!(await refreshAdmin())||!adminSession?.token)throw Error("Sesión expirada.");
+              const form=new FormData(); form.append("file",item.file,item.file.name);form.append("folder","productos");
+              const response=await fetch(R2_WORKER+"/images",{method:"POST",headers:{Authorization:"Bearer "+adminSession.token},body:form});
+              const uploaded=await response.json().catch(()=>({}));
+              if(!response.ok||!validProductImage(uploaded.url))throw Error(uploaded.error||"Error de R2 ("+response.status+")");
+              const patched=await jp1Request("productos?"+filter+"&imagen_url=is.null",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({imagen_url:uploaded.url})});
+              if(!Array.isArray(patched)||patched.length!==1)throw Error("Imagen subida a R2 pero no vinculada; revisar antes de repetir.");
+              saved++;
+            }catch(e){errors.push(item.ref+": "+e.message);}
+          }
+          progress.textContent=`Finalizado: ${saved} vinculadas · ${skipped} omitidas · ${errors.length} errores. `+errors.join(" | ");
+          try{await sincronizarProductosSupabase();}catch(e){console.warn(e);}
+          toast(errors.length?"Revisa los errores de Pocamarket":"Fotos de Pocamarket guardadas ♡",!!errors.length);
+        }finally{pocaBusy=false;pocaPlan=null;selector.disabled=input.disabled=false;input.value="";button.disabled=true;}
+      }
+      document.addEventListener("change",e=>{
+        if(e.target.id==="pocaPhotoFiles")pocaPreview([...e.target.files]);
+        if(e.target.id==="pocaPhotoGroup"){
+          ++pocaPreviewVersion;pocaPlan=null;$("#pocaPhotoFiles").value="";$("#pocaPhotoUpload").disabled=true;$("#pocaPhotoPreview").innerHTML="";$("#pocaPhotoProgress").textContent="";$("#pocaPhotoStatus").textContent="Selecciona las imágenes para revisar coincidencias.";
+        }
+      });
+      document.addEventListener("click",e=>{if(e.target.id==="pocaPhotoUpload")pocaUpload();});
 
       /* ===== Fotografías JP #3: importación protegida y reanudable ===== */
       const JP3_BOX_ID = "42866b92-7154-42c5-8627-517bb6294c95";
