@@ -2438,7 +2438,7 @@
         const result = await r.json().catch(() => ({}));
         const validUploadUrl = folder === "envios"
           ? (() => { try { const u = new URL(result.url); return u.origin === R2_WORKER && /^\/images\/envios\/[a-f0-9-]{36}\.(png|jpg|webp|gif)$/.test(u.pathname); } catch { return false; } })()
-          : validPublicImage(result.url);
+          : folder === "productos" ? validProductImage(result.url) : validPublicImage(result.url);
         if (!r.ok || !validUploadUrl)
           throw Error(
             result.error ||
@@ -2893,11 +2893,11 @@
                 `<div class="custom-field"><label for="tr-${k}">${l}: <output id="to-${k}">${T[k]}${u}</output></label><input id="tr-${k}" type="range" data-theme="${k}" min="${min}" max="${max}" step="${step}" value="${T[k]}"></div>`,
             )
             .join("");
-        return `<p style="color:var(--t2)">Cambia la apariencia y observa el resultado al instante. Los cambios se previsualizan en este navegador. Pulsa «Publicar apariencia» para compartirlos con todos.</p>
-<div class="custom-actions"><label for="themePreset" class="sr">Paleta prediseñada</label><select id="themePreset" style="max-width:230px"><option value="">Elegir una paleta...</option><option value="rosa">Rosa original</option><option value="lavanda">Lavanda</option><option value="menta">Menta</option><option value="crema">Crema</option><option value="noche">Noche</option></select><button type="button" class="btn" data-act="themeExport">Exportar diseño</button><button type="button" class="btn" data-act="themeImport">Importar diseño</button><input type="file" id="themeFile" accept="application/json,.json" hidden><button type="button" class="btn dng" data-act="themeReset">Restablecer diseño</button></div>
+        return `<p style="color:var(--t2)">Personaliza tu página y publica los cambios cuando esté lista.</p>
+<div class="custom-actions"><label for="themePreset" class="sr">Paleta prediseñada</label><select id="themePreset" style="max-width:230px"><option value="">Elegir una paleta...</option><option value="rosa">Rosa original</option><option value="lavanda">Lavanda</option><option value="menta">Menta</option><option value="crema">Crema</option><option value="noche">Noche</option></select><button type="button" class="btn dng" data-act="themeReset">Restablecer diseño</button></div>
 <section class="custom-section"><h3>Colores de toda la página</h3><div class="custom-grid">${colors}</div></section>
 <section class="custom-section"><h3>Tipografías y vista previa</h3><div class="custom-grid"><div><label for="tf">Fuente de la página</label><select id="tf" data-theme="font">${fontOpts(T.font)}</select></div><div><label for="th">Fuente de títulos</label><select id="th" data-theme="heading"><option value="same" ${T.heading === "same" ? "selected" : ""}>Igual que la página</option>${fontOpts(T.heading, true)}</select></div>${range(["fontScale"])}</div><div class="theme-preview"><div class="sample-card"><div class="sample-heading">dearcupid club ✧</div><p class="sample-body">Así se verán los textos, títulos, colores y tarjetas de tu página.</p><button type="button" class="btn pri">Botón de ejemplo ♡</button> <span class="b">Etiqueta de ejemplo</span></div></div></section>
-<section class="custom-section"><h3>Subir fuente personalizada</h3><p>Selecciona un archivo de fuente WOFF2, WOFF, TTF u OTF (máximo 3 MB). La fuente se aplicará a toda la página, con vista previa inmediata. Usa solo fuentes que tengas permiso para utilizar.</p><div class="custom-grid"><div><label for="customFontFile">Archivo de fuente</label><input type="file" id="customFontFile" accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"></div><div class="row" style="align-self:end"><button type="button" class="btn dng" data-act="fontRemove">Eliminar fuente personalizada</button></div></div><p class="err" id="customFontError" role="alert"></p><p style="font-size:.83rem;color:var(--t2)">La fuente se guarda en este navegador. Para mostrarla a todos los visitantes será necesario publicarla en el servidor.</p></section>
+<section class="custom-section"><h3>Subir fuente personalizada</h3><p>WOFF2, WOFF, TTF u OTF · Máximo 3 MB. Usa fuentes autorizadas.</p><div class="custom-grid"><div><label for="customFontFile">Archivo de fuente</label><input type="file" id="customFontFile" accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"></div><div class="row" style="align-self:end"><button type="button" class="btn dng" data-act="fontRemove">Eliminar fuente personalizada</button></div></div><p class="err" id="customFontError" role="alert"></p><p style="font-size:.83rem;color:var(--t2)">La fuente personalizada solo se muestra en este navegador.</p></section>
 <section class="custom-section"><h3>Diseño y distribución</h3><div class="custom-grid">${range(["radius", "shadow", "pageWidth", "cardPad", "headerAlpha"])}</div></section>
 <section class="custom-section"><h3>Partículas y animaciones</h3><div class="custom-grid"><div><label for="tpEnabled">Mostrar partículas</label><select id="tpEnabled" data-theme="particles"><option value="true" ${T.particles ? "selected" : ""}>Activadas</option><option value="false" ${!T.particles ? "selected" : ""}>Desactivadas</option></select></div><div><label for="tpShape">Forma de partículas</label><select id="tpShape" data-theme="particleShape">${[
           ["heart", "Corazones"],
@@ -2912,8 +2912,8 @@
           )
           .join(
             "",
-          )}</select></div><div><label for="tpColor">Color principal</label><input id="tpColor" type="color" data-theme="particleColor" value="${T.particleColor}"></div><div><label for="tpSecond">Color secundario</label><input id="tpSecond" type="color" data-theme="particleSecond" value="${T.particleSecond}"></div><div><label for="tpThird">Color de destellos</label><input id="tpThird" type="color" data-theme="particleThird" value="${T.particleThird}"></div><div><label for="tpDrift">Movimiento flotante</label><select id="tpDrift" data-theme="particleDrift"><option value="true" ${T.particleDrift ? "selected" : ""}>Sí</option><option value="false" ${!T.particleDrift ? "selected" : ""}>No, estáticas</option></select></div>${range(["particleCount", "particleSize", "particleSpeed", "particleOpacity"])}</div><p style="font-size:.83rem;color:var(--t2)">Si tu dispositivo solicita reducir movimiento, las partículas quedarán estáticas. Muchas partículas pueden consumir más batería.</p></section>
-<section class="custom-section"><h3>Guardar y compartir apariencia</h3><p>Los cambios se previsualizan automáticamente. Publícalos en Supabase para que todos los visitantes los vean. También puedes exportar un archivo JSON.</p><button type="button" class="btn pri" data-act="themeSave">Publicar apariencia</button><p class="err" id="themeError" role="alert"></p></section>`;
+          )}</select></div><div><label for="tpColor">Color principal</label><input id="tpColor" type="color" data-theme="particleColor" value="${T.particleColor}"></div><div><label for="tpSecond">Color secundario</label><input id="tpSecond" type="color" data-theme="particleSecond" value="${T.particleSecond}"></div><div><label for="tpThird">Color de destellos</label><input id="tpThird" type="color" data-theme="particleThird" value="${T.particleThird}"></div><div><label for="tpDrift">Movimiento flotante</label><select id="tpDrift" data-theme="particleDrift"><option value="true" ${T.particleDrift ? "selected" : ""}>Sí</option><option value="false" ${!T.particleDrift ? "selected" : ""}>No, estáticas</option></select></div>${range(["particleCount", "particleSize", "particleSpeed", "particleOpacity"])}</div></section>
+<section class="custom-section"><h3>Guardar y compartir apariencia</h3><p>Publica los cambios para que todos los visitantes los vean.</p><button type="button" class="btn pri" data-act="themeSave">Publicar apariencia</button><p class="err" id="themeError" role="alert"></p></section>`;
       }
       function setThemeField(k, v) {
         if (!(k in themeDefaults)) return;
@@ -2929,56 +2929,6 @@
         applyTheme();
         saveTheme();
         rerender();
-      }
-      function exportTheme() {
-        const blob = new Blob(
-            [
-              JSON.stringify(
-                { format: "dearcupid-theme-v1", settings: T },
-                null,
-                2,
-              ),
-            ],
-            { type: "application/json" },
-          ),
-          u = URL.createObjectURL(blob),
-          a = document.createElement("a");
-        a.href = u;
-        a.download = "dearcupid-diseno.json";
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(u), 1000);
-      }
-      async function importTheme(file) {
-        try {
-          if (file.size > 100000) throw Error("El archivo es demasiado grande");
-          const obj = JSON.parse(await file.text());
-          if (
-            obj.format !== "dearcupid-theme-v1" ||
-            !obj.settings ||
-            typeof obj.settings !== "object"
-          )
-            throw Error("No es un diseño compatible");
-          const clean = { ...themeDefaults };
-          for (const [k, v] of Object.entries(obj.settings)) {
-            if (!(k in clean) || typeof v !== typeof clean[k]) continue;
-            if (typeof v === "string" && v.length > 150) continue;
-            clean[k] = v;
-          }
-          for (const k of Object.keys(themeColorLabels).concat([
-            "particleColor",
-            "particleSecond",
-            "particleThird",
-          ]))
-            if (!/^#[0-9a-f]{6}$/i.test(clean[k]))
-              throw Error("Un color no es válido");
-          T = clean;
-          applyTheme();
-          saveTheme();
-          rerender();
-          toast("Diseño importado");
-        } catch (e) {
-          toast(e.message || "No se pudo importar", 1);
-        }
       }
       /* ===== Estado de vistas ===== */
       let S = {
@@ -3335,7 +3285,7 @@
         let selected = null, uploaded = null, removed = false, busy = false, previewVersion = 0, checking = false;
         dlg(
           id ? "Editar envío nacional" : "Nuevo envío nacional",
-          `<div class="f">${fld("buyer", "Username del cupidito", x.buyer || "", "text", 'required maxlength="120" autocomplete="off" aria-controls="shipBuyerSuggestions"')}<div id="shipBuyerSuggestions" aria-live="polite"></div>${sel("carrier", "Paquetería", CARRIERS.map((v) => `<option value="${esc(v)}" ${x.carrier === v ? "selected" : ""}>${esc(v)}</option>`).join(""))}${fld("tracking", "Número de guía (visible públicamente)", x.tracking || "", "text", 'maxlength="120"')}${sel("status", "Status", opts(SHIP_ST, x.status ?? 0))}<div class="drop ship-collage-field"><label for="shipCollageFile">Collage del envío (opcional)</label><img id="shipCollagePreview" alt="Vista previa del collage" ${old ? `src="${esc(old)}"` : "hidden"}><input type="file" id="shipCollageFile" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"><div class="row"><button type="button" class="btn sm" id="shipCollageRemove" ${old ? "" : "hidden"}>Quitar collage</button></div><p id="shipCollageStatus" role="status" style="margin:0;font-size:.85rem;color:var(--t2)">${old ? "Collage actual. Puedes cambiarlo o conservarlo." : "JPG, PNG, WebP o GIF · Máximo 5 MB."}</p><label id="shipCollageConsentRow" hidden><input type="checkbox" id="shipCollageConsent"> Confirmo que tengo autorización para publicar esta imagen y que no contiene direcciones, teléfonos, etiquetas postales ni datos privados.</label></div><p class="note">El collage es público. Se subirá al guardar el envío; puedes agregarlo o cambiarlo después.</p><p style="color:var(--t2);font-size:.85rem">No incluyas direcciones, teléfonos ni datos personales en el nombre o la guía.</p>${err}${foot}</div>`,
+          `<div class="f">${fld("buyer", "Username del cupidito", x.buyer || "", "text", 'required maxlength="120" autocomplete="off" aria-controls="shipBuyerSuggestions"')}<div id="shipBuyerSuggestions" aria-live="polite"></div>${sel("carrier", "Paquetería", CARRIERS.map((v) => `<option value="${esc(v)}" ${x.carrier === v ? "selected" : ""}>${esc(v)}</option>`).join(""))}${fld("tracking", "Número de guía (visible públicamente)", x.tracking || "", "text", 'maxlength="120"')}${sel("status", "Status", opts(SHIP_ST, x.status ?? 0))}<div class="drop ship-collage-field"><label for="shipCollageFile">Collage del envío (opcional)</label><img id="shipCollagePreview" alt="Vista previa del collage" ${old ? `src="${esc(old)}"` : "hidden"}><input type="file" id="shipCollageFile" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"><div class="row"><button type="button" class="btn sm" id="shipCollageRemove" ${old ? "" : "hidden"}>Quitar collage</button></div><p id="shipCollageStatus" role="status" style="margin:0;font-size:.85rem;color:var(--t2)">${old ? "Collage actual. Puedes cambiarlo o conservarlo." : "JPG, PNG, WebP o GIF · Máximo 5 MB."}</p><label id="shipCollageConsentRow" hidden><input type="checkbox" id="shipCollageConsent"> Confirmo que tengo autorización para publicar esta imagen y que no contiene direcciones, teléfonos, etiquetas postales ni datos privados.</label></div><p class="note">El collage será visible al guardar el envío.</p><p style="color:var(--t2);font-size:.85rem">No incluyas direcciones, teléfonos ni datos personales en el nombre o la guía.</p>${err}${foot}</div>`,
           async (fd) => {
             if (!String(fd.buyer || "").trim()) throw Error("Escribe el username del cupidito.");
             if (checking) throw Error("Espera a que termine la validación de la imagen.");
@@ -3346,13 +3296,13 @@
             try {
               let collageUrl = removed ? null : undefined;
               if (selected) {
-                status.textContent = "Subiendo collage a Cloudflare R2…";
+                status.textContent = "Subiendo collage…";
                 if (!uploaded) uploaded = await uploadR2Image(selected, "envios");
                 collageUrl = uploaded;
               }
               status.textContent = "Guardando envío…";
               await guardarEnvioSupabase(id, fd, collageUrl);
-              toast("Envío guardado y verificado en Supabase ♡");
+              toast("Envío guardado ♡");
               return 0;
             } catch (error) {
               status.textContent = "No se pudo completar el guardado. Revisa el mensaje e inténtalo de nuevo.";
@@ -3391,7 +3341,7 @@
           status.textContent = "Verificando imagen…";
           try {
             if (!file.size || file.size > 5 * 1048576) throw Error("El collage debe pesar entre 1 byte y 5 MB.");
-            const normalized = await pocaNormalizeImage(file);
+            const normalized = await normalizarImagen(file);
             if (version !== previewVersion || !dialog.open) return;
             selected = normalized; removed = false;
             showPreview(URL.createObjectURL(normalized));
@@ -3500,16 +3450,6 @@
         ["cajas", "Cajas"],
         ["borradores", "Borradores privados"],
         ["productos", "Productos"],
-        ["importar-japon", "Importar Japón"],
-        ["fotos-jp1", "Fotos JP #1"],
-        ["fotos-jp2", "Fotos JP #2"],
-        ["fotos-jp3", "Fotos JP #3"],
-        ["fotos-jp4", "Fotos JP #4"],
-        ["fotos-jp45", "Fotos JP #4.5"],
-        ["fotos-kr1", "Fotos KR #1"],
-        ["fotos-kr2", "Fotos KR #2"],
-        ["fotos-poca", "Fotos Pocamarket"],
-        ["fotos-meow", "Fotos Meowcafe"],
         ["envios", "Envíos"],
         ["cargos", "Cargos"],
         ["personalizar", "Personalizar página"],
@@ -3532,7 +3472,7 @@
         const ids = new Map();
         let offset = 0;
         while (true) {
-          const rows = await jp1Request(
+          const rows = await adminRequest(
             "productos?select=caja_id&order=id.asc&limit=1000&offset=" + offset,
           );
           if (!Array.isArray(rows))
@@ -3549,7 +3489,7 @@
         return ids;
       }
       async function vAdmin(tab, sub) {
-        tab = tab || "resumen";
+        tab = AT.some(([key]) => key === tab) ? tab : "resumen";
         const tabs = `<div class="tabs">${AT.map(([k, t]) => `<a href="#/admin/${k}" ${k === tab ? 'aria-current="page"' : ""}>${t}</a>`).join("")}</div>`;
         let b = "";
         if (tab === "resumen") {
@@ -3568,7 +3508,7 @@
             .join("")}</div>`;
         }
         if (tab === "categorias")
-          b = `<div class="row sp"><h2>Categorías</h2><span class="note">Edita las descripciones y los iconos públicos de cada categoría ♡</span></div><div class="grid" style="margin-top:16px">${D.cats.map((c) => `<div class="card">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><div class="row" style="margin-top:12px"><button class="btn sm" data-act="ecat" data-id="${c.id}">Editar descripción</button><button class="btn sm" data-act="ecaticon" data-id="${esc(c.id)}">Cambiar icono</button><button class="btn sm dng" data-act="dcat" data-id="${c.id}">Eliminar</button></div></div>`).join("")}</div>`;
+          b = `<div class="row sp"><h2>Categorías</h2></div><div class="grid" style="margin-top:16px">${D.cats.map((c) => `<div class="card">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><div class="row" style="margin-top:12px"><button class="btn sm" data-act="ecat" data-id="${c.id}">Editar descripción</button><button class="btn sm" data-act="ecaticon" data-id="${esc(c.id)}">Cambiar icono</button><button class="btn sm dng" data-act="dcat" data-id="${c.id}">Eliminar</button></div></div>`).join("")}</div>`;
         if (tab === "cajas") {
           let conteosAdmin = null,
             conteosError = "";
@@ -3641,32 +3581,6 @@
             )}</div>`;
           }
         }
-        if (tab === "importar-japon")
-          b = `<h2>Importar Japón · importación controlada ♡</h2><p>Primero revisaremos JP #1. Después podrás confirmar la creación de productos sin subir fotografías. Selecciona el archivo <strong>japon_jp1_preparacion.json</strong> que descargaste.</p><div class="card"><label for="jpPreviewFile">Archivo JSON de preparación</label><input id="jpPreviewFile" type="file" accept=".json,application/json"><button type="button" class="btn" id="jpBuyerPreviewBtn" style="margin-top:12px">Revisar compradores del JSON (sin guardar)</button><button type="button" class="btn" id="jpTotalsPreviewBtn" style="margin-top:12px;margin-right:8px">Vista previa de cargos por cupidito (sin guardar)</button><div id="jpTotalsPreviewResult" role="status" aria-live="polite"></div><button type="button" class="btn" id="jpChargesPreviewBtn" style="margin-top:12px;margin-left:8px">Revisar EMS y aduana (sin guardar)</button><div id="jpChargesPreviewResult" role="status" aria-live="polite"></div><p id="jpPreviewStatus" aria-live="polite" style="color:var(--t2)">Esperando archivo…</p><div id="jpPreviewResults"></div></div><p style="color:var(--t2)">Solo se crearán productos nuevos después de tu confirmación. No se modificarán los existentes ni se subirán fotografías.</p>`;
-        if (tab === "fotos-jp1")
-          b = `<h2>Fotografías de JP #1 ♡</h2><p>Importa las 57 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG o PNG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jpPhotosFiles">Fotografías JP__1_fila_N.jpg</label><input type="file" id="jpPhotosFiles" accept=".jpg,.jpeg,image/jpeg" multiple><p id="jpPhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jpPhotosPreview"></div><button type="button" class="btn pri" id="jpPhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jpPhotosProgress" role="status" aria-live="polite"></p></div>`;
-        if (tab === "fotos-jp2")
-          b = `<h2>Fotografías de JP #2 ♡</h2><p>Importa las 71 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG o PNG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jp2PhotosFiles">Fotografías JP__2_fila_N.jpg</label><input type="file" id="jp2PhotosFiles" accept=".jpg,.jpeg,image/jpeg" multiple><p id="jp2PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jp2PhotosPreview"></div><button type="button" class="btn pri" id="jp2PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jp2PhotosProgress" role="status" aria-live="polite"></p></div>`;
-        if (tab === "fotos-jp3")
-          b = `<h2>Fotografías de JP #3 ♡</h2><p>Importa las 83 fotografías sin modificar precios, compradores ni pagos. Descomprime el ZIP y selecciona las imágenes JPG o PNG (puedes seleccionar todas con Ctrl+A).</p><div class="card"><label for="jp3PhotosFiles">Fotografías JP__3_fila_N.jpg / .png</label><input type="file" id="jp3PhotosFiles" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple><p id="jp3PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="jp3PhotosPreview"></div><button type="button" class="btn pri" id="jp3PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="jp3PhotosProgress" role="status" aria-live="polite"></p></div>`;
-
-        if (tab === "fotos-jp4" || tab === "fotos-jp45") {
-          const half = tab === "fotos-jp45",
-            key = half ? "jp45" : "jp4",
-            label = half ? "JP #4.5" : "JP #4",
-            qty = half ? 44 : 47;
-          b = `<h2>Fotografías de ${label} ♡</h2><p>Importa las ${qty} fotografías JPG o PNG sin modificar precios, compradores ni pagos. Las imágenes provienen de la hoja combinada JP #4/.5; se separan por su número de fila original.</p><div class="card"><label for="${key}PhotosFiles">Fotografías de ${label} (JPG o PNG)</label><input type="file" id="${key}PhotosFiles" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple><p id="${key}PhotosStatus" role="status" aria-live="polite">Selecciona las imágenes para comprobar sus referencias.</p><div id="${key}PhotosPreview"></div><button type="button" class="btn pri" id="${key}PhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="${key}PhotosProgress" role="status" aria-live="polite"></p></div>`;
-        }
-        if (tab === "fotos-kr1" || tab === "fotos-kr2") {
-          const n = tab === "fotos-kr1" ? 1 : 2;
-          b = `<h2>Fotografías KR #${n} ♡</h2><p>Descomprime el ZIP de KR #${n} y selecciona todas las imágenes. Primero se comprobarán las referencias, sin modificar datos.</p><div class="card"><label for="krPhotosFiles">Imágenes KR #${n}</label><input type="file" id="krPhotosFiles" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" multiple><p id="krPhotosStatus" role="status">Selecciona las imágenes para revisar coincidencias.</p><div id="krPhotosPreview"></div><button type="button" class="btn pri" id="krPhotosUpload" disabled>Subir fotografías verificadas ♡</button><p id="krPhotosProgress" role="status"></p></div>`;
-        }
-        if (tab === "fotos-poca") {
-          b = `<h2>Fotografías de Pocamarket ♡</h2><p>Selecciona una caja o PICK PACK y las imágenes descomprimidas. Los productos sin foto se conservan sin cambios.</p><div class="card"><label for="pocaPhotoGroup">Caja</label><select id="pocaPhotoGroup"><option value="12">POCA 12</option><option value="13">POCA 13</option><option value="14">POCA 14</option><option value="pick">PICK PACK · 15, 16 y 17</option><option value="18">POCA 18</option><option value="19">POCA 19</option><option value="20">POCA 20</option></select><label for="pocaPhotoFiles" style="margin-top:12px">Fotografías originales de Apps Script</label><input type="file" id="pocaPhotoFiles" multiple accept=".jpg,.jpeg,.png,.webp,.gif"><p id="pocaPhotoStatus" role="status">Selecciona las imágenes para revisar coincidencias.</p><div id="pocaPhotoPreview"></div><button type="button" class="btn pri" id="pocaPhotoUpload" disabled>Subir fotografías verificadas ♡</button><p id="pocaPhotoProgress" role="status"></p></div>`;
-        }
-        if (tab === "fotos-meow") {
-          b = `<h2>Fotografías de Meowcafe ♡</h2><p>Selecciona una caja y las imágenes descomprimidas. Los productos sin foto se conservan sin cambios.</p><div class="card"><label for="meowPhotoGroup">Caja</label><select id="meowPhotoGroup"><option value="1">MC #1</option><option value="2">MC #2</option><option value="3">MC #3</option></select><label for="meowPhotoFiles" style="margin-top:12px">Fotografías originales de Apps Script</label><input type="file" id="meowPhotoFiles" multiple accept=".jpg,.jpeg,.png,.webp,.gif"><p id="meowPhotoStatus" role="status">Selecciona las imágenes para revisar coincidencias.</p><div id="meowPhotoPreview"></div><button type="button" class="btn pri" id="meowPhotoUpload" disabled>Subir fotografías verificadas ♡</button><p id="meowPhotoProgress" role="status"></p></div>`;
-        }
         if (tab === "cupiditos") {
           if (sub) {
             const key = nmz(decodeURIComponent(sub)),
@@ -3699,7 +3613,7 @@
             });
             CUP = Object.values(seen).sort((a, c) => a.localeCompare(c));
             b =
-              `<div class="row sp"><h2>Cupiditos</h2><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="unusedCupiditos">Eliminar cupiditos de prueba</button><button class="btn pri" data-act="eprod">Agregar producto</button></div></div><p style="color:var(--t2)">Usuarios con al menos un producto en una caja (${CUP.length}). Toca uno para ver sus cajas.</p>` +
+              `<div class="row sp"><h2>Cupiditos</h2><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn pri" data-act="eprod">Agregar producto</button></div></div><p style="color:var(--t2)">${CUP.length} cupiditos registrados con pedidos.</p>` +
               (CUP.length
                 ? `<div style="max-width:360px;margin:14px 0"><label for="cq">Buscar username</label><input id="cq" type="search" autocomplete="off"></div><div id="cl" class="lst">${cupRows(CUP)}</div>`
                 : `<div class="empty"><p><strong>Aún no hay cupiditos</strong></p><p>Aparecen aquí cuando agregas un producto a una caja.</p></div>`);
@@ -3713,12 +3627,12 @@
           }
         }
         if (tab === "envios")
-          b += `<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p style="color:var(--t2)">Registra los paquetes nacionales enviados desde la administradora a cada cupidito. No utilizan cajas.</p>${shipRows(D.envios, true)}`;
+          b += `<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div>${shipRows(D.envios, true)}`;
         if (tab === "cargos") {
           const bid = S.cb && box(S.cb) ? S.cb : D.boxes[0]?.id;
           const ps = bid ? D.prods.filter((p) => p.box === bid) : [];
           if(isMeowBox(bid)) await loadMeowCharges(bid);
-          b = `<h2>Cargos por cupidito ♡</h2><p style="color:var(--t2)">${isMeowBox(bid)?"Cruce por cupidito. Guarda cada cargo para publicarlo.":"Solo se cobran EMS y aduana. Los precios de productos ya están pagados. Los estados se guardan individualmente en Supabase."}</p><div style="max-width:340px;margin:14px 0"><label for="cb">Caja publicada</label><select id="cb">${[
+          b = `<h2>Cargos por cupidito ♡</h2><p style="color:var(--t2)">${isMeowBox(bid)?"Cruce por cupidito. Guarda cada cargo para publicarlo.":"Consulta y actualiza los cargos y pagos de cada cupidito."}</p><div style="max-width:340px;margin:14px 0"><label for="cb">Caja publicada</label><select id="cb">${[
             ...D.boxes,
           ]
             .sort(ordenCajas)
@@ -3733,7 +3647,7 @@
         if (tab === "personalizar") {
           const u = await currentImage("logo"),
             bu = await currentImage("banner");
-          b = `<h2>Personalizar página</h2>${customUi()}<div class="card" style="max-width:520px;margin-top:14px"><h3>Logo (PNG)</h3><div class="f"><div class="drop">${u ? `<img src="${u}" alt="Vista previa del logo actual">` : '<p style="color:var(--t2);margin:0">Aún no hay logo. Selecciona un PNG de hasta 2 MB.</p>'}<label for="lf">Archivo PNG</label><input type="file" id="lf" accept="image/png"></div>${u ? `<div><label for="lsz">Tamaño del logo en la página principal: <strong id="lszv">${logoW()}px</strong></label><input type="range" id="lsz" min="100" max="420" step="10" value="${logoW()}"><div class="prev"><img id="lpv" src="${u}" alt="Vista previa del tamaño del logo" style="width:${logoW()}px"></div><button type="button" class="btn sm" data-act="logoreset">Restablecer tamaño</button></div>` : ""}<div class="row"><button class="btn" data-act="logoup">${u ? "Cambiar logo" : "Guardar logo"}</button>${u ? '<button class="btn dng" data-act="logodel">Eliminar logo</button>' : ""}</div><p class="err" id="le" role="alert"></p></div></div><div class="card" style="max-width:520px;margin-top:16px"><h3>Banner de inicio</h3><p>Aparece arriba en la página principal y se desvanece en su parte superior. JPG, PNG o WebP, máx. 5 MB.</p><div class="f"><div class="drop">${bu ? '<img src="' + bu + '" alt="Vista previa del banner actual">' : '<p style="color:var(--t2);margin:0">Aún no hay banner.</p>'}<label for="bf">Imagen del banner</label><input type="file" id="bf" accept="image/jpeg,image/png,image/webp"></div><div class="row"><button class="btn" data-act="bannerup">${bu ? "Cambiar banner" : "Guardar banner"}</button>${bu ? '<button class="btn dng" data-act="bannerdel">Eliminar banner</button>' : ""}</div><p class="err" id="be" role="alert"></p></div></div>`;
+          b = `<h2>Personalizar página</h2>${customUi()}<div class="card" style="max-width:520px;margin-top:14px"><h3>Logo (PNG)</h3><div class="f"><div class="drop">${u ? `<img src="${u}" alt="Vista previa del logo actual">` : '<p style="color:var(--t2);margin:0">Aún no hay logo. Selecciona un PNG de hasta 2 MB.</p>'}<label for="lf">Archivo PNG</label><input type="file" id="lf" accept="image/png"></div>${u ? `<div><label for="lsz">Tamaño del logo en la página principal: <strong id="lszv">${logoW()}px</strong></label><input type="range" id="lsz" min="100" max="420" step="10" value="${logoW()}"><div class="prev"><img id="lpv" src="${u}" alt="Vista previa del tamaño del logo" style="width:${logoW()}px"></div><button type="button" class="btn sm" data-act="logoreset">Restablecer tamaño</button></div>` : ""}<div class="row"><button class="btn" data-act="logoup">${u ? "Cambiar logo" : "Guardar logo"}</button>${u ? '<button class="btn dng" data-act="logodel">Eliminar logo</button>' : ""}</div><p class="err" id="le" role="alert"></p></div></div><div class="card" style="max-width:520px;margin-top:16px"><h3>Banner de inicio</h3><p>JPG, PNG o WebP · Máximo 5 MB.</p><div class="f"><div class="drop">${bu ? '<img src="' + bu + '" alt="Vista previa del banner actual">' : '<p style="color:var(--t2);margin:0">Aún no hay banner.</p>'}<label for="bf">Imagen del banner</label><input type="file" id="bf" accept="image/jpeg,image/png,image/webp"></div><div class="row"><button class="btn" data-act="bannerup">${bu ? "Cambiar banner" : "Guardar banner"}</button>${bu ? '<button class="btn dng" data-act="bannerdel">Eliminar banner</button>' : ""}</div><p class="err" id="be" role="alert"></p></div></div>`;
         }
         return (
           bc([["Inicio", "#/"], ["Panel administrativo"]]) +
@@ -3756,7 +3670,7 @@
       const err = '<p class="err" id="er" role="alert"></p>',
         foot = `<div class="row" style="margin-top:6px"><button type="submit" class="btn pri">Guardar</button><button type="button" class="btn" data-act="close">Cancelar</button></div>`;
       function imgField(has, lab = "Foto del producto") {
-        return `<div class="drop"><label for="pf">${lab} (JPG, PNG o WebP, máx. 8 MB)</label><input type="file" id="pf" accept="image/jpeg,image/png,image/webp"><img id="pv" alt="Vista previa de la foto" ${has ? "" : "hidden"}><button type="button" class="btn sm dng" id="prm" data-act="rmimg" ${has ? "" : "hidden"}>Eliminar foto</button></div>`;
+        return `<div class="drop"><label for="pf">${lab} (JPG, PNG, WebP o GIF · Máximo 5 MB)</label><input type="file" id="pf" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"><img id="pv" alt="Vista previa de la foto" ${has ? "" : "hidden"}><button type="button" class="btn sm dng" id="prm" data-act="rmimg" ${has ? "" : "hidden"}>Eliminar foto</button></div>`;
       }
       let previewUrl = null;
       function setPv(u) {
@@ -3827,10 +3741,10 @@
           toast("Primero crea una caja.", 1);
           return eBox();
         }
-        pend = { blob: null, rm: false, old: p.imgId || "" };
+        pend = { blob: null, rm: false, old: validProductImage(p.imagenUrl), checking: false, version: 0, uploaded: null };
         dlg(
           ne ? "Nuevo producto" : "Editar producto",
-          `<div class="f">${fld("buyer", "Username del comprador", p.buyer, "text", 'required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}${sel("box", "Caja", D.boxes.map((b) => `<option value="${b.id}" ${p.box === b.id || (S.ab === b.id && ne) ? "selected" : ""}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(""))}</div><div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld("price", "Precio (MXN)", p.price, "number", 'min="0" step="0.01" required')}${sel("logi", "Estatus logístico", opts(LOGI, p.logi ?? 0))}</div><div class="f2">${fld("ems", "EMS (MXN, 0 = pendiente)", p.ems ?? 0, "number", 'min="0" step="0.01"')}${fld("adu", "Aduana (MXN, 0 = pendiente)", p.adu ?? 0, "number", 'min="0" step="0.01"')}</div>${imgField(p.imgId)}${err}${foot}</div>`,
+          `<div class="f">${fld("buyer", "Username del comprador", p.buyer, "text", 'required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}${sel("box", "Caja", D.boxes.map((b) => `<option value="${b.id}" ${p.box === b.id || (S.ab === b.id && ne) ? "selected" : ""}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(""))}</div><div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld("price", "Precio (MXN)", p.price, "number", 'min="0" step="0.01" required')}${sel("logi", "Estatus logístico", opts(LOGI, p.logi ?? 0))}</div><div class="f2">${fld("ems", "EMS (MXN, 0 = pendiente)", p.ems ?? 0, "number", 'min="0" step="0.01"')}${fld("adu", "Aduana (MXN, 0 = pendiente)", p.adu ?? 0, "number", 'min="0" step="0.01"')}</div>${imgField(pend.old || p.imgId)}${err}${foot}</div>`,
           async (fd) => {
             const o = {
               buyer: fd.buyer.trim(),
@@ -3847,15 +3761,15 @@
               return "Ingresa un precio válido.";
             // La tabla Supabase es la fuente de verdad; nunca anunciar éxito solo por localStorage.
             try {
-              if (pend.blob || pend.rm)
-                return "Las fotos de productos aún no están conectadas al guardado de Supabase. Guarda primero los datos sin cambiar la foto.";
+              if (pend.checking) return "Espera a que termine la validación de la imagen.";
+              const photo = pend;
               const normalizar = (t) =>
                 String(t || "")
                   .trim()
                   .replace(/^@/, "")
                   .normalize("NFKC")
                   .toLocaleLowerCase("es-MX");
-              const cupiditos = await jp1Request(
+              const cupiditos = await adminRequest(
                 "cupiditos?select=id,nombre&limit=10000",
               );
               let matches = cupiditos.filter(
@@ -3864,7 +3778,7 @@
               if (matches.length > 1)
                 return "Hay varios cupiditos con ese nombre. Revisa los duplicados antes de guardar.";
               if (!matches.length) {
-                matches = await jp1Request("cupiditos", {
+                matches = await adminRequest("cupiditos", {
                   method: "POST",
                   headers: { Prefer: "return=representation" },
                   body: JSON.stringify({ nombre: o.buyer }),
@@ -3891,10 +3805,15 @@
                 ems: o.ems,
                 aduana: o.adu,
               };
+              if (photo.rm) payload.imagen_url = null;
+              if (photo.blob) {
+                if (!photo.uploaded) photo.uploaded = await uploadR2Image(photo.blob, "productos");
+                payload.imagen_url = photo.uploaded;
+              }
               const endpoint = ne
                 ? "productos"
                 : "productos?id=eq." + encodeURIComponent(p.id);
-              const rows = await jp1Request(endpoint, {
+              const rows = await adminRequest(endpoint, {
                 method: ne ? "POST" : "PATCH",
                 headers: { Prefer: "return=representation" },
                 body: JSON.stringify(payload),
@@ -3906,8 +3825,8 @@
               await sincronizarProductosSupabase();
               toast(
                 ne
-                  ? "Producto creado en Supabase ♡"
-                  : "Producto actualizado en Supabase ♡",
+                  ? "Producto creado ♡"
+                  : "Producto actualizado ♡",
               );
               return 0;
             } catch (e) {
@@ -3916,7 +3835,8 @@
             }
           },
         );
-        if (p.imgId) imgUrl(p.imgId).then((u) => u && setPv(u));
+        if (pend.old) setPv(pend.old);
+        else if (p.imgId) imgUrl(p.imgId).then((u) => u && $("#pv") && setPv(u));
       }
       async function guardarDescripcionCategoria(id, descripcion) {
         if (!(await refreshAdmin()) || !adminSession?.token)
@@ -3952,7 +3872,7 @@
         if (!c) return toast("No se encontró la categoría.", 1);
         dlg(
           "Editar descripción pública · " + c.name,
-          `<div class="f"><p class="note">Se mostrará a todos los visitantes. El texto se guarda en Supabase.</p><div><label for="catdesc">Descripción de la categoría</label><textarea id="catdesc" name="desc" maxlength="1500" rows="4" placeholder="Escribe la descripción que verán los cupiditos">${esc(c.desc || "")}</textarea></div>${err}<div class="row"><button class="btn pri">Guardar descripción pública</button><button type="button" class="btn" data-act="close">Cancelar</button></div></div>`,
+          `<div class="f"><div><label for="catdesc">Descripción de la categoría</label><textarea id="catdesc" name="desc" maxlength="1500" rows="4" placeholder="Escribe la descripción que verán los cupiditos">${esc(c.desc || "")}</textarea></div>${err}<div class="row"><button class="btn pri">Guardar descripción pública</button><button type="button" class="btn" data-act="close">Cancelar</button></div></div>`,
           async (fd) => {
             try {
               await guardarDescripcionCategoria(c.id, fd.desc.trim());
@@ -3971,14 +3891,14 @@
         if(!c) return toast("No se encontró la categoría.",1);
         const key=categoryIconKey(id), current=validPublicImage(publicImages[key]);
         dlg("Icono de categoría · "+c.name,
-          `<div class="f"><p class="note">El icono será público para todos los visitantes. PNG transparente recomendado, máximo 5 MB.</p><div class="row">${cIc(c)}<strong>${esc(c.name)}</strong></div><div><label for="categoryIconFile">Nueva imagen</label><input id="categoryIconFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div>${current?'<label><input type="checkbox" name="removeIcon" value="1" style="width:auto;min-height:0"> Quitar imagen y volver al icono predeterminado</label>':""}${err}${foot}</div>`,
+          `<div class="f"><p class="note">PNG transparente recomendado · Máximo 5 MB.</p><div class="row">${cIc(c)}<strong>${esc(c.name)}</strong></div><div><label for="categoryIconFile">Nueva imagen</label><input id="categoryIconFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div>${current?'<label><input type="checkbox" name="removeIcon" value="1" style="width:auto;min-height:0"> Quitar imagen y volver al icono predeterminado</label>':""}${err}${foot}</div>`,
           async(fd)=>{
             const file=$("#categoryIconFile")?.files?.[0];
             if(file && fd.removeIcon) return "Selecciona una imagen nueva o quitar el icono, no ambos.";
             if(!file && !fd.removeIcon) return "Selecciona una imagen.";
             try {
               if(file && (file.size===0 || file.size>5*1024*1024)) return "La imagen debe pesar como máximo 5 MB.";
-              const url=file?await uploadR2Image(await pocaNormalizeImage(file),"logo"):"";
+              const url=file?await uploadR2Image(await normalizarImagen(file),"logo"):"";
               await publishPublicImage(key,url);
               toast("Icono público actualizado ♡");
               return 0;
@@ -4221,7 +4141,7 @@
           contenido = structuredClone(privateWork.contenido);
         await guardarBorradorCompleto(id, contenido);
         await verifyDraftSaved(id, contenido);
-        draftStatus("Todos los estados verificados en Supabase ♡");
+        draftStatus("Estados guardados ♡");
       }
       function draftStatus(msg, error = false) {
         const el = $("#draftStatus");
@@ -4233,7 +4153,7 @@
       async function persistPrivateWork() {
         if (!privateWork) throw Error("Abre un borrador primero.");
         await guardarBorradorCompleto(privateWork.id, privateWork.contenido);
-        draftStatus("Guardado en Supabase ♡");
+        draftStatus("Guardado ♡");
       }
       async function openPrivateWorkspace(id = null) {
         if (!(await refreshAdmin()))
@@ -4289,7 +4209,7 @@
         const v = w.caja || {};
         dlg(
           "Editor de borradores",
-          `<div class="f"><div class="note"><strong>${b ? "Borrador de caja publicada" : "Caja todavía no publicada"}</strong><p style="margin:4px 0">Los productos aquí no aparecen en la masterlist pública. Guardar conserva el trabajo en Supabase.</p></div>${fld("name", "Nombre de la caja", v.name || "", "text", "required")}<div><label for="desc">Descripción</label><textarea name="desc" id="desc">${esc(v.desc || "")}</textarea></div>${fld("tracking", "Guía", v.tracking || "")}${sel(
+          `<div class="f"><div class="note"><strong>${b ? "Borrador de caja publicada" : "Caja todavía no publicada"}</strong><p style="margin:4px 0">Los productos del borrador no serán visibles hasta publicarlos.</p></div>${fld("name", "Nombre de la caja", v.name || "", "text", "required")}<div><label for="desc">Descripción</label><textarea name="desc" id="desc">${esc(v.desc || "")}</textarea></div>${fld("tracking", "Guía", v.tracking || "")}${sel(
             "cat",
             "Categoría",
             D.cats
@@ -4299,7 +4219,7 @@
                   `<option value="${esc(c.id)}" ${c.id === v.cat ? "selected" : ""}>${esc(c.name)}</option>`,
               )
               .join(""),
-          )}${sel("st", "Estado", opts(BOX, v.st ?? 0))}<div class="row sp"><h3>Productos</h3><button type="button" class="btn sm" data-act="draftAddProduct">+ Agregar producto</button></div><div class="row" style="align-items:end"><div style="flex:1;min-width:180px"><label for="draftBulkStatus">Cambiar todos los productos a</label><select id="draftBulkStatus">${opts(LOGI, 0)}</select></div><button type="button" class="btn sm" data-act="draftApplyAll">Aplicar a todos</button></div><p style="font-size:.85rem;color:var(--t2)">Puedes cambiar varios estados aquí y guardarlos juntos. No se publican hasta que presiones «Publicar caja».</p><span id="draftCount" style="font-size:.85rem;color:var(--t2)"></span><div id="draftProductRows" class="lst"></div><p id="draftStatus" role="status" style="font-size:.9rem"></p>${err}<div class="row"><button type="button" class="btn pri" data-act="draftSaveAll">Guardar borrador privado ♡</button><button type="button" class="btn" data-act="draftPublish">Publicar caja ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.84rem;color:var(--t2)">Publicar hará visible la caja y sus productos. Los productos anteriores que no estén en el borrador se conservarán. Los productos existentes se cargan automáticamente al abrir una caja publicada. Las imágenes se añadirán después con Cloudflare R2.</p></div>`,
+          )}${sel("st", "Estado", opts(BOX, v.st ?? 0))}<div class="row sp"><h3>Productos</h3><button type="button" class="btn sm" data-act="draftAddProduct">+ Agregar producto</button></div><div class="row" style="align-items:end"><div style="flex:1;min-width:180px"><label for="draftBulkStatus">Cambiar todos los productos a</label><select id="draftBulkStatus">${opts(LOGI, 0)}</select></div><button type="button" class="btn sm" data-act="draftApplyAll">Aplicar a todos</button></div><span id="draftCount" style="font-size:.85rem;color:var(--t2)"></span><div id="draftProductRows" class="lst"></div><p id="draftStatus" role="status" style="font-size:.9rem"></p>${err}<div class="row"><button type="button" class="btn pri" data-act="draftSaveAll">Guardar borrador privado ♡</button><button type="button" class="btn" data-act="draftPublish">Publicar caja ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.84rem;color:var(--t2)">Publicar hará visible la caja y sus productos. Los productos anteriores se conservarán.</p></div>`,
         );
         draftProductRows();
       }
@@ -4328,7 +4248,7 @@
           index >= 0
             ? "Editar producto del borrador"
             : "Agregar producto al borrador",
-          `<div class="f">${fld("nombre", "Nombre o descripción del producto", p.nombre || "", "text", "required")}${fld("buyer", "Username del cupidito", p.buyer || "", "text", 'autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}<div class="f2">${fld("precio", "Precio", p.precio ?? "", "number", 'min="0" step="0.01"')}${sel("moneda", "Moneda", ["MXN", "KRW", "JPY", "USD"].map((x) => `<option ${p.moneda === x ? "selected" : ""}>${x}</option>`).join(""))}</div>${sel("estado", "Estado", LOGI.map((x, i) => `<option value="${i}" ${p.logi === i ? "selected" : ""}>${esc(x)}</option>`).join(""))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion || "")}</textarea></div><p class="note">Las imágenes se integrarán cuando Cloudflare R2 esté conectado. No se perderán imágenes porque todavía no se admiten en este editor.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,
+          `<div class="f">${fld("nombre", "Nombre o descripción del producto", p.nombre || "", "text", "required")}${fld("buyer", "Username del cupidito", p.buyer || "", "text", 'autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}<div class="f2">${fld("precio", "Precio", p.precio ?? "", "number", 'min="0" step="0.01"')}${sel("moneda", "Moneda", ["MXN", "KRW", "JPY", "USD"].map((x) => `<option ${p.moneda === x ? "selected" : ""}>${x}</option>`).join(""))}</div>${sel("estado", "Estado", LOGI.map((x, i) => `<option value="${i}" ${p.logi === i ? "selected" : ""}>${esc(x)}</option>`).join(""))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion || "")}</textarea></div><p class="note">Puedes añadir fotografías desde Productos después de publicar la caja.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,
           async (fd) => {
             if (!fd.nombre.trim()) return "Escribe el nombre del producto.";
             const o = {
@@ -4376,7 +4296,7 @@
         }
         const v = draft ? { ...b, ...draft } : b;
         const draftControls = id
-          ? `<div class="note"><strong>${draft ? "Borrador privado recuperado" : "Edición de caja"}</strong><p style="margin:4px 0;font-size:.88rem">Guardar borrador no modifica la caja pública. Publicar cambios sí actualiza la caja visible.</p><button type="button" class="btn sm" data-act="saveBoxDraft" data-id="${esc(id)}">Guardar borrador privado ♡</button> <button type="button" class="btn sm" data-act="openBoxWorkspace" data-id="${esc(id)}">Editar productos en borrador</button><p id="draftStatus" role="status" style="margin:4px 0"></p></div>`
+          ? `<div class="note"><strong>${draft ? "Borrador privado recuperado" : "Edición de caja"}</strong><p style="margin:4px 0;font-size:.88rem">Los cambios del borrador son privados hasta publicarlos.</p><button type="button" class="btn sm" data-act="saveBoxDraft" data-id="${esc(id)}">Guardar borrador privado ♡</button> <button type="button" class="btn sm" data-act="openBoxWorkspace" data-id="${esc(id)}">Editar productos en borrador</button><p id="draftStatus" role="status" style="margin:4px 0"></p></div>`
           : "";
         dlg(
           id ? "Editar caja" : "Nueva caja",
@@ -4408,7 +4328,7 @@
               const current = await leerBorradorCompleto(id);
               if (current?.productos?.length)
                 throw Error(
-                  "Esta caja tiene productos pendientes en su borrador. Para evitar una publicación parcial, primero configuraremos la publicación conjunta.",
+                  "Esta caja tiene cambios de productos pendientes. Abre su borrador y publica la caja completa.",
                 );
               await actualizarCajaSupabase(id, o);
               Object.assign(b, o);
@@ -4488,7 +4408,7 @@
           .join("");
         dlg(
           "Borrador de cargos · " + b.name,
-          `<div class="f"><div class="note">Los cambios son privados y no alteran los cargos publicados. Deja un campo vacío si aún no conoces su importe.</div>${fields}<p id="chargesDraftStatus" role="status" class="err"></p><div class="row"><button type="button" class="btn pri" data-act="saveChargesDraft">Guardar borrador en Supabase ♡</button><button type="button" class="btn" data-act="publishChargesDraft">Publicar cargos ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.85rem;color:var(--t2)">Publicar hará visibles los importes. Cada concepto nuevo quedará pendiente de pago.</p></div>`,
+          `<div class="f"><div class="note">Los cambios son privados y no alteran los cargos publicados. Deja un campo vacío si aún no conoces su importe.</div>${fields}<p id="chargesDraftStatus" role="status" class="err"></p><div class="row"><button type="button" class="btn pri" data-act="saveChargesDraft">Guardar borrador ♡</button><button type="button" class="btn" data-act="publishChargesDraft">Publicar cargos ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.85rem;color:var(--t2)">Publicar hará visibles los importes. Cada concepto nuevo quedará pendiente de pago.</p></div>`,
         );
       }
       async function saveChargesDraft() {
@@ -4540,7 +4460,7 @@
         const status = $("#chargesDraftStatus");
         if (status) {
           status.style.color = "#286b44";
-          status.textContent = "Borrador guardado en Supabase ♡";
+          status.textContent = "Borrador guardado ♡";
         }
       }
       /* Cargos agrupados por cupidito: los estados de pago siguen siendo por producto. */
@@ -4582,9 +4502,9 @@
           const values={cruce:Number(amount.value),estado:state,fecha_limite:date||null,actualizado_en:new Date().toISOString()};
           let result;
           if(ed.dataset.new==="1"){
-            const current=await jp1Request("cargos_meowcafe?select=orden&caja_id=eq."+encodeURIComponent(id)+"&order=orden.desc&limit=1");
-            result=await jp1Request("cargos_meowcafe",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...values,caja_id:id,cupidito_id:person,orden:Number(current[0]?.orden||0)+1})});
-          }else result=await jp1Request("cargos_meowcafe?caja_id=eq."+encodeURIComponent(id)+"&cupidito_id=eq."+encodeURIComponent(person),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(values)});
+            const current=await adminRequest("cargos_meowcafe?select=orden&caja_id=eq."+encodeURIComponent(id)+"&order=orden.desc&limit=1");
+            result=await adminRequest("cargos_meowcafe",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...values,caja_id:id,cupidito_id:person,orden:Number(current[0]?.orden||0)+1})});
+          }else result=await adminRequest("cargos_meowcafe?caja_id=eq."+encodeURIComponent(id)+"&cupidito_id=eq."+encodeURIComponent(person),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(values)});
           if(!Array.isArray(result)||result.length!==1)throw Error("No se confirmó el guardado");
           toast("Cargo de cruce guardado ♡"); await route();
         }catch(err){status.textContent=err.message;btn.disabled=false;}
@@ -5102,6 +5022,10 @@
           }
           html = vFind(decodeURIComponent(p[1] || ""));
         } else if (p[0] === "admin") {
+          if (p[1] && !AT.some(([key]) => key === p[1])) {
+            location.replace("#/admin/resumen");
+            return;
+          }
           if (adminReady && !(await refreshAdmin())) adminReady = false;
           html = adminReady ? await vAdmin(p[1], p[2]) : loginView();
         } else html = nf();
@@ -5163,17 +5087,8 @@
         S.fromNav = 1;
         route();
       });
-      /* ===== Importador JP #1: vista previa y creación controlada ===== */
-      let jp1PendientesImportacion = null;
-      function jp1Dinero(v) {
-        const raw = String(v ?? "").trim();
-        if (!raw) return 0;
-        const n = Number(raw.replace(/[$,\s]/g, ""));
-        if (!Number.isFinite(n) || n < 0)
-          throw Error("Importe inválido: " + raw);
-        return n;
-      }
-      async function jp1Request(path, options = {}) {
+      /* ===== Solicitudes administrativas e imágenes ===== */
+      async function adminRequest(path, options = {}) {
         if (!(await refreshAdmin()) || !adminSession?.token)
           throw Error("Sesión administrativa expirada.");
         const r = await fetch(AUTH_URL + "/rest/v1/" + path, {
@@ -5203,1013 +5118,7 @@
         }
       }
 
-      async function previsualizarJP1(file) {
-        const status = $("#jpPreviewStatus"),
-          out = $("#jpPreviewResults");
-        if (!status || !out) return;
-        status.textContent = "Validando archivo y consultando Supabase…";
-        out.innerHTML = "";
-        jp1PendientesImportacion = null;
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          if (file.size > 2 * 1024 * 1024)
-            throw Error("El archivo JSON es demasiado grande.");
-          const data = JSON.parse(await file.text());
-          if (
-            data.origen !== "JP #1" ||
-            data.modo !== "preparacion_sin_importar" ||
-            !Array.isArray(data.productos) ||
-            !Array.isArray(data.revision_manual ?? data.pendientes)
-          )
-            throw Error(
-              "El archivo no tiene la estructura de preparación de JP #1.",
-            );
-          const productos = data.productos,
-            pendientes = data.revision_manual ?? data.pendientes;
-          if (
-            productos.length > 100 ||
-            productos.some(
-              (x) =>
-                x.hoja !== "JP #1" ||
-                !/^JAPON-JP1-FILA[0-9]+$/.test(x.referencia_excel || ""),
-            )
-          )
-            throw Error("Hay registros inesperados en el archivo.");
-          const refs = productos.map((x) => x.referencia_excel);
-          if (new Set(refs).size !== refs.length)
-            throw Error("El archivo contiene referencias duplicadas.");
-          const r = await fetch(
-            AUTH_URL +
-              "/rest/v1/productos?select=referencia_excel,nombre,imagen_url&referencia_excel=like.JAPON-JP1-*",
-            {
-              headers: {
-                apikey: AUTH_PUBLISHABLE_KEY,
-                Authorization: "Bearer " + adminSession.token,
-              },
-              cache: "no-store",
-            },
-          );
-          if (!r.ok)
-            throw Error("No se pudo consultar productos (" + r.status + ").");
-          const existentes = await r.json(),
-            byRef = new Map(existentes.map((x) => [x.referencia_excel, x]));
-          const nuevos = productos.filter(
-              (x) => !byRef.has(x.referencia_excel),
-            ),
-            ya = productos.filter((x) => byRef.has(x.referencia_excel));
-          jp1PendientesImportacion = { productos, nuevos };
-          status.textContent = `${productos.length} productos identificados · ${nuevos.length} nuevos · ${ya.length} existentes · ${pendientes.length} filas pendientes de revisión`;
-          out.innerHTML = `<p><strong>Sin cambios realizados.</strong> Los productos existentes no se sobrescribirán.</p><h3 style="margin:18px 0 8px">Ya existentes</h3><p>${ya.length ? ya.map((x) => esc(x.referencia_excel) + " · " + esc(x.descripcion)).join("<br>") : "Ninguno"}</p><h3 style="margin:18px 0 8px">Por crear (vista previa)</h3><div style="max-height:330px;overflow:auto"><table><thead><tr><th>Fila</th><th>Producto</th><th>Comprador original</th></tr></thead><tbody>${nuevos.map((x) => `<tr><td>${x.fila}</td><td>${esc(x.descripcion)}</td><td>${esc(x.comprador || "Sin asignar")}</td></tr>`).join("")}</tbody></table></div><h3 style="margin:18px 0 8px">Revisión manual</h3><p>${pendientes.map((x) => "Fila " + x.fila + " · sin descripción/precio").join("<br>") || "Ninguna"}</p><div style="margin-top:22px;padding:16px;border:1px solid var(--bd);border-radius:14px"><p><strong>Importación real:</strong> se crearán únicamente los productos que todavía no existan. Los compradores quedarán sin asignar para que los organices después. No se subirán fotos.</p><button type="button" class="btn pri" id="jpImportConfirm" ${nuevos.length ? "" : "disabled"}>Confirmar importación de ${nuevos.length} productos</button><p id="jpImportProgress" role="status" aria-live="polite"></p></div>`;
-        } catch (e) {
-          status.textContent = "No se pudo completar la vista previa.";
-          out.textContent = e.message || "Error al leer archivo";
-        }
-      }
-      document.addEventListener("change", (e) => {
-        if (e.target.id === "jpPreviewFile" && e.target.files[0])
-          previsualizarJP1(e.target.files[0]);
-      });
-      /* Vista previa de EMS y aduana; no escribe datos. */
-      async function previsualizarImportesJP1(file) {
-        const out = $("#jpChargesPreviewResult");
-        if (!out) return;
-        out.textContent = "Comparando importes con Supabase…";
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          const data = JSON.parse(await file.text());
-          if (
-            data.origen !== "JP #1" ||
-            data.modo !== "preparacion_sin_importar" ||
-            !Array.isArray(data.productos)
-          )
-            throw Error("Selecciona el JSON de preparación de JP #1.");
-          const rows = await jp1Request(
-            "productos?select=referencia_excel,nombre,ems,aduana&referencia_excel=like.JAPON-JP1-*",
-          );
-          const byRef = new Map(rows.map((x) => [x.referencia_excel, x]));
-          const differences = [],
-            same = [],
-            missing = [];
-          for (const x of data.productos) {
-            if (!/^JAPON-JP1-FILA[0-9]+$/.test(x.referencia_excel || ""))
-              throw Error("Referencia inesperada.");
-            const p = byRef.get(x.referencia_excel);
-            if (!p) {
-              missing.push(x);
-              continue;
-            }
-            const ems = jp1Dinero(x.ems),
-              aduana = jp1Dinero(x.aduana);
-            const record = { x, p, ems, aduana };
-            if (
-              Math.abs((Number(p.ems) || 0) - ems) > 0.001 ||
-              Math.abs((Number(p.aduana) || 0) - aduana) > 0.001
-            )
-              differences.push(record);
-            else same.push(record);
-          }
-          out.innerHTML = `<p><strong>Solo lectura:</strong> ${same.length} productos coinciden · ${differences.length} necesitan corrección · ${missing.length} no encontrados. No se modificó nada.</p><div style="max-height:350px;overflow:auto"><table><thead><tr><th>Producto</th><th>EMS actual → JSON</th><th>Aduana actual → JSON</th></tr></thead><tbody>${differences.map(({ x, p, ems, aduana }) => `<tr><td>${esc(x.descripcion)}</td><td>${pm(Number(p.ems) || 0)} → ${pm(ems)}</td><td>${pm(Number(p.aduana) || 0)} → ${pm(aduana)}</td></tr>`).join("")}</tbody></table></div><p style="color:var(--t2)">Esta revisión compara la tabla productos. Los cargos publicados se guardan por separado y todavía no se actualizan automáticamente.</p>`;
-        } catch (e) {
-          out.textContent =
-            "No se pudo completar la revisión: " + (e.message || e);
-        }
-      }
-      document.addEventListener("click", (e) => {
-        if (e.target?.id === "jpChargesPreviewBtn") {
-          const f = $("#jpPreviewFile")?.files?.[0];
-          if (!f) {
-            toast("Primero selecciona japon_jp1_preparacion.json", 1);
-            return;
-          }
-          previsualizarImportesJP1(f);
-        }
-      });
-      document.addEventListener("click", (e) => {
-        if (e.target?.id === "jpBuyerPreviewBtn") {
-          const f = $("#jpPreviewFile")?.files?.[0];
-          if (!f) {
-            toast("Primero selecciona japon_jp1_preparacion.json", 1);
-            return;
-          }
-          previsualizarCompradoresJP1(f);
-        }
-      });
-
-      async function importarJP1() {
-        const state = jp1PendientesImportacion,
-          btn = $("#jpImportConfirm"),
-          progress = $("#jpImportProgress");
-        if (!state || !btn || !progress) return;
-        if (
-          !confirm(
-            "¿Confirmas crear los productos nuevos de JP #1 en Supabase? Los existentes no se editarán y los compradores quedarán sin asignar.",
-          )
-        )
-          return;
-        btn.disabled = true;
-        progress.textContent = "Verificando caja y productos existentes…";
-        let creados = 0,
-          omitidos = 0;
-        try {
-          const cajas = await jp1Request(
-            "cajas?select=id,categoria_id,nombre&nombre=eq.JP%20%231",
-          );
-          if (cajas.length !== 1 || !cajas[0].categoria_id)
-            throw Error(
-              "No se encontró una única caja JP #1 con categoría en Supabase.",
-            );
-          const caja = cajas[0];
-          for (const x of state.productos) {
-            if (
-              !/^JAPON-JP1-FILA[0-9]+$/.test(x.referencia_excel || "") ||
-              !String(x.descripcion || "").trim()
-            )
-              throw Error("Producto incompleto o referencia inválida.");
-            jp1Dinero(x.precio);
-            jp1Dinero(x.ems);
-            jp1Dinero(x.aduana);
-          }
-          for (const x of state.productos) {
-            // Revalidar antes de cada inserción: reintentos no sobrescriben datos.
-            const existe = await jp1Request(
-              "productos?select=id&referencia_excel=eq." +
-                encodeURIComponent(x.referencia_excel) +
-                "&limit=1",
-            );
-            if (existe.length) {
-              omitidos++;
-              continue;
-            }
-            const estados = {
-              "en méxico": "En México",
-              "en mexico": "En México",
-              comprado: "Comprado",
-              asegurado: "Asegurado",
-              "en camino a méxico": "En camino a México",
-              "en camino a mexico": "En camino a México",
-              stock: "Stock",
-              entregado: "Entregado",
-              "en warehouse": "En dirección japonesa",
-            };
-            const original = String(x.estatus || "").trim();
-            const estado =
-              estados[original.toLocaleLowerCase("es-MX")] || "Comprado";
-            const payload = {
-              caja_id: caja.id,
-              categoria_id: caja.categoria_id,
-              cupidito_id: null,
-              nombre: x.descripcion.trim(),
-              descripcion: x.descripcion.trim(),
-              precio: jp1Dinero(x.precio),
-              moneda: "MXN",
-              estado,
-              ems: jp1Dinero(x.ems),
-              aduana: jp1Dinero(x.aduana),
-              referencia_excel: x.referencia_excel,
-            };
-            await jp1Request("productos", {
-              method: "POST",
-              headers: { Prefer: "return=minimal" },
-              body: JSON.stringify(payload),
-            });
-            creados++;
-            progress.textContent =
-              "Creados " +
-              creados +
-              " · ya existentes " +
-              omitidos +
-              " · procesados " +
-              (creados + omitidos) +
-              "/" +
-              state.productos.length;
-          }
-          progress.textContent =
-            "Importación terminada: " +
-            creados +
-            " creados, " +
-            omitidos +
-            " ya existentes. Las fotografías siguen pendientes.";
-          jp1PendientesImportacion = null;
-          toast("JP #1 importado. Actualiza la vista previa para verificar.");
-          try {
-            await sincronizarProductosSupabase();
-          } catch (e) {
-            console.warn("Recarga de productos:", e);
-          }
-        } catch (e) {
-          progress.textContent =
-            "Importación detenida. " +
-            creados +
-            " creados y " +
-            omitidos +
-            " omitidos. " +
-            e.message +
-            " Puedes volver a analizar el JSON para reintentar sin sobrescribir.";
-        }
-      }
-      document.addEventListener("click", (e) => {
-        if (e.target?.id === "jpImportConfirm") importarJP1();
-      });
-
-      /* ===== Fotografías JP #1: importación protegida y reanudable ===== */
-      const JP1_BOX_ID = "2cf64152-49aa-46b5-86ee-1e51e6fecc1e";
-      let jpPhotosPlan = null,
-        jpPhotosBusy = false;
-      async function jpPhotosPreview(files) {
-        const status = $("#jpPhotosStatus"),
-          out = $("#jpPhotosPreview"),
-          button = $("#jpPhotosUpload");
-        if (!status || !out || !button) return;
-        button.disabled = true;
-        jpPhotosPlan = null;
-        out.innerHTML = "";
-        status.textContent =
-          "Comparando imágenes con los productos publicados…";
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          const rows = await jp1Request(
-            "productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq." +
-              JP1_BOX_ID +
-              "&limit=1000",
-          );
-          const byRef = new Map(
-            rows
-              .filter((p) =>
-                /^JAPON-JP1-FILA\d+$/.test(p.referencia_excel || ""),
-              )
-              .map((p) => [p.referencia_excel, p]),
-          );
-          if (byRef.size !== 57)
-            throw Error(
-              "Se esperaban 57 productos JP #1, pero hay " +
-                byRef.size +
-                ". No se realizará ninguna subida.",
-            );
-          const seen = new Set(),
-            matched = [],
-            extra = [],
-            invalid = [];
-          for (const file of files) {
-            const m = /^JP__1_fila_(\d+)\.jpe?g$/i.exec(file.name);
-            if (
-              !m ||
-              file.size < 1 ||
-              file.size > 5 * 1024 * 1024 ||
-              !["image/jpeg", "image/png", ""].includes(file.type)
-            ) {
-              invalid.push(file.name);
-              continue;
-            }
-            const ref = "JAPON-JP1-FILA" + Number(m[1]);
-            if (seen.has(ref)) {
-              invalid.push("Duplicado: " + file.name);
-              continue;
-            }
-            seen.add(ref);
-            const product = byRef.get(ref);
-            if (!product) {
-              extra.push(file.name);
-              continue;
-            }
-            matched.push({ file, product, ref });
-          }
-          const missing = [...byRef.keys()].filter((ref) => !seen.has(ref));
-          const existing = matched.filter((x) =>
-            validProductImage(x.product.imagen_url),
-          );
-          const pending = matched.filter(
-            (x) => !validProductImage(x.product.imagen_url),
-          );
-          status.textContent =
-            matched.length +
-            " imágenes relacionadas · " +
-            existing.length +
-            " ya tienen fotografía · " +
-            pending.length +
-            " por subir · " +
-            missing.length +
-            " sin archivo (pueden subirse después).";
-          out.innerHTML =
-            "<p><strong>Vista previa, sin cambios realizados.</strong></p>" +
-            (extra.length
-              ? "<p>Archivos adicionales excluidos: " +
-                extra.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (invalid.length
-              ? '<p class="err">Archivos inválidos o repetidos: ' +
-                invalid.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (missing.length
-              ? "<p>Sin fotografía por ahora: " +
-                missing.length +
-                " productos. Puedes añadirlas en otra actualización.</p>"
-              : "") +
-            "<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>" +
-            '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>' +
-            matched
-              .sort(
-                (a, b) =>
-                  Number(a.ref.split("FILA")[1]) -
-                  Number(b.ref.split("FILA")[1]),
-              )
-              .map(
-                (x) =>
-                  "<tr><td>" +
-                  esc(x.ref) +
-                  "</td><td>" +
-                  esc(x.product.nombre) +
-                  "</td><td>" +
-                  (validProductImage(x.product.imagen_url)
-                    ? "Ya tiene foto"
-                    : "Lista para subir") +
-                  "</td></tr>",
-              )
-              .join("") +
-            "</tbody></table></div>";
-          if (invalid.length || missing.length || matched.length !== 57) {
-            status.textContent += " Revisa los archivos antes de continuar.";
-            return;
-          }
-          jpPhotosPlan = pending;
-          button.disabled = !pending.length;
-        } catch (err) {
-          status.textContent = "No se pudo verificar: " + (err.message || err);
-        }
-      }
-      async function jpPhotosUpload() {
-        if (jpPhotosBusy || !jpPhotosPlan?.length) return;
-        if (
-          !confirm(
-            "¿Subir " +
-              jpPhotosPlan.length +
-              " fotografías a R2 y vincularlas únicamente con productos de JP #1 que todavía no tengan imagen?",
-          )
-        )
-          return;
-        const button = $("#jpPhotosUpload"),
-          progress = $("#jpPhotosProgress");
-        jpPhotosBusy = true;
-        button.disabled = true;
-        let saved = 0,
-          skipped = 0;
-        const errors = [];
-        try {
-          for (const item of jpPhotosPlan) {
-            progress.textContent =
-              "Procesando " +
-              (saved + skipped + errors.length + 1) +
-              "/" +
-              jpPhotosPlan.length +
-              " · " +
-              item.ref;
-            try {
-              // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
-              const current = await jp1Request(
-                "productos?select=id,imagen_url,referencia_excel,caja_id&id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&limit=1",
-              );
-              if (
-                current.length !== 1 ||
-                current[0].caja_id !== JP1_BOX_ID ||
-                current[0].referencia_excel !== item.ref
-              )
-                throw Error("El producto cambió.");
-              if (current[0].imagen_url) {
-                skipped++;
-                continue;
-              }
-              const form = new FormData();
-              form.append("file", item.file, item.file.name);
-              form.append("folder", "productos");
-              if (!(await refreshAdmin()) || !adminSession?.token)
-                throw Error("Sesión expirada.");
-              const uploaded = await fetch(R2_WORKER + "/images", {
-                method: "POST",
-                headers: { Authorization: "Bearer " + adminSession.token },
-                body: form,
-              });
-              const result = await uploaded.json().catch(() => ({}));
-              if (!uploaded.ok || !validProductImage(result.url))
-                throw Error(
-                  result.error ||
-                    "Error al subir a R2 (" + uploaded.status + ")",
-                );
-              const patched = await jp1Request(
-                "productos?id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&caja_id=eq." +
-                  JP1_BOX_ID +
-                  "&referencia_excel=eq." +
-                  encodeURIComponent(item.ref) +
-                  "&imagen_url=is.null",
-                {
-                  method: "PATCH",
-                  headers: { Prefer: "return=representation" },
-                  body: JSON.stringify({ imagen_url: result.url }),
-                },
-              );
-              if (!Array.isArray(patched) || patched.length !== 1)
-                throw Error(
-                  "No se pudo asociar la URL en Supabase; revisa permisos.",
-                );
-              saved++;
-            } catch (err) {
-              errors.push(item.ref + ": " + (err.message || err));
-            }
-          }
-          progress.textContent =
-            "Terminó: " +
-            saved +
-            " vinculadas · " +
-            skipped +
-            " omitidas · " +
-            errors.length +
-            " con error." +
-            (errors.length ? " " + errors.slice(0, 5).join(" | ") : "");
-          try {
-            await sincronizarProductosSupabase();
-          } catch (e) {
-            console.warn(e);
-          }
-          toast(
-            errors.length
-              ? "Revisa los errores de la importación"
-              : "Fotos de JP #1 guardadas ♡",
-            !!errors.length,
-          );
-        } finally {
-          jpPhotosBusy = false;
-          jpPhotosPlan = null;
-          button.disabled = true;
-        }
-      }
-      document.addEventListener("change", (e) => {
-        if (e.target.id === "jpPhotosFiles")
-          jpPhotosPreview([...e.target.files]);
-      });
-      document.addEventListener("click", (e) => {
-        if (e.target.id === "jpPhotosUpload") jpPhotosUpload();
-      });
-
-      /* ===== Fotografías JP #2: importación protegida y reanudable ===== */
-      const JP2_BOX_ID = "79ba8add-a529-4d3c-8d09-59e9c5ca2bcf";
-      let jp2PhotosPlan = null,
-        jp2PhotosBusy = false;
-      async function jp2PhotosPreview(files) {
-        const status = $("#jp2PhotosStatus"),
-          out = $("#jp2PhotosPreview"),
-          button = $("#jp2PhotosUpload");
-        if (!status || !out || !button) return;
-        button.disabled = true;
-        jp2PhotosPlan = null;
-        out.innerHTML = "";
-        status.textContent =
-          "Comparando imágenes con los productos publicados…";
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          const rows = await jp1Request(
-            "productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq." +
-              JP2_BOX_ID +
-              "&limit=1000",
-          );
-          const byRef = new Map(
-            rows
-              .filter((p) =>
-                /^JAPON-JP2-FILA\d+$/.test(p.referencia_excel || ""),
-              )
-              .map((p) => [p.referencia_excel, p]),
-          );
-          if (byRef.size !== 71)
-            throw Error(
-              "Se esperaban 71 productos JP #2, pero hay " +
-                byRef.size +
-                ". No se realizará ninguna subida.",
-            );
-          const seen = new Set(),
-            matched = [],
-            extra = [],
-            invalid = [];
-          for (const file of files) {
-            const m = /^JP__2_fila_(\d+)\.jpe?g$/i.exec(file.name);
-            if (
-              !m ||
-              file.size < 1 ||
-              file.size > 5 * 1024 * 1024 ||
-              !["image/jpeg", "image/png", ""].includes(file.type)
-            ) {
-              invalid.push(file.name);
-              continue;
-            }
-            const ref = "JAPON-JP2-FILA" + Number(m[1]);
-            if (seen.has(ref)) {
-              invalid.push("Duplicado: " + file.name);
-              continue;
-            }
-            seen.add(ref);
-            const product = byRef.get(ref);
-            if (!product) {
-              extra.push(file.name);
-              continue;
-            }
-            matched.push({ file, product, ref });
-          }
-          const missing = [...byRef.keys()].filter((ref) => !seen.has(ref));
-          const existing = matched.filter((x) =>
-            validProductImage(x.product.imagen_url),
-          );
-          const pending = matched.filter(
-            (x) => !validProductImage(x.product.imagen_url),
-          );
-          status.textContent =
-            matched.length +
-            " imágenes relacionadas · " +
-            existing.length +
-            " ya tienen fotografía · " +
-            pending.length +
-            " por subir · " +
-            missing.length +
-            " sin archivo (pueden subirse después).";
-          out.innerHTML =
-            "<p><strong>Vista previa, sin cambios realizados.</strong></p>" +
-            (extra.length
-              ? "<p>Archivos adicionales excluidos: " +
-                extra.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (invalid.length
-              ? '<p class="err">Archivos inválidos o repetidos: ' +
-                invalid.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (missing.length
-              ? "<p>Sin fotografía por ahora: " +
-                missing.length +
-                " productos. Puedes añadirlas en otra actualización.</p>"
-              : "") +
-            "<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>" +
-            '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>' +
-            matched
-              .sort(
-                (a, b) =>
-                  Number(a.ref.split("FILA")[1]) -
-                  Number(b.ref.split("FILA")[1]),
-              )
-              .map(
-                (x) =>
-                  "<tr><td>" +
-                  esc(x.ref) +
-                  "</td><td>" +
-                  esc(x.product.nombre) +
-                  "</td><td>" +
-                  (validProductImage(x.product.imagen_url)
-                    ? "Ya tiene foto"
-                    : "Lista para subir") +
-                  "</td></tr>",
-              )
-              .join("") +
-            "</tbody></table></div>";
-          if (invalid.length || missing.length || matched.length !== 71) {
-            status.textContent += " Revisa los archivos antes de continuar.";
-            return;
-          }
-          jp2PhotosPlan = pending;
-          button.disabled = !pending.length;
-        } catch (err) {
-          status.textContent = "No se pudo verificar: " + (err.message || err);
-        }
-      }
-      async function jp2PhotosUpload() {
-        if (jp2PhotosBusy || !jp2PhotosPlan?.length) return;
-        if (
-          !confirm(
-            "¿Subir " +
-              jp2PhotosPlan.length +
-              " fotografías a R2 y vincularlas únicamente con productos de JP #2 que todavía no tengan imagen?",
-          )
-        )
-          return;
-        const button = $("#jp2PhotosUpload"),
-          progress = $("#jp2PhotosProgress");
-        jp2PhotosBusy = true;
-        button.disabled = true;
-        let saved = 0,
-          skipped = 0;
-        const errors = [];
-        try {
-          for (const item of jp2PhotosPlan) {
-            progress.textContent =
-              "Procesando " +
-              (saved + skipped + errors.length + 1) +
-              "/" +
-              jp2PhotosPlan.length +
-              " · " +
-              item.ref;
-            try {
-              // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
-              const current = await jp1Request(
-                "productos?select=id,imagen_url,referencia_excel,caja_id&id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&limit=1",
-              );
-              if (
-                current.length !== 1 ||
-                current[0].caja_id !== JP2_BOX_ID ||
-                current[0].referencia_excel !== item.ref
-              )
-                throw Error("El producto cambió.");
-              if (current[0].imagen_url) {
-                skipped++;
-                continue;
-              }
-              const form = new FormData();
-              form.append("file", item.file, item.file.name);
-              form.append("folder", "productos");
-              if (!(await refreshAdmin()) || !adminSession?.token)
-                throw Error("Sesión expirada.");
-              const uploaded = await fetch(R2_WORKER + "/images", {
-                method: "POST",
-                headers: { Authorization: "Bearer " + adminSession.token },
-                body: form,
-              });
-              const result = await uploaded.json().catch(() => ({}));
-              if (!uploaded.ok || !validProductImage(result.url))
-                throw Error(
-                  result.error ||
-                    "Error al subir a R2 (" + uploaded.status + ")",
-                );
-              const patched = await jp1Request(
-                "productos?id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&caja_id=eq." +
-                  JP2_BOX_ID +
-                  "&referencia_excel=eq." +
-                  encodeURIComponent(item.ref) +
-                  "&imagen_url=is.null",
-                {
-                  method: "PATCH",
-                  headers: { Prefer: "return=representation" },
-                  body: JSON.stringify({ imagen_url: result.url }),
-                },
-              );
-              if (!Array.isArray(patched) || patched.length !== 1)
-                throw Error(
-                  "No se pudo asociar la URL en Supabase; revisa permisos.",
-                );
-              saved++;
-            } catch (err) {
-              errors.push(item.ref + ": " + (err.message || err));
-            }
-          }
-          progress.textContent =
-            "Terminó: " +
-            saved +
-            " vinculadas · " +
-            skipped +
-            " omitidas · " +
-            errors.length +
-            " con error." +
-            (errors.length ? " " + errors.slice(0, 5).join(" | ") : "");
-          try {
-            await sincronizarProductosSupabase();
-          } catch (e) {
-            console.warn(e);
-          }
-          toast(
-            errors.length
-              ? "Revisa los errores de la importación"
-              : "Fotos de JP #2 guardadas ♡",
-            !!errors.length,
-          );
-        } finally {
-          jp2PhotosBusy = false;
-          jp2PhotosPlan = null;
-          button.disabled = true;
-        }
-      }
-      document.addEventListener("change", (e) => {
-        if (e.target.id === "jp2PhotosFiles")
-          jp2PhotosPreview([...e.target.files]);
-      });
-      document.addEventListener("click", (e) => {
-        if (e.target.id === "jp2PhotosUpload") jp2PhotosUpload();
-      });
-
-      /* ===== Fotografías Corea: vista previa y subida controlada ===== */
-      const KR_PHOTO_BOXES = {
-        1: "61237dd2-85e7-4112-85aa-9c6589541084",
-        2: "27e30699-3288-40c8-86df-ecb40a7a74c4",
-      };
-      let krPhotoPlan = null,
-        krPhotoBusy = false;
-      function krPhotoNumber() {
-        return location.hash.includes("fotos-kr2") ? 2 : 1;
-      }
-      async function krPhotoPreview(files) {
-        const status = $("#krPhotosStatus"),
-          out = $("#krPhotosPreview"),
-          button = $("#krPhotosUpload");
-        if (!status || !out || !button) return;
-        button.disabled = true;
-        krPhotoPlan = null;
-        out.innerHTML = "";
-        status.textContent = "Verificando productos en Supabase…";
-        try {
-          const n = krPhotoNumber(),
-            bid = KR_PHOTO_BOXES[n];
-          const rows = await jp1Request(
-            "productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq." +
-              bid +
-              "&limit=1000",
-          );
-          const expected = n === 1 ? 122 : 136;
-          const byRef = new Map(rows.map((p) => [p.referencia_excel, p]));
-          if (
-            rows.length !== expected ||
-            byRef.size !== expected ||
-            rows.some(
-              (p) =>
-                !new RegExp("^KR #" + n + " fila [0-9]+$").test(
-                  p.referencia_excel || "",
-                ),
-            )
-          )
-            throw Error(
-              "Las referencias de Supabase no coinciden con las " +
-                expected +
-                " esperadas. No se subirá nada.",
-            );
-          const seen = new Set(),
-            matched = [],
-            extra = [],
-            invalid = [];
-          for (const file of files) {
-            const m = new RegExp(
-              "^KR_#" + n + "_fila_([0-9]+)_col_3\\.(png|jpe?g|webp|gif)$",
-              "i",
-            ).exec(file.name);
-            if (!m) {
-              invalid.push(file.name);
-              continue;
-            }
-            const ref = "KR #" + n + " fila " + Number(m[1]);
-            if (seen.has(ref)) {
-              invalid.push("Fila repetida: " + file.name);
-              continue;
-            }
-            seen.add(ref);
-            const product = byRef.get(ref);
-            if (!product) {
-              extra.push(file.name);
-              continue;
-            }
-            const type = {
-              png: "image/png",
-              jpg: "image/jpeg",
-              jpeg: "image/jpeg",
-              webp: "image/webp",
-              gif: "image/gif",
-            }[m[2].toLowerCase()];
-            if (
-              file.size < 1 ||
-              file.size > 5 * 1024 * 1024 ||
-              (file.type && file.type !== type)
-            ) {
-              invalid.push("Archivo inválido: " + file.name);
-              continue;
-            }
-            matched.push({ file, product, ref });
-          }
-          const missing = [...byRef.keys()].filter((ref) => !seen.has(ref));
-          const pending = matched.filter((x) => !x.product.imagen_url),
-            existing = matched.length - pending.length;
-          status.textContent =
-            matched.length +
-            " coincidencias · " +
-            pending.length +
-            " por subir · " +
-            existing +
-            " con imagen · " +
-            extra.length +
-            " fotos sin producto · " +
-            missing.length +
-            " productos sin foto.";
-          out.innerHTML =
-            "<p><strong>Vista previa: todavía no se ha subido nada.</strong></p>" +
-            (extra.length
-              ? "<p>Fotografías sin producto (se omitirán): " +
-                extra.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (invalid.length
-              ? '<p class="err">Archivos inválidos: ' +
-                invalid.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            "<p>Los productos sin foto se mantendrán sin foto. Nunca se reemplazarán URLs existentes.</p>" +
-            '<div style="max-height:290px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Estado</th></tr></thead><tbody>' +
-            matched
-              .sort(
-                (a, b) =>
-                  Number(a.ref.match(/fila (\d+)/)[1]) -
-                  Number(b.ref.match(/fila (\d+)/)[1]),
-              )
-              .map(
-                (x) =>
-                  "<tr><td>" +
-                  esc(x.ref) +
-                  "</td><td>" +
-                  esc(x.product.nombre) +
-                  "</td><td>" +
-                  (x.product.imagen_url
-                    ? "Ya tiene imagen"
-                    : "Lista para subir") +
-                  "</td></tr>",
-              )
-              .join("") +
-            "</tbody></table></div>";
-          if (invalid.length || !matched.length) {
-            status.textContent +=
-              " Corrige los archivos inválidos antes de continuar.";
-            return;
-          }
-          krPhotoPlan = { n, bid, items: pending };
-          button.disabled = !pending.length;
-        } catch (err) {
-          status.textContent = "Error: " + (err.message || err);
-        }
-      }
-      async function krPhotoUpload() {
-        if (krPhotoBusy || !krPhotoPlan?.items.length) return;
-        const { n, bid, items } = krPhotoPlan;
-        if (n !== krPhotoNumber()) return;
-        if (
-          !confirm(
-            "¿Subir " +
-              items.length +
-              " imágenes de KR #" +
-              n +
-              " a R2 y vincularlas a sus productos?",
-          )
-        )
-          return;
-        const button = $("#krPhotosUpload"),
-          progress = $("#krPhotosProgress");
-        krPhotoBusy = true;
-        button.disabled = true;
-        let saved = 0,
-          skipped = 0;
-        const errors = [];
-        try {
-          for (const item of items) {
-            progress.textContent =
-              "Procesando " +
-              (saved + skipped + errors.length + 1) +
-              "/" +
-              items.length +
-              " · " +
-              item.ref;
-            try {
-              const current = await jp1Request(
-                "productos?select=id,imagen_url,referencia_excel,caja_id&id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&limit=1",
-              );
-              if (
-                current.length !== 1 ||
-                current[0].caja_id !== bid ||
-                current[0].referencia_excel !== item.ref
-              )
-                throw Error("Producto cambiado, omitido.");
-              if (current[0].imagen_url) {
-                skipped++;
-                continue;
-              }
-              const form = new FormData();
-              form.append("file", item.file, item.file.name);
-              form.append("folder", "productos");
-              if (!(await refreshAdmin()) || !adminSession?.token)
-                throw Error("Sesión administrativa expirada.");
-              const response = await fetch(R2_WORKER + "/images", {
-                method: "POST",
-                headers: { Authorization: "Bearer " + adminSession.token },
-                body: form,
-              });
-              const uploaded = await response.json().catch(() => ({}));
-              if (!response.ok || !validProductImage(uploaded.url))
-                throw Error(
-                  uploaded.error || "Error de R2 (" + response.status + ")",
-                );
-              const patched = await jp1Request(
-                "productos?id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&caja_id=eq." +
-                  bid +
-                  "&referencia_excel=eq." +
-                  encodeURIComponent(item.ref) +
-                  "&imagen_url=is.null",
-                {
-                  method: "PATCH",
-                  headers: { Prefer: "return=representation" },
-                  body: JSON.stringify({ imagen_url: uploaded.url }),
-                },
-              );
-              if (!Array.isArray(patched) || patched.length !== 1)
-                throw Error(
-                  "La imagen llegó a R2, pero no pudo asociarse en Supabase.",
-                );
-              saved++;
-            } catch (err) {
-              errors.push(item.ref + ": " + (err.message || err));
-            }
-          }
-          progress.textContent =
-            "Finalizado: " +
-            saved +
-            " vinculadas · " +
-            skipped +
-            " omitidas · " +
-            errors.length +
-            " errores." +
-            (errors.length ? " " + errors.slice(0, 5).join(" | ") : "");
-          try {
-            await sincronizarProductosSupabase();
-          } catch (e) {
-            console.warn(e);
-          }
-          toast(
-            errors.length
-              ? "Revisa los errores de KR #" + n
-              : "Fotos de KR #" + n + " guardadas ♡",
-            !!errors.length,
-          );
-        } finally {
-          krPhotoBusy = false;
-          krPhotoPlan = null;
-          button.disabled = true;
-        }
-      }
-      document.addEventListener("change", (e) => {
-        if (e.target.id === "krPhotosFiles")
-          krPhotoPreview([...e.target.files]);
-      });
-      document.addEventListener("click", (e) => {
-        if (e.target.id === "krPhotosUpload") krPhotoUpload();
-      });
-
-      /* Fotografías Pocamarket: referencias originales, sin sobrescribir. */
-      let pocaPlan = null, pocaBusy = false, pocaPreviewVersion = 0;
-      const pocaRanges = {12:[4,43],13:[4,43],14:[4,43],15:[4,43],16:[46,85],17:[88,127],18:[4,43],19:[4,43],20:[4,34]};
-      const pocaBoxName = n => `POCA ${n}${n >= 15 && n <= 17 ? " · PICK PACK" : ""}`;
-      const pocaRef = (n,row) => `POCA ${n} fila ${row}`;
-      // Apps Script puede guardar JPEG con extensión .png. Detectar los bytes reales.
-      async function pocaNormalizeImage(file) {
+      async function normalizarImagen(file) {
         const b = new Uint8Array(await file.slice(0, 16).arrayBuffer());
         const starts = (...v) => v.every((x,i) => b[i] === x);
         let ext, type;
@@ -6225,1284 +5134,7 @@
         finally { URL.revokeObjectURL(url); }
         return normalized;
       }
-      async function pocaPreview(files) {
-        const selector = $("#pocaPhotoGroup"), status = $("#pocaPhotoStatus"), out = $("#pocaPhotoPreview"), button = $("#pocaPhotoUpload");
-        if (!selector || !status || pocaBusy) return;
-        const version = ++pocaPreviewVersion, group = selector.value;
-        pocaPlan = null; button.disabled = true; out.innerHTML = "";
-        $("#pocaPhotoProgress").textContent = "";
-        status.textContent = "Verificando referencias en Supabase…";
-        try {
-          const nums = group === "pick" ? [15,16,17] : [Number(group)];
-          const categories = D.cats.filter(c => c.name.trim().toLowerCase() === "pocamarket");
-          if (categories.length !== 1) throw Error("No se encontró una categoría Pocamarket única.");
-          const refs = new Map(), counts = new Map();
-          for (const n of nums) {
-            const boxes = D.boxes.filter(b => b.cat === categories[0].id && b.name.trim() === pocaBoxName(n));
-            if (boxes.length !== 1) throw Error("No se encontró una caja única: " + pocaBoxName(n));
-            const bid = boxes[0].id, [first,last] = pocaRanges[n];
-            const rows = await jp1Request("productos?select=id,caja_id,referencia_excel,nombre,imagen_url&caja_id=eq." + encodeURIComponent(bid) + "&limit=500");
-            if (!Array.isArray(rows)) throw Error("Respuesta inválida de productos.");
-            for (let i=first;i<=last;i++) {
-              const ref = pocaRef(n,i), matches = rows.filter(p => p.referencia_excel === ref && p.caja_id === bid);
-              if (matches.length !== 1 || refs.has(ref)) throw Error("Referencia ausente o duplicada: " + ref);
-              refs.set(ref,{product:matches[0],n,bid});
-            }
-            counts.set(n,{total:last-first+1,matched:0,pending:0,existing:0});
-          }
-          const seen = new Set(), matched=[], extra=[], invalid=[];
-          for (const file of files) {
-            const m = /^(POCA_([0-9]+)|CAJAS_PICK_PACK)_fila_([0-9]+)_col_3\.(png|jpe?g|webp|gif)$/i.exec(file.name);
-            if (!m) { invalid.push(file.name); continue; }
-            const row=Number(m[3]), n=group === "pick" ? nums.find(k=>row>=pocaRanges[k][0]&&row<=pocaRanges[k][1]) : Number(group);
-            if (!n || (group === "pick" ? !!m[2] : Number(m[2])!==n)) { extra.push(file.name); continue; }
-            const ref=pocaRef(n,row), record=refs.get(ref);
-            if (!record) { extra.push(file.name); continue; }
-            if (seen.has(ref)||file.size<1||file.size>5*1024*1024) { invalid.push(file.name); continue; }
-            let normalized;
-            try { normalized=await pocaNormalizeImage(file); }
-            catch(e) { invalid.push(file.name+" ("+e.message+")"); continue; }
-            seen.add(ref); matched.push({...record,ref,file:normalized,row});
-            const c=counts.get(n); c.matched++; if(record.product.imagen_url)c.existing++; else c.pending++;
-          }
-          if (version!==pocaPreviewVersion || !status.isConnected || selector.value!==group) return;
-          const pending=matched.filter(x=>!x.product.imagen_url);
-          status.textContent=`${matched.length} coincidencias · ${pending.length} por subir · ${extra.length} fuera de selección · ${invalid.length} inválidas.`;
-          out.innerHTML='<p><strong>Vista previa: no se ha subido nada.</strong></p>'+ [...counts].map(([n,c])=>`<p>${esc(pocaBoxName(n))}: ${c.matched}/${c.total} archivos seleccionados · ${c.existing} ya tienen imagen · ${c.total-c.matched} sin archivo seleccionado.</p>`).join("")+(extra.length?'<p>Se omitirán: '+extra.map(esc).join(", ")+ '</p>':"")+(invalid.length?'<p class="err">Archivos inválidos o duplicados: '+invalid.map(esc).join(", ")+ '</p>':"")+'<div style="max-height:290px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Estado</th></tr></thead><tbody>'+matched.sort((a,b)=>a.n-b.n||a.row-b.row).map(x=>`<tr><td>${esc(x.ref)}</td><td>${esc(x.product.nombre)}</td><td>${x.product.imagen_url?"Ya tiene imagen":"Lista para subir"}</td></tr>`).join("")+'</tbody></table></div>';
-          if (invalid.length) return;
-          pocaPlan={group,items:pending}; button.disabled=!pending.length;
-        } catch(e) { if(version===pocaPreviewVersion) status.textContent="Error: "+e.message; }
-      }
-      async function pocaUpload() {
-        const selector=$("#pocaPhotoGroup"), input=$("#pocaPhotoFiles"), button=$("#pocaPhotoUpload"), progress=$("#pocaPhotoProgress");
-        if(pocaBusy||!pocaPlan?.items.length||selector.value!==pocaPlan.group)return;
-        const {items}=pocaPlan;
-        if(!confirm(`¿Subir ${items.length} imágenes verificadas de Pocamarket?`))return;
-        pocaBusy=true; selector.disabled=input.disabled=button.disabled=true;
-        let saved=0,skipped=0; const errors=[];
-        try {
-          for(const item of items) {
-            progress.textContent=`Procesando ${saved+skipped+errors.length+1}/${items.length} · ${item.ref}`;
-            try {
-              const filter="id=eq."+encodeURIComponent(item.product.id)+"&caja_id=eq."+encodeURIComponent(item.bid)+"&referencia_excel=eq."+encodeURIComponent(item.ref);
-              const current=await jp1Request("productos?select=id,imagen_url&"+filter);
-              if(!Array.isArray(current)||current.length!==1)throw Error("Producto cambiado o no encontrado.");
-              if(current[0].imagen_url){skipped++;continue;}
-              if(!(await refreshAdmin())||!adminSession?.token)throw Error("Sesión expirada.");
-              const form=new FormData(); form.append("file",item.file,item.file.name);form.append("folder","productos");
-              const response=await fetch(R2_WORKER+"/images",{method:"POST",headers:{Authorization:"Bearer "+adminSession.token},body:form});
-              const uploaded=await response.json().catch(()=>({}));
-              if(!response.ok||!validProductImage(uploaded.url))throw Error(uploaded.error||"Error de R2 ("+response.status+")");
-              const patched=await jp1Request("productos?"+filter+"&imagen_url=is.null",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({imagen_url:uploaded.url})});
-              if(!Array.isArray(patched)||patched.length!==1)throw Error("Imagen subida a R2 pero no vinculada; revisar antes de repetir.");
-              saved++;
-            }catch(e){errors.push(item.ref+": "+e.message);}
-          }
-          progress.textContent=`Finalizado: ${saved} vinculadas · ${skipped} omitidas · ${errors.length} errores. `+errors.join(" | ");
-          try{await sincronizarProductosSupabase();}catch(e){console.warn(e);}
-          toast(errors.length?"Revisa los errores de Pocamarket":"Fotos de Pocamarket guardadas ♡",!!errors.length);
-        }finally{pocaBusy=false;pocaPlan=null;selector.disabled=input.disabled=false;input.value="";button.disabled=true;}
-      }
-      document.addEventListener("change",e=>{
-        if(e.target.id==="pocaPhotoFiles")pocaPreview([...e.target.files]);
-        if(e.target.id==="pocaPhotoGroup"){
-          ++pocaPreviewVersion;pocaPlan=null;$("#pocaPhotoFiles").value="";$("#pocaPhotoUpload").disabled=true;$("#pocaPhotoPreview").innerHTML="";$("#pocaPhotoProgress").textContent="";$("#pocaPhotoStatus").textContent="Selecciona las imágenes para revisar coincidencias.";
-        }
-      });
-      document.addEventListener("click",e=>{if(e.target.id==="pocaPhotoUpload")pocaUpload();});
 
-      /* Fotografías Meowcafe: referencias originales, sin sobrescribir. */
-      let meowPlan = null, meowBusy = false, meowPreviewVersion = 0;
-      const meowRanges={1:[4,34],2:[4,22],3:[4,24]};
-      const meowBoxName=n=>`MC #${n}`;
-      const meowRef=(n,row)=>`MC #${n} fila ${row}`;
-      async function meowPreview(files) {
-        const selector = $("#meowPhotoGroup"), status = $("#meowPhotoStatus"), out = $("#meowPhotoPreview"), button = $("#meowPhotoUpload");
-        if (!selector || !status || meowBusy) return;
-        const version = ++meowPreviewVersion, group = selector.value;
-        meowPlan = null; button.disabled = true; out.innerHTML = "";
-        $("#meowPhotoProgress").textContent = "";
-        status.textContent = "Verificando referencias en Supabase…";
-        try {
-          const nums = [Number(group)];
-          const categories = D.cats.filter(c => c.name.trim().toLowerCase() === "meowcafe");
-          if (categories.length !== 1) throw Error("No se encontró una categoría Meowcafe única.");
-          const refs = new Map(), counts = new Map();
-          for (const n of nums) {
-            const boxes = D.boxes.filter(b => b.cat === categories[0].id && b.name.trim() === meowBoxName(n));
-            if (boxes.length !== 1) throw Error("No se encontró una caja única: " + meowBoxName(n));
-            const bid = boxes[0].id, [first,last] = meowRanges[n];
-            const rows = await jp1Request("productos?select=id,caja_id,referencia_excel,nombre,imagen_url&caja_id=eq." + encodeURIComponent(bid) + "&limit=500");
-            if (!Array.isArray(rows)) throw Error("Respuesta inválida de productos.");
-            for (let i=first;i<=last;i++) {
-              const ref = meowRef(n,i), matches = rows.filter(p => p.referencia_excel === ref && p.caja_id === bid);
-              if (matches.length !== 1 || refs.has(ref)) throw Error("Referencia ausente o duplicada: " + ref);
-              refs.set(ref,{product:matches[0],n,bid});
-            }
-            counts.set(n,{total:last-first+1,matched:0,pending:0,existing:0});
-          }
-          const seen = new Set(), matched=[], extra=[], invalid=[];
-          for (const file of files) {
-            const m = /^MC_(\d+)_fila_(\d+)_col_3\.(png|jpe?g|webp|gif)$/i.exec(file.name);
-            if (!m) { invalid.push(file.name); continue; }
-            const row=Number(m[2]), n=Number(group);
-            if(Number(m[1])!==n){extra.push(file.name);continue;}
-            const ref=meowRef(n,row), record=refs.get(ref);
-            if (!record) { extra.push(file.name); continue; }
-            if (seen.has(ref)||file.size<1||file.size>5*1024*1024) { invalid.push(file.name); continue; }
-            let normalized;
-            try { normalized=await pocaNormalizeImage(file); }
-            catch(e) { invalid.push(file.name+" ("+e.message+")"); continue; }
-            seen.add(ref); matched.push({...record,ref,file:normalized,row});
-            const c=counts.get(n); c.matched++; if(record.product.imagen_url)c.existing++; else c.pending++;
-          }
-          if (version!==meowPreviewVersion || !status.isConnected || selector.value!==group) return;
-          const pending=matched.filter(x=>!x.product.imagen_url);
-          status.textContent=`${matched.length} coincidencias · ${pending.length} por subir · ${extra.length} fuera de selección · ${invalid.length} inválidas.`;
-          out.innerHTML='<p><strong>Vista previa: no se ha subido nada.</strong></p>'+ [...counts].map(([n,c])=>`<p>${esc(meowBoxName(n))}: ${c.matched}/${c.total} archivos seleccionados · ${c.existing} ya tienen imagen · ${c.total-c.matched} sin archivo seleccionado.</p>`).join("")+(extra.length?'<p>Se omitirán: '+extra.map(esc).join(", ")+ '</p>':"")+(invalid.length?'<p class="err">Archivos inválidos o duplicados: '+invalid.map(esc).join(", ")+ '</p>':"")+'<div style="max-height:290px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Estado</th></tr></thead><tbody>'+matched.sort((a,b)=>a.n-b.n||a.row-b.row).map(x=>`<tr><td>${esc(x.ref)}</td><td>${esc(x.product.nombre)}</td><td>${x.product.imagen_url?"Ya tiene imagen":"Lista para subir"}</td></tr>`).join("")+'</tbody></table></div>';
-          if (invalid.length) return;
-          meowPlan={group,items:pending}; button.disabled=!pending.length;
-        } catch(e) { if(version===meowPreviewVersion) status.textContent="Error: "+e.message; }
-      }
-      async function meowUpload() {
-        const selector=$("#meowPhotoGroup"), input=$("#meowPhotoFiles"), button=$("#meowPhotoUpload"), progress=$("#meowPhotoProgress");
-        if(meowBusy||!meowPlan?.items.length||selector.value!==meowPlan.group)return;
-        const {items}=meowPlan;
-        if(!confirm(`¿Subir ${items.length} imágenes verificadas de Meowcafe?`))return;
-        meowBusy=true; selector.disabled=input.disabled=button.disabled=true;
-        let saved=0,skipped=0; const errors=[];
-        try {
-          for(const item of items) {
-            progress.textContent=`Procesando ${saved+skipped+errors.length+1}/${items.length} · ${item.ref}`;
-            try {
-              const filter="id=eq."+encodeURIComponent(item.product.id)+"&caja_id=eq."+encodeURIComponent(item.bid)+"&referencia_excel=eq."+encodeURIComponent(item.ref);
-              const current=await jp1Request("productos?select=id,imagen_url&"+filter);
-              if(!Array.isArray(current)||current.length!==1)throw Error("Producto cambiado o no encontrado.");
-              if(current[0].imagen_url){skipped++;continue;}
-              if(!(await refreshAdmin())||!adminSession?.token)throw Error("Sesión expirada.");
-              const form=new FormData(); form.append("file",item.file,item.file.name);form.append("folder","productos");
-              const response=await fetch(R2_WORKER+"/images",{method:"POST",headers:{Authorization:"Bearer "+adminSession.token},body:form});
-              const uploaded=await response.json().catch(()=>({}));
-              if(!response.ok||!validProductImage(uploaded.url))throw Error(uploaded.error||"Error de R2 ("+response.status+")");
-              const patched=await jp1Request("productos?"+filter+"&imagen_url=is.null",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({imagen_url:uploaded.url})});
-              if(!Array.isArray(patched)||patched.length!==1)throw Error("Imagen subida a R2 pero no vinculada; revisar antes de repetir.");
-              saved++;
-            }catch(e){errors.push(item.ref+": "+e.message);}
-          }
-          progress.textContent=`Finalizado: ${saved} vinculadas · ${skipped} omitidas · ${errors.length} errores. `+errors.join(" | ");
-          try{await sincronizarProductosSupabase();}catch(e){console.warn(e);}
-          toast(errors.length?"Revisa los errores de Meowcafe":"Fotos de Meowcafe guardadas ♡",!!errors.length);
-        }finally{meowBusy=false;meowPlan=null;selector.disabled=input.disabled=false;input.value="";button.disabled=true;}
-      }
-      document.addEventListener("change",e=>{
-        if(e.target.id==="meowPhotoFiles")meowPreview([...e.target.files]);
-        if(e.target.id==="meowPhotoGroup"){
-          ++meowPreviewVersion;meowPlan=null;$("#meowPhotoFiles").value="";$("#meowPhotoUpload").disabled=true;$("#meowPhotoPreview").innerHTML="";$("#meowPhotoProgress").textContent="";$("#meowPhotoStatus").textContent="Selecciona las imágenes para revisar coincidencias.";
-        }
-      });
-      document.addEventListener("click",e=>{if(e.target.id==="meowPhotoUpload")meowUpload();});
-
-      /* ===== Fotografías JP #3: importación protegida y reanudable ===== */
-      const JP3_BOX_ID = "42866b92-7154-42c5-8627-517bb6294c95";
-      let jp3PhotosPlan = null,
-        jp3PhotosBusy = false;
-      async function jp3PhotosPreview(files) {
-        const status = $("#jp3PhotosStatus"),
-          out = $("#jp3PhotosPreview"),
-          button = $("#jp3PhotosUpload");
-        if (!status || !out || !button) return;
-        button.disabled = true;
-        jp3PhotosPlan = null;
-        out.innerHTML = "";
-        status.textContent =
-          "Comparando imágenes con los productos publicados…";
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          const rows = await jp1Request(
-            "productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq." +
-              JP3_BOX_ID +
-              "&limit=1000",
-          );
-          const byRef = new Map(
-            rows
-              .filter((p) =>
-                /^JAPON-JP3-FILA\d+$/.test(p.referencia_excel || ""),
-              )
-              .map((p) => [p.referencia_excel, p]),
-          );
-          if (byRef.size !== 83)
-            throw Error(
-              "Se esperaban 83 productos JP #3, pero hay " +
-                byRef.size +
-                ". No se realizará ninguna subida.",
-            );
-          const seen = new Set(),
-            matched = [],
-            extra = [],
-            invalid = [];
-          for (const file of files) {
-            const m = /^JP__3_fila_(\d+)\.(?:jpe?g|png)$/i.exec(file.name);
-            if (
-              !m ||
-              file.size < 1 ||
-              file.size > 5 * 1024 * 1024 ||
-              !["image/jpeg", "image/png", ""].includes(file.type)
-            ) {
-              invalid.push(file.name);
-              continue;
-            }
-            const ref = "JAPON-JP3-FILA" + Number(m[1]);
-            if (seen.has(ref)) {
-              invalid.push("Duplicado: " + file.name);
-              continue;
-            }
-            seen.add(ref);
-            const product = byRef.get(ref);
-            if (!product) {
-              extra.push(file.name);
-              continue;
-            }
-            matched.push({ file, product, ref });
-          }
-          const missing = [...byRef.keys()].filter((ref) => !seen.has(ref));
-          const existing = matched.filter((x) =>
-            validProductImage(x.product.imagen_url),
-          );
-          const pending = matched.filter(
-            (x) => !validProductImage(x.product.imagen_url),
-          );
-          status.textContent =
-            matched.length +
-            " imágenes relacionadas · " +
-            existing.length +
-            " ya tienen fotografía · " +
-            pending.length +
-            " por subir · " +
-            missing.length +
-            " sin archivo (pueden subirse después).";
-          out.innerHTML =
-            "<p><strong>Vista previa, sin cambios realizados.</strong></p>" +
-            (extra.length
-              ? "<p>Archivos adicionales excluidos: " +
-                extra.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (invalid.length
-              ? '<p class="err">Archivos inválidos o repetidos: ' +
-                invalid.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (missing.length
-              ? "<p>Sin fotografía por ahora: " +
-                missing.length +
-                " productos. Puedes añadirlas en otra actualización.</p>"
-              : "") +
-            "<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>" +
-            '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>' +
-            matched
-              .sort(
-                (a, b) =>
-                  Number(a.ref.split("FILA")[1]) -
-                  Number(b.ref.split("FILA")[1]),
-              )
-              .map(
-                (x) =>
-                  "<tr><td>" +
-                  esc(x.ref) +
-                  "</td><td>" +
-                  esc(x.product.nombre) +
-                  "</td><td>" +
-                  (validProductImage(x.product.imagen_url)
-                    ? "Ya tiene foto"
-                    : "Lista para subir") +
-                  "</td></tr>",
-              )
-              .join("") +
-            "</tbody></table></div>";
-          if (invalid.length || missing.length || matched.length !== 83) {
-            status.textContent += " Revisa los archivos antes de continuar.";
-            return;
-          }
-          jp3PhotosPlan = pending;
-          button.disabled = !pending.length;
-        } catch (err) {
-          status.textContent = "No se pudo verificar: " + (err.message || err);
-        }
-      }
-      async function jp3PhotosUpload() {
-        if (jp3PhotosBusy || !jp3PhotosPlan?.length) return;
-        if (
-          !confirm(
-            "¿Subir " +
-              jp3PhotosPlan.length +
-              " fotografías a R2 y vincularlas únicamente con productos de JP #3 que todavía no tengan imagen?",
-          )
-        )
-          return;
-        const button = $("#jp3PhotosUpload"),
-          progress = $("#jp3PhotosProgress");
-        jp3PhotosBusy = true;
-        button.disabled = true;
-        let saved = 0,
-          skipped = 0;
-        const errors = [];
-        try {
-          for (const item of jp3PhotosPlan) {
-            progress.textContent =
-              "Procesando " +
-              (saved + skipped + errors.length + 1) +
-              "/" +
-              jp3PhotosPlan.length +
-              " · " +
-              item.ref;
-            try {
-              // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
-              const current = await jp1Request(
-                "productos?select=id,imagen_url,referencia_excel,caja_id&id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&limit=1",
-              );
-              if (
-                current.length !== 1 ||
-                current[0].caja_id !== JP3_BOX_ID ||
-                current[0].referencia_excel !== item.ref
-              )
-                throw Error("El producto cambió.");
-              if (current[0].imagen_url) {
-                skipped++;
-                continue;
-              }
-              const form = new FormData();
-              form.append("file", item.file, item.file.name);
-              form.append("folder", "productos");
-              if (!(await refreshAdmin()) || !adminSession?.token)
-                throw Error("Sesión expirada.");
-              const uploaded = await fetch(R2_WORKER + "/images", {
-                method: "POST",
-                headers: { Authorization: "Bearer " + adminSession.token },
-                body: form,
-              });
-              const result = await uploaded.json().catch(() => ({}));
-              if (!uploaded.ok || !validProductImage(result.url))
-                throw Error(
-                  result.error ||
-                    "Error al subir a R2 (" + uploaded.status + ")",
-                );
-              const patched = await jp1Request(
-                "productos?id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&caja_id=eq." +
-                  JP3_BOX_ID +
-                  "&referencia_excel=eq." +
-                  encodeURIComponent(item.ref) +
-                  "&imagen_url=is.null",
-                {
-                  method: "PATCH",
-                  headers: { Prefer: "return=representation" },
-                  body: JSON.stringify({ imagen_url: result.url }),
-                },
-              );
-              if (!Array.isArray(patched) || patched.length !== 1)
-                throw Error(
-                  "No se pudo asociar la URL en Supabase; revisa permisos.",
-                );
-              saved++;
-            } catch (err) {
-              errors.push(item.ref + ": " + (err.message || err));
-            }
-          }
-          progress.textContent =
-            "Terminó: " +
-            saved +
-            " vinculadas · " +
-            skipped +
-            " omitidas · " +
-            errors.length +
-            " con error." +
-            (errors.length ? " " + errors.slice(0, 5).join(" | ") : "");
-          try {
-            await sincronizarProductosSupabase();
-          } catch (e) {
-            console.warn(e);
-          }
-          toast(
-            errors.length
-              ? "Revisa los errores de la importación"
-              : "Fotos de JP #3 guardadas ♡",
-            !!errors.length,
-          );
-        } finally {
-          jp3PhotosBusy = false;
-          jp3PhotosPlan = null;
-          button.disabled = true;
-        }
-      }
-      document.addEventListener("change", (e) => {
-        if (e.target.id === "jp3PhotosFiles")
-          jp3PhotosPreview([...e.target.files]);
-      });
-      document.addEventListener("click", (e) => {
-        if (e.target.id === "jp3PhotosUpload") jp3PhotosUpload();
-      });
-
-      /* ===== Fotografías JP #4: importación protegida y reanudable ===== */
-      const JP4_BOX_ID = "a25fb2e5-c7ca-4961-b25f-869033fc4ca9";
-      let jp4PhotosPlan = null,
-        jp4PhotosBusy = false;
-      async function jp4PhotosPreview(files) {
-        const status = $("#jp4PhotosStatus"),
-          out = $("#jp4PhotosPreview"),
-          button = $("#jp4PhotosUpload");
-        if (!status || !out || !button) return;
-        button.disabled = true;
-        jp4PhotosPlan = null;
-        out.innerHTML = "";
-        status.textContent =
-          "Comparando imágenes con los productos publicados…";
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          const rows = await jp1Request(
-            "productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq." +
-              JP4_BOX_ID +
-              "&limit=1000",
-          );
-          const byRef = new Map(
-            rows
-              .filter((p) =>
-                /^JAPON-JP4-FILA\d+$/.test(p.referencia_excel || ""),
-              )
-              .map((p) => [p.referencia_excel, p]),
-          );
-          if (byRef.size !== 47)
-            throw Error(
-              "Se esperaban 47 productos JP #4, pero hay " +
-                byRef.size +
-                ". No se realizará ninguna subida.",
-            );
-          const seen = new Set(),
-            matched = [],
-            extra = [],
-            invalid = [];
-          for (const file of files) {
-            const m =
-              /^JP__4(?:__?5|[._]5|_\.5)?_fila_(\d+)\.(?:jpe?g|png)$/i.exec(
-                file.name,
-              );
-            if (
-              !m ||
-              file.size < 1 ||
-              file.size > 5 * 1024 * 1024 ||
-              !["image/jpeg", "image/png", ""].includes(file.type)
-            ) {
-              invalid.push(file.name);
-              continue;
-            }
-            const fila = Number(m[1]);
-            if (fila < 4 || fila > 50) {
-              extra.push(file.name);
-              continue;
-            }
-            const ref = "JAPON-JP4-FILA" + fila;
-            if (seen.has(ref)) {
-              invalid.push("Duplicado: " + file.name);
-              continue;
-            }
-            seen.add(ref);
-            const product = byRef.get(ref);
-            if (!product) {
-              extra.push(file.name);
-              continue;
-            }
-            matched.push({ file, product, ref });
-          }
-          const missing = [...byRef.keys()].filter((ref) => !seen.has(ref));
-          const existing = matched.filter((x) =>
-            validProductImage(x.product.imagen_url),
-          );
-          const pending = matched.filter(
-            (x) => !validProductImage(x.product.imagen_url),
-          );
-          status.textContent =
-            matched.length +
-            " imágenes relacionadas · " +
-            existing.length +
-            " ya tienen fotografía · " +
-            pending.length +
-            " por subir · " +
-            missing.length +
-            " sin archivo (pueden subirse después).";
-          out.innerHTML =
-            "<p><strong>Vista previa, sin cambios realizados.</strong></p>" +
-            (extra.length
-              ? "<p>Archivos adicionales excluidos: " +
-                extra.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (invalid.length
-              ? '<p class="err">Archivos inválidos o repetidos: ' +
-                invalid.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (missing.length
-              ? "<p>Sin fotografía por ahora: " +
-                missing.length +
-                " productos. Puedes añadirlas en otra actualización.</p>"
-              : "") +
-            "<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>" +
-            '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>' +
-            matched
-              .sort(
-                (a, b) =>
-                  Number(a.ref.split("FILA")[1]) -
-                  Number(b.ref.split("FILA")[1]),
-              )
-              .map(
-                (x) =>
-                  "<tr><td>" +
-                  esc(x.ref) +
-                  "</td><td>" +
-                  esc(x.product.nombre) +
-                  "</td><td>" +
-                  (validProductImage(x.product.imagen_url)
-                    ? "Ya tiene foto"
-                    : "Lista para subir") +
-                  "</td></tr>",
-              )
-              .join("") +
-            "</tbody></table></div>";
-          if (invalid.length || extra.length) {
-            status.textContent +=
-              " Revisa los archivos inválidos o ajenos a esta caja.";
-            return;
-          }
-          if (!matched.length) {
-            status.textContent +=
-              " No hay imágenes correspondientes a esta caja.";
-            return;
-          }
-          jp4PhotosPlan = pending;
-          button.disabled = !pending.length;
-        } catch (err) {
-          status.textContent = "No se pudo verificar: " + (err.message || err);
-        }
-      }
-      async function jp4PhotosUpload() {
-        if (jp4PhotosBusy || !jp4PhotosPlan?.length) return;
-        if (
-          !confirm(
-            "¿Subir " +
-              jp4PhotosPlan.length +
-              " fotografías a R2 y vincularlas únicamente con productos de JP #4 que todavía no tengan imagen?",
-          )
-        )
-          return;
-        const button = $("#jp4PhotosUpload"),
-          progress = $("#jp4PhotosProgress");
-        jp4PhotosBusy = true;
-        button.disabled = true;
-        let saved = 0,
-          skipped = 0;
-        const errors = [];
-        try {
-          for (const item of jp4PhotosPlan) {
-            progress.textContent =
-              "Procesando " +
-              (saved + skipped + errors.length + 1) +
-              "/" +
-              jp4PhotosPlan.length +
-              " · " +
-              item.ref;
-            try {
-              // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
-              const current = await jp1Request(
-                "productos?select=id,imagen_url,referencia_excel,caja_id&id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&limit=1",
-              );
-              if (
-                current.length !== 1 ||
-                current[0].caja_id !== JP4_BOX_ID ||
-                current[0].referencia_excel !== item.ref
-              )
-                throw Error("El producto cambió.");
-              if (current[0].imagen_url) {
-                skipped++;
-                continue;
-              }
-              const form = new FormData();
-              form.append("file", item.file, item.file.name);
-              form.append("folder", "productos");
-              if (!(await refreshAdmin()) || !adminSession?.token)
-                throw Error("Sesión expirada.");
-              const uploaded = await fetch(R2_WORKER + "/images", {
-                method: "POST",
-                headers: { Authorization: "Bearer " + adminSession.token },
-                body: form,
-              });
-              const result = await uploaded.json().catch(() => ({}));
-              if (!uploaded.ok || !validProductImage(result.url))
-                throw Error(
-                  result.error ||
-                    "Error al subir a R2 (" + uploaded.status + ")",
-                );
-              const patched = await jp1Request(
-                "productos?id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&caja_id=eq." +
-                  JP4_BOX_ID +
-                  "&referencia_excel=eq." +
-                  encodeURIComponent(item.ref) +
-                  "&imagen_url=is.null",
-                {
-                  method: "PATCH",
-                  headers: { Prefer: "return=representation" },
-                  body: JSON.stringify({ imagen_url: result.url }),
-                },
-              );
-              if (!Array.isArray(patched) || patched.length !== 1)
-                throw Error(
-                  "No se pudo asociar la URL en Supabase; revisa permisos.",
-                );
-              saved++;
-            } catch (err) {
-              errors.push(item.ref + ": " + (err.message || err));
-            }
-          }
-          progress.textContent =
-            "Terminó: " +
-            saved +
-            " vinculadas · " +
-            skipped +
-            " omitidas · " +
-            errors.length +
-            " con error." +
-            (errors.length ? " " + errors.slice(0, 5).join(" | ") : "");
-          try {
-            await sincronizarProductosSupabase();
-          } catch (e) {
-            console.warn(e);
-          }
-          toast(
-            errors.length
-              ? "Revisa los errores de la importación"
-              : "Fotos de JP #4 guardadas ♡",
-            !!errors.length,
-          );
-        } finally {
-          jp4PhotosBusy = false;
-          jp4PhotosPlan = null;
-          button.disabled = true;
-        }
-      }
-      document.addEventListener("change", (e) => {
-        if (e.target.id === "jp4PhotosFiles")
-          jp4PhotosPreview([...e.target.files]);
-      });
-      document.addEventListener("click", (e) => {
-        if (e.target.id === "jp4PhotosUpload") jp4PhotosUpload();
-      });
-
-      /* ===== Fotografías JP #4.5: importación protegida y reanudable ===== */
-      const JP45_BOX_ID = "ab8f32bd-1817-472e-a060-aff0bdaa7b3e";
-      let jp45PhotosPlan = null,
-        jp45PhotosBusy = false;
-      async function jp45PhotosPreview(files) {
-        const status = $("#jp45PhotosStatus"),
-          out = $("#jp45PhotosPreview"),
-          button = $("#jp45PhotosUpload");
-        if (!status || !out || !button) return;
-        button.disabled = true;
-        jp45PhotosPlan = null;
-        out.innerHTML = "";
-        status.textContent =
-          "Comparando imágenes con los productos publicados…";
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          const rows = await jp1Request(
-            "productos?select=id,referencia_excel,nombre,imagen_url,caja_id&caja_id=eq." +
-              JP45_BOX_ID +
-              "&limit=1000",
-          );
-          const byRef = new Map(
-            rows
-              .filter((p) =>
-                /^JAPON-JP4-FILA\d+$/.test(p.referencia_excel || ""),
-              )
-              .map((p) => [p.referencia_excel, p]),
-          );
-          if (byRef.size !== 44)
-            throw Error(
-              "Se esperaban 44 productos JP #4.5, pero hay " +
-                byRef.size +
-                ". No se realizará ninguna subida.",
-            );
-          const seen = new Set(),
-            matched = [],
-            extra = [],
-            invalid = [];
-          for (const file of files) {
-            const m =
-              /^JP__4(?:__?5|[._]5|_\.5)?_fila_(\d+)\.(?:jpe?g|png)$/i.exec(
-                file.name,
-              );
-            if (
-              !m ||
-              file.size < 1 ||
-              file.size > 5 * 1024 * 1024 ||
-              !["image/jpeg", "image/png", ""].includes(file.type)
-            ) {
-              invalid.push(file.name);
-              continue;
-            }
-            const fila = Number(m[1]);
-            if (fila < 54 || fila > 97) {
-              extra.push(file.name);
-              continue;
-            }
-            const ref = "JAPON-JP4-FILA" + fila;
-            if (seen.has(ref)) {
-              invalid.push("Duplicado: " + file.name);
-              continue;
-            }
-            seen.add(ref);
-            const product = byRef.get(ref);
-            if (!product) {
-              extra.push(file.name);
-              continue;
-            }
-            matched.push({ file, product, ref });
-          }
-          const missing = [...byRef.keys()].filter((ref) => !seen.has(ref));
-          const existing = matched.filter((x) =>
-            validProductImage(x.product.imagen_url),
-          );
-          const pending = matched.filter(
-            (x) => !validProductImage(x.product.imagen_url),
-          );
-          status.textContent =
-            matched.length +
-            " imágenes relacionadas · " +
-            existing.length +
-            " ya tienen fotografía · " +
-            pending.length +
-            " por subir · " +
-            missing.length +
-            " sin archivo (pueden subirse después).";
-          out.innerHTML =
-            "<p><strong>Vista previa, sin cambios realizados.</strong></p>" +
-            (extra.length
-              ? "<p>Archivos adicionales excluidos: " +
-                extra.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (invalid.length
-              ? '<p class="err">Archivos inválidos o repetidos: ' +
-                invalid.map(esc).join(", ") +
-                "</p>"
-              : "") +
-            (missing.length
-              ? "<p>Sin fotografía por ahora: " +
-                missing.length +
-                " productos. Puedes añadirlas en otra actualización.</p>"
-              : "") +
-            "<p>Se subirán únicamente las fotografías de productos sin imagen. Las existentes no se reemplazan.</p>" +
-            '<div style="max-height:280px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Resultado</th></tr></thead><tbody>' +
-            matched
-              .sort(
-                (a, b) =>
-                  Number(a.ref.split("FILA")[1]) -
-                  Number(b.ref.split("FILA")[1]),
-              )
-              .map(
-                (x) =>
-                  "<tr><td>" +
-                  esc(x.ref) +
-                  "</td><td>" +
-                  esc(x.product.nombre) +
-                  "</td><td>" +
-                  (validProductImage(x.product.imagen_url)
-                    ? "Ya tiene foto"
-                    : "Lista para subir") +
-                  "</td></tr>",
-              )
-              .join("") +
-            "</tbody></table></div>";
-          if (invalid.length || extra.length) {
-            status.textContent +=
-              " Revisa los archivos inválidos o ajenos a esta caja.";
-            return;
-          }
-          if (!matched.length) {
-            status.textContent +=
-              " No hay imágenes correspondientes a esta caja.";
-            return;
-          }
-          jp45PhotosPlan = pending;
-          button.disabled = !pending.length;
-        } catch (err) {
-          status.textContent = "No se pudo verificar: " + (err.message || err);
-        }
-      }
-      async function jp45PhotosUpload() {
-        if (jp45PhotosBusy || !jp45PhotosPlan?.length) return;
-        if (
-          !confirm(
-            "¿Subir " +
-              jp45PhotosPlan.length +
-              " fotografías a R2 y vincularlas únicamente con productos de JP #4.5 que todavía no tengan imagen?",
-          )
-        )
-          return;
-        const button = $("#jp45PhotosUpload"),
-          progress = $("#jp45PhotosProgress");
-        jp45PhotosBusy = true;
-        button.disabled = true;
-        let saved = 0,
-          skipped = 0;
-        const errors = [];
-        try {
-          for (const item of jp45PhotosPlan) {
-            progress.textContent =
-              "Procesando " +
-              (saved + skipped + errors.length + 1) +
-              "/" +
-              jp45PhotosPlan.length +
-              " · " +
-              item.ref;
-            try {
-              // Comprobar de nuevo antes de cada actualización, para no sobrescribir ediciones ajenas.
-              const current = await jp1Request(
-                "productos?select=id,imagen_url,referencia_excel,caja_id&id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&limit=1",
-              );
-              if (
-                current.length !== 1 ||
-                current[0].caja_id !== JP45_BOX_ID ||
-                current[0].referencia_excel !== item.ref
-              )
-                throw Error("El producto cambió.");
-              if (current[0].imagen_url) {
-                skipped++;
-                continue;
-              }
-              const form = new FormData();
-              form.append("file", item.file, item.file.name);
-              form.append("folder", "productos");
-              if (!(await refreshAdmin()) || !adminSession?.token)
-                throw Error("Sesión expirada.");
-              const uploaded = await fetch(R2_WORKER + "/images", {
-                method: "POST",
-                headers: { Authorization: "Bearer " + adminSession.token },
-                body: form,
-              });
-              const result = await uploaded.json().catch(() => ({}));
-              if (!uploaded.ok || !validProductImage(result.url))
-                throw Error(
-                  result.error ||
-                    "Error al subir a R2 (" + uploaded.status + ")",
-                );
-              const patched = await jp1Request(
-                "productos?id=eq." +
-                  encodeURIComponent(item.product.id) +
-                  "&caja_id=eq." +
-                  JP45_BOX_ID +
-                  "&referencia_excel=eq." +
-                  encodeURIComponent(item.ref) +
-                  "&imagen_url=is.null",
-                {
-                  method: "PATCH",
-                  headers: { Prefer: "return=representation" },
-                  body: JSON.stringify({ imagen_url: result.url }),
-                },
-              );
-              if (!Array.isArray(patched) || patched.length !== 1)
-                throw Error(
-                  "No se pudo asociar la URL en Supabase; revisa permisos.",
-                );
-              saved++;
-            } catch (err) {
-              errors.push(item.ref + ": " + (err.message || err));
-            }
-          }
-          progress.textContent =
-            "Terminó: " +
-            saved +
-            " vinculadas · " +
-            skipped +
-            " omitidas · " +
-            errors.length +
-            " con error." +
-            (errors.length ? " " + errors.slice(0, 5).join(" | ") : "");
-          try {
-            await sincronizarProductosSupabase();
-          } catch (e) {
-            console.warn(e);
-          }
-          toast(
-            errors.length
-              ? "Revisa los errores de la importación"
-              : "Fotos de JP #4.5 guardadas ♡",
-            !!errors.length,
-          );
-        } finally {
-          jp45PhotosBusy = false;
-          jp45PhotosPlan = null;
-          button.disabled = true;
-        }
-      }
-      document.addEventListener("change", (e) => {
-        if (e.target.id === "jp45PhotosFiles")
-          jp45PhotosPreview([...e.target.files]);
-      });
-      document.addEventListener("click", (e) => {
-        if (e.target.id === "jp45PhotosUpload") jp45PhotosUpload();
-      });
-
-      /* ===== Compradores JP #1: revisión y asignación confirmada ===== */
-      let jp1AsociacionesPendientes = null;
-      async function previsualizarCompradoresJP1(file) {
-        const status = $("#jpPreviewStatus"),
-          out = $("#jpPreviewResults");
-        if (!status || !out) return;
-        status.textContent = "Revisando compradores del archivo…";
-        out.innerHTML = "";
-        jp1AsociacionesPendientes = null;
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          if (file.size > 2 * 1024 * 1024)
-            throw Error("El archivo es demasiado grande.");
-          const data = JSON.parse(await file.text());
-          if (
-            data.origen !== "JP #1" ||
-            data.modo !== "preparacion_sin_importar" ||
-            !Array.isArray(data.productos)
-          )
-            throw Error("Selecciona el JSON de preparación de JP #1.");
-          const norm = (x) =>
-            String(x ?? "")
-              .trim()
-              .normalize("NFKC")
-              .toLocaleLowerCase("es-MX");
-          const rows = data.productos.filter(
-            (x) =>
-              x.hoja === "JP #1" &&
-              /^JAPON-JP1-FILA[0-9]+$/.test(x.referencia_excel || ""),
-          );
-          if (
-            rows.length !== data.productos.length ||
-            new Set(rows.map((x) => x.referencia_excel)).size !== rows.length
-          )
-            throw Error("El JSON tiene referencias inesperadas o duplicadas.");
-          const [products, cupiditos] = await Promise.all([
-            jp1Request(
-              "productos?select=id,referencia_excel,cupidito_id&referencia_excel=like.JAPON-JP1-*",
-            ),
-            jp1Request("cupiditos?select=id,nombre"),
-          ]);
-          const byRef = new Map(products.map((x) => [x.referencia_excel, x]));
-          const byName = new Map();
-          for (const c of cupiditos) {
-            const k = norm(c.nombre);
-            if (k) {
-              const arr = byName.get(k) || [];
-              arr.push(c);
-              byName.set(k, arr);
-            }
-          }
-          const proposed = [],
-            issues = [];
-          for (const x of rows) {
-            const name = String(x.comprador ?? "").trim();
-            if (!name) continue;
-            if (norm(name) === "stock") {
-              issues.push({
-                fila: x.fila,
-                name,
-                reason: "Stock no se asignará como comprador automáticamente",
-              });
-              continue;
-            }
-            const p = byRef.get(x.referencia_excel);
-            if (!p) {
-              issues.push({
-                fila: x.fila,
-                name,
-                reason: "Producto no encontrado en Supabase",
-              });
-              continue;
-            }
-            if (p.cupidito_id) {
-              issues.push({
-                fila: x.fila,
-                name,
-                reason: "Ya tiene comprador; no se modificará",
-              });
-              continue;
-            }
-            const matches = byName.get(norm(name)) || [];
-            if (matches.length > 1) {
-              issues.push({
-                fila: x.fila,
-                name,
-                reason:
-                  "Hay varios cupiditos con este nombre; requiere revisión",
-              });
-              continue;
-            }
-            proposed.push({
-              fila: x.fila,
-              name,
-              ref: x.referencia_excel,
-              exists: matches.length === 1,
-            });
-          }
-          jp1AsociacionesPendientes = { proposed, filename: file.name };
-          status.textContent = `${proposed.length} asociaciones propuestas · ${issues.length} casos para revisar · ningún cambio realizado`;
-          out.innerHTML = `<p><strong>Solo vista previa.</strong> No se ha creado ningún cupidito ni modificado ningún producto. Los nombres vacíos permanecerán sin asignar.</p>
-  <h3 style="margin:18px 0 8px">Compradores por asociar</h3>
-  <div style="max-height:340px;overflow:auto"><table><thead><tr><th>Fila</th><th>Comprador original</th><th>Acción futura</th></tr></thead><tbody>${proposed.map((x) => `<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${x.exists ? "Vincular cupidito existente" : "Crear cupidito y vincular"} · ${plataformaCupidito(x.name)}</td></tr>`).join("") || '<tr><td colspan="3">Ninguna asociación pendiente</td></tr>'}</tbody></table></div>
-  <h3 style="margin:18px 0 8px">Para revisar o conservar</h3><div style="max-height:200px;overflow:auto"><table><thead><tr><th>Fila</th><th>Nombre</th><th>Motivo</th></tr></thead><tbody>${issues.map((x) => `<tr><td>${esc(x.fila)}</td><td>${esc(x.name)}</td><td>${esc(x.reason)}</td></tr>`).join("") || '<tr><td colspan="3">Ningún caso</td></tr>'}</tbody></table></div>
-  <div style="margin-top:16px;padding:16px;border:1px solid var(--bd);border-radius:14px">
-  <p>Solo se asignarán las filas mostradas arriba. No se cambiarán productos que ya tengan cupidito, ni filas vacías o marcadas para revisión.</p>
-  <button type="button" class="btn pri" id="jpAssignBuyersConfirm" ${proposed.length ? "" : "disabled"}>Confirmar asignación de ${proposed.length} productos</button>
-  <p id="jpAssignBuyersProgress" role="status" aria-live="polite"></p></div>`;
-        } catch (e) {
-          status.textContent = "No se pudo revisar compradores.";
-          out.textContent = e.message || "Error de consulta";
-        }
-      }
-
-      /* Escritura explícita: revalida cada registro y nunca reemplaza asignaciones. */
-      async function asignarCompradoresJP1() {
-        const state = jp1AsociacionesPendientes,
-          btn = $("#jpAssignBuyersConfirm"),
-          progress = $("#jpAssignBuyersProgress");
-        if (!state || !btn || !progress || btn.disabled) return;
-        if (
-          !confirm(
-            "¿Asignar los " +
-              state.proposed.length +
-              " productos revisados? Se crearán los cupiditos faltantes. No se tocarán los productos ya asignados.",
-          )
-        )
-          return;
-        btn.disabled = true;
-        let vinculados = 0,
-          omitidos = 0,
-          creados = 0;
-        const norm = (x) =>
-          String(x ?? "")
-            .trim()
-            .normalize("NFKC")
-            .toLocaleLowerCase("es-MX");
-        try {
-          const cupiditos = await jp1Request(
-            "cupiditos?select=id,nombre&limit=10000",
-          );
-          const cache = new Map();
-          for (const c of cupiditos) {
-            const key = norm(c.nombre);
-            const arr = cache.get(key) || [];
-            arr.push(c);
-            cache.set(key, arr);
-          }
-          for (const item of state.proposed) {
-            progress.textContent = `Procesando ${vinculados + omitidos + 1} de ${state.proposed.length}…`;
-            const rows = await jp1Request(
-              "productos?select=id,cupidito_id&referencia_excel=eq." +
-                encodeURIComponent(item.ref) +
-                "&limit=2",
-            );
-            if (rows.length !== 1 || rows[0].cupidito_id) {
-              omitidos++;
-              continue;
-            }
-            const key = norm(item.name);
-            if (!key || key === "stock") {
-              omitidos++;
-              continue;
-            }
-            let matches = cache.get(key) || [];
-            if (matches.length > 1) {
-              omitidos++;
-              continue;
-            }
-            if (!matches.length) {
-              // Volver a consultar antes de crear para evitar duplicados en reintentos.
-              const all = await jp1Request(
-                "cupiditos?select=id,nombre&limit=10000",
-              );
-              matches = all.filter((c) => norm(c.nombre) === key);
-              if (matches.length > 1) {
-                omitidos++;
-                continue;
-              }
-              if (!matches.length) {
-                const inserted = await jp1Request("cupiditos", {
-                  method: "POST",
-                  headers: { Prefer: "return=representation" },
-                  body: JSON.stringify({ nombre: item.name }),
-                });
-                if (
-                  !Array.isArray(inserted) ||
-                  inserted.length !== 1 ||
-                  !inserted[0].id
-                )
-                  throw Error("No se confirmó la creación de " + item.name);
-                matches = inserted;
-                creados++;
-              }
-              cache.set(key, matches);
-            }
-            // Filtro cupidito_id=is.null evita sobrescribir una asignación concurrente.
-            const updated = await jp1Request(
-              "productos?id=eq." +
-                encodeURIComponent(rows[0].id) +
-                "&cupidito_id=is.null",
-              {
-                method: "PATCH",
-                headers: { Prefer: "return=representation" },
-                body: JSON.stringify({
-                  cupidito_id: matches[0].id,
-                  plataforma: plataformaCupidito(item.name),
-                }),
-              },
-            );
-            if (!Array.isArray(updated) || updated.length !== 1) {
-              omitidos++;
-              continue;
-            }
-            vinculados++;
-          }
-          progress.textContent = `Terminado: ${vinculados} productos asociados, ${creados} cupiditos creados, ${omitidos} omitidos.`;
-          jp1AsociacionesPendientes = null;
-          toast("Compradores de JP #1 asociados ♡");
-          try {
-            await sincronizarProductosSupabase();
-          } catch (e) {
-            console.warn("Recarga:", e);
-          }
-        } catch (e) {
-          progress.textContent = `Proceso detenido: ${vinculados} vinculados, ${creados} cupiditos creados, ${omitidos} omitidos. ${e.message}. Vuelve a revisar el JSON antes de reintentar.`;
-        }
-      }
-      document.addEventListener("click", (e) => {
-        if (e.target?.id === "jpAssignBuyersConfirm") asignarCompradoresJP1();
-      });
-
-      /* Vista previa de totales calculados: no modifica pagos ni registros. */
-      async function vistaPreviaTotalesCupiditos() {
-        const out = $("#jpTotalsPreviewResult");
-        if (!out) return;
-        out.textContent = "Consultando importes y cupiditos…";
-        try {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          const headers = {
-            apikey: AUTH_PUBLISHABLE_KEY,
-            Authorization: "Bearer " + adminSession.token,
-          };
-          const [pr, cr] = await Promise.all([
-            fetch(
-              AUTH_URL +
-                "/rest/v1/productos?select=id,cupidito_id,ems,aduana,referencia_excel&referencia_excel=like.JAPON-JP1-*&limit=1000",
-              { headers, cache: "no-store" },
-            ),
-            fetch(
-              AUTH_URL +
-                "/rest/v1/cupiditos?select=id,nombre,alias&limit=10000",
-              { headers, cache: "no-store" },
-            ),
-          ]);
-          if (!pr.ok)
-            throw Error(
-              "No se pudieron consultar los productos (" +
-                pr.status +
-                "): " +
-                (await pr.text()).slice(0, 180),
-            );
-          if (!cr.ok)
-            throw Error(
-              "No se pudieron consultar los cupiditos (" +
-                cr.status +
-                "): " +
-                (await cr.text()).slice(0, 180),
-            );
-          const productos = await pr.json(),
-            cupiditos = await cr.json();
-          const nombres = new Map(
-            cupiditos.map((c) => [c.id, c.alias || c.nombre || "Sin nombre"]),
-          );
-          const grupos = new Map();
-          let sinAsignar = 0;
-          for (const p of productos) {
-            if (!p.cupidito_id) {
-              sinAsignar++;
-              continue;
-            }
-            const g = grupos.get(p.cupidito_id) || {
-              id: p.cupidito_id,
-              n: 0,
-              ems: 0,
-              aduana: 0,
-            };
-            g.n++;
-            g.ems += Number(p.ems) || 0;
-            g.aduana += Number(p.aduana) || 0;
-            grupos.set(p.cupidito_id, g);
-          }
-          const dinero = (n) =>
-            "$" +
-            n.toLocaleString("es-MX", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-          const rows = [...grupos.values()].sort((a, b) =>
-            (nombres.get(a.id) || "").localeCompare(
-              nombres.get(b.id) || "",
-              "es",
-            ),
-          );
-          out.innerHTML =
-            "<p><strong>Solo lectura.</strong> " +
-            productos.length +
-            " productos JP #1 · " +
-            rows.length +
-            " cupiditos con productos · " +
-            sinAsignar +
-            " productos sin asignar. No se guardó nada.</p>" +
-            '<div style="overflow:auto"><table><thead><tr><th>Cupidito</th><th>Productos</th><th>EMS</th><th>Aduana</th><th>Total</th></tr></thead><tbody>' +
-            rows
-              .map(
-                (g) =>
-                  "<tr><td>" +
-                  esc(nombres.get(g.id) || "ID sin nombre") +
-                  "</td><td>" +
-                  g.n +
-                  "</td><td>" +
-                  dinero(g.ems) +
-                  "</td><td>" +
-                  dinero(g.aduana) +
-                  "</td><td>" +
-                  dinero(g.ems + g.aduana) +
-                  "</td></tr>",
-              )
-              .join("") +
-            '</tbody></table></div><p style="color:var(--t2)">Los estados pagado/pendiente no se calculan aquí. Los productos sin cupidito no se suman.</p>';
-        } catch (e) {
-          out.textContent =
-            "No se pudo generar la vista previa: " + (e.message || e);
-        }
-      }
-      document.addEventListener("click", (e) => {
-        if (e.target?.id === "jpTotalsPreviewBtn")
-          vistaPreviaTotalesCupiditos();
-      });
       /* ===== Eventos ===== */
       document.addEventListener("change", async (e) => {
         if (e.target.id !== "lsz") return;
@@ -7560,7 +5192,7 @@
             try {
               const data = datosFormularioCaja();
               await guardarBorradorCaja(id, data);
-              draftStatus("Borrador guardado en Supabase ♡");
+              draftStatus("Borrador guardado ♡");
             } catch (ex) {
               toast(ex.message || "No se pudo guardar el borrador", 1);
             } finally {
@@ -7796,12 +5428,6 @@
               if (el) el.textContent = ex.message;
             }
             break;
-          case "themeExport":
-            exportTheme();
-            break;
-          case "themeImport":
-            $("#themeFile").click();
-            break;
           case "themeReset":
             confirmDlg(
               "¿Restablecer todos los colores, fuentes, tamaños y partículas?",
@@ -7857,7 +5483,7 @@
                 "? Esta acción no se puede deshacer.",
               async () => {
                 await eliminarEnvioSupabase(id);
-                toast("Envío eliminado y verificado en Supabase");
+                toast("Envío eliminado");
                 rerender();
               },
             );
@@ -7880,9 +5506,9 @@
             confirmDlg(
               "¿Eliminar definitivamente «" +
                 producto.desc +
-                "» de Supabase? Esta acción no se puede deshacer. No se eliminarán otros productos ni la caja.",
+                "»? Esta acción no se puede deshacer. No se eliminarán otros productos ni la caja.",
               async () => {
-                const result = await jp1Request(
+                const result = await adminRequest(
                   "productos?id=eq." + encodeURIComponent(id),
                   {
                     method: "DELETE",
@@ -7898,7 +5524,7 @@
                     "Supabase no confirmó la eliminación de exactamente un producto.",
                   );
                 await sincronizarProductosSupabase();
-                toast("Producto eliminado de Supabase ♡");
+                toast("Producto eliminado ♡");
                 await rerender();
               },
             );
@@ -7934,79 +5560,6 @@
               rerender();
             });
             break;
-          case "unusedCupiditos":
-            try {
-              const [all, used] = await Promise.all([
-                jp1Request("cupiditos?select=id,nombre&limit=10000"),
-                jp1Request(
-                  "productos?select=cupidito_id&cupidito_id=not.is.null&limit=10000",
-                ),
-              ]);
-              const occupied = new Set(used.map((x) => x.cupidito_id));
-              const free = all.filter((x) => !occupied.has(x.id));
-              dlg(
-                "Cupiditos sin pedidos",
-                free.length
-                  ? '<p>Solo se muestran cupiditos sin productos vinculados. Selecciona uno para eliminarlo de Supabase.</p><div class="lst">' +
-                      free
-                        .map(
-                          (x) =>
-                            '<div class="row sp" style="padding:9px 0"><strong>' +
-                            esc(x.nombre) +
-                            '</strong><button type="button" class="btn sm dng" data-act="removeUnusedCupidito" data-id="' +
-                            esc(x.id) +
-                            '">Eliminar</button></div>',
-                        )
-                        .join("") +
-                      "</div>"
-                  : "<p>No hay cupiditos sin productos. No se modificó nada.</p>",
-              );
-            } catch (ex) {
-              toast(ex.message, 1);
-            }
-            break;
-          case "removeUnusedCupidito":
-            try {
-              const cid = id;
-              const matches = await jp1Request(
-                "productos?select=id&cupidito_id=eq." +
-                  encodeURIComponent(cid) +
-                  "&limit=1",
-              );
-              if (matches.length)
-                return toast(
-                  "Este cupidito tiene pedidos y no se puede eliminar.",
-                  1,
-                );
-              confirmDlg(
-                "¿Eliminar definitivamente este cupidito sin pedidos?",
-                async () => {
-                  const again = await jp1Request(
-                    "productos?select=id&cupidito_id=eq." +
-                      encodeURIComponent(cid) +
-                      "&limit=1",
-                  );
-                  if (again.length)
-                    throw Error("El cupidito ya tiene productos.");
-                  const deleted = await jp1Request(
-                    "cupiditos?id=eq." + encodeURIComponent(cid),
-                    {
-                      method: "DELETE",
-                      headers: { Prefer: "return=representation" },
-                    },
-                  );
-                  if (!deleted?.length)
-                    throw Error(
-                      "Supabase no confirmó la eliminación. Comprueba los permisos.",
-                    );
-                  toast("Cupidito de prueba eliminado");
-                  rerender();
-                },
-              );
-            } catch (ex) {
-              toast(ex.message, 1);
-            }
-            break;
           case "dbox":
             try {
               const target = D.boxes.find((x) => x.id === id);
@@ -8022,7 +5575,7 @@
                     target.name +
                     "» tiene " +
                     total +
-                    " producto(s) en Supabase y no se puede eliminar.",
+                    " producto(s) y no se puede eliminar.",
                   1,
                 );
                 break;
@@ -8030,14 +5583,14 @@
               confirmDlg(
                 "¿Eliminar «" +
                   target.name +
-                  "»? Se verificaron 0 productos en Supabase. Esta acción no se puede deshacer.",
+                  "»? Esta caja no tiene productos. Esta acción no se puede deshacer.",
                 async () => {
                   const current = await conteosCajasAdmin();
                   if (current.get(id))
                     throw Error(
                       "La caja ahora tiene productos y no se eliminará.",
                     );
-                  const deleted = await jp1Request(
+                  const deleted = await adminRequest(
                     "cajas?id=eq." + encodeURIComponent(id),
                     {
                       method: "DELETE",
@@ -8071,7 +5624,7 @@
               if (!b) throw Error("No se encontró la caja seleccionada.");
               const next = b.st === 0 ? 1 : 0;
               const estado = BOX[next];
-              const rows = await jp1Request(
+              const rows = await adminRequest(
                 "cajas?id=eq." + encodeURIComponent(id) + "&select=id,estado",
                 {
                   method: "PATCH",
@@ -8100,6 +5653,9 @@
           }
 
           case "rmimg":
+            pend.version++;
+            pend.checking = false;
+            pend.uploaded = null;
             pend.blob = null;
             pend.rm = true;
             $("#pf").value = "";
@@ -8242,6 +5798,8 @@
           );
           if (er) er.textContent = "";
           const original = submit?.textContent;
+          const productPhotoControls = [...form.querySelectorAll("#pf, #prm")];
+          productPhotoControls.forEach(el => el.disabled = true);
           if (submit) {
             submit.disabled = true;
             submit.textContent = "Guardando…";
@@ -8277,6 +5835,7 @@
             if (er) er.textContent = message;
             toast(message, 1);
           } finally {
+            productPhotoControls.forEach(el => el.disabled = false);
             if (submit) {
               submit.disabled = false;
               submit.textContent = original;
@@ -8346,10 +5905,6 @@
           await uploadCustomFont(t.files[0]);
           return;
         }
-        if (t.id === "themeFile" && t.files[0]) {
-          await importTheme(t.files[0]);
-          return;
-        }
         if (t.id === "fl") {
           S.lg = t.value;
           S.page = 1;
@@ -8374,23 +5929,28 @@
           rerender();
         }
         if (t.id === "pf") {
-          const f = t.files[0],
-            er = $("#er");
+          const f = t.files[0], er = $("#er"), photo = pend;
           if (!f) return;
-          if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
-            er.textContent = "Formato no válido. Usa JPG, PNG o WebP.";
-            t.value = "";
-            return;
-          }
-          if (f.size > 8 * 1048576) {
-            er.textContent = "La foto pesa más de 8 MB.";
-            t.value = "";
-            return;
-          }
+          const version = ++photo.version;
+          photo.blob = null; photo.uploaded = null;
+          photo.checking = true;
           er.textContent = "";
-          pend.blob = await compress(f, pend.max || 1200);
-          pend.rm = false;
-          setPv(URL.createObjectURL(pend.blob));
+          try {
+            if (!f.size || f.size > 5 * 1048576) throw Error("Selecciona una imagen de hasta 5 MB.");
+            const normalized = await normalizarImagen(f);
+            if (pend !== photo || version !== photo.version || !t.isConnected || !$("#dlg").open) return;
+            photo.blob = normalized;
+            photo.rm = false;
+            setPv(URL.createObjectURL(normalized));
+          } catch (ex) {
+            if (pend === photo && version === photo.version && t.isConnected) {
+              er.textContent = ex.message;
+              t.value = "";
+              setPv(photo.rm ? null : photo.old || null);
+            }
+          } finally {
+            if (version === photo.version) photo.checking = false;
+          }
         }
         if (t.id === "bf") {
           const f = t.files[0];
@@ -8586,7 +6146,7 @@
         } catch (e) {
           console.warn(e);
           toast(
-            "No se pudieron cargar las imágenes públicas; se usarán las locales.",
+            "No se pudieron cargar las imágenes. Inténtalo de nuevo.",
             1,
           );
         }
