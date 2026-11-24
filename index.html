@@ -1983,8 +1983,9 @@
           "En México",
           "Entregado",
           "Stock",
+          "Sin asignar",
         ],
-        LI = ["①", "②", "③", "④", "⑤", "⑥", "✓", "▣"];
+        LI = ["①", "②", "③", "④", "⑤", "⑥", "✓", "▣", "○"];
       const PAY = ["Pendiente", "Pagado"],
         PI = ["○", "●"],
         BOX = ["Abierta", "Cerrada", "En tránsito", "Finalizada"],
@@ -2902,6 +2903,8 @@
       // Respeta las filas originales del Excel en Corea, Japón y Pocamarket.
       function filaOriginalProducto(p) {
         const ref = String(p.referenciaExcel || "").trim();
+        const mc = /^MC\s*#([123])\s+fila\s+(\d+)$/i.exec(ref);
+        if (mc) return {tipo:"MC",caja:Number(mc[1]),fila:Number(mc[2])};
         const kr = /^KR\s*#([12])\s+fila\s+(\d+)$/i.exec(ref);
         if (kr) return { tipo: "KR", caja: Number(kr[1]), fila: Number(kr[2]) };
         const jp = /^JAPON-JP(\d+)-FILA(\d+)$/i.exec(ref);
@@ -2920,8 +2923,8 @@
             return aa.fila - bb.fila || (a.ordenCarga ?? 0) - (b.ordenCarga ?? 0);
           // Si se añade un producto manualmente, mantenerlo después de los
           // registros importados de esa caja, sin cambiar las demás categorías.
-          if (aa && !bb && (aa.tipo === "KR" || aa.tipo === "POCA")) return -1;
-          if (bb && !aa && (bb.tipo === "KR" || bb.tipo === "POCA")) return 1;
+          if (aa && !bb && (aa.tipo === "KR" || aa.tipo === "POCA" || aa.tipo === "MC")) return -1;
+          if (bb && !aa && (bb.tipo === "KR" || bb.tipo === "POCA" || bb.tipo === "MC")) return 1;
         }
         return (a.ordenCarga ?? 0) - (b.ordenCarga ?? 0);
       }
@@ -2957,7 +2960,7 @@
           ? money(p.price)
           : "";
       const pcard = (p) =>
-        `<article class="card pc"><button class="im" data-act="zoom" data-id="${esc(p.imgId || "")}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ver imagen grande de ${esc(p.desc)}" title="Haz clic para ampliar la imagen">${productPhoto(p)}</button><div class="bd"><strong>${esc(p.desc)}</strong><span>${esc(p.buyer)} <small style="color:var(--t2)">· ${esc(p.plat)}</small></span>${publicPrice(p) ? `<strong>${publicPrice(p)}</strong>` : ""}<div class="row">${bLogi(p.logi)}</div><small style="color:var(--t2)">EMS: ${pm(p.ems, p.emsEstado)} · Aduana: ${pm(p.adu, p.aduEstado)}</small></div></article>`;
+        `<article class="card pc"><button class="im" data-act="zoom" data-id="${esc(p.imgId || "")}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ver imagen grande de ${esc(p.desc)}" title="Haz clic para ampliar la imagen">${productPhoto(p)}</button><div class="bd"><strong>${esc(p.desc)}</strong><span>${esc(p.buyer)} <small style="color:var(--t2)">· ${esc(p.plat)}</small></span>${publicPrice(p) ? `<strong>${publicPrice(p)}</strong>` : ""}<div class="row">${bLogi(p.logi)}</div>${isMeowBox(p.box)?`<small><a href="#/box/${esc(p.box)}/cargos">Consultar cruce por cupidito</a></small>`:`<small style="color:var(--t2)">EMS: ${pm(p.ems, p.emsEstado)} · Aduana: ${pm(p.adu, p.aduEstado)}</small>`}</div></article>`;
       const pm = (n, estado) => {
         const e = String(estado || "").trim().toLowerCase();
         if (e === "pagado") return "Pagado";
@@ -2966,7 +2969,7 @@
         return +n > 0 ? money(n) : "Pendiente";
       };
       const prow = (p, admin) =>
-        `<article class="row2"><button class="th" data-act="zoom" data-id="${esc(p.imgId || "")}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ver imagen grande de ${esc(p.desc)}" title="Haz clic para ampliar la imagen">${productPhoto(p)}</button><div class="mn"><strong>${esc(p.desc)}</strong><span class="meta">${esc(p.buyer)} · ${esc(p.plat)}${admin && box(p.box) ? " · " + esc(box(p.box).name) : ""}</span><div class="bs">${bLogi(p.logi)}<span class="b">EMS: ${pm(p.ems, p.emsEstado)}</span><span class="b">Aduana: ${pm(p.adu, p.aduEstado)}</span></div>${admin ? `<div class="ac"><button class="btn sm" data-act="eprod" data-id="${p.id}">Editar</button><button class="btn sm dng" data-act="dprod" data-id="${p.id}">Eliminar</button></div>` : ""}</div><div class="pr">${admin ? money(p.price) : publicPrice(p)}</div></article>`;
+        `<article class="row2"><button class="th" data-act="zoom" data-id="${esc(p.imgId || "")}" data-url="${esc(validProductImage(p.imagenUrl))}" aria-label="Ver imagen grande de ${esc(p.desc)}" title="Haz clic para ampliar la imagen">${productPhoto(p)}</button><div class="mn"><strong>${esc(p.desc)}</strong><span class="meta">${esc(p.buyer)} · ${esc(p.plat)}${admin && box(p.box) ? " · " + esc(box(p.box).name) : ""}</span><div class="bs">${bLogi(p.logi)}${isMeowBox(p.box)?`<a href="#/box/${esc(p.box)}/cargos">Consultar cruce por cupidito</a>`:`<span class="b">EMS: ${pm(p.ems, p.emsEstado)}</span><span class="b">Aduana: ${pm(p.adu, p.aduEstado)}</span>`}</div>${admin ? `<div class="ac"><button class="btn sm" data-act="eprod" data-id="${p.id}">Editar</button><button class="btn sm dng" data-act="dprod" data-id="${p.id}">Eliminar</button></div>` : ""}</div><div class="pr">${admin ? money(p.price) : publicPrice(p)}</div></article>`;
       function plist(list, admin) {
         const f = filt(list),
           pages = Math.max(1, Math.ceil(f.length / PER));
@@ -3295,12 +3298,12 @@
         let body;
         if (tab) {
           const ps = D.prods.filter((p) => p.box === id);
-          body = `<div style="max-width:440px;margin:14px 0"><label for="publicCargoSearch">Buscar cargos por cupidito</label><input id="publicCargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.publicCargoSearch || "")}"></div><p id="publicCargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${renderCargosAgrupados(ps, false)}`;
+          body = `<div style="max-width:440px;margin:14px 0"><label for="publicCargoSearch">Buscar cargos por cupidito</label><input id="publicCargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.publicCargoSearch || "")}"></div><p id="publicCargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${isMeowBox(id)?renderMeowCharges(id,false):renderCargosAgrupados(ps, false)}`;
         } else
           body = `${controls()}<div id="list">${plist(D.prods.filter((p) => p.box === id))}</div>`;
         return (
           bc([["Inicio", "#/"], [c.name, "#/cat/" + c.id], [b.name]]) +
-          `<div class="row sp"><h1>${esc(c.name)} · ${esc(b.name)}</h1>${bBox(b.st)}</div>${b.tracking?.trim() ? `<p class="box-track"><span aria-hidden="true">♥</span> <span>Guía</span> <strong>${esc(b.tracking)}</strong></p>` : ""}${b.desc?.trim() ? `<p class="box-description">${esc(b.desc).replace(/\n/g, "<br>")}</p>` : ""}${tabs}${tab ? cargoInfoPublica(b) : colorLegend()}${body}`
+          `<div class="row sp"><h1>${esc(c.name)} · ${esc(b.name)}</h1>${bBox(b.st)}</div>${b.tracking?.trim() ? `<p class="box-track"><span aria-hidden="true">♥</span> <span>Guía</span> <strong>${esc(b.tracking)}</strong></p>` : ""}${b.desc?.trim() ? `<p class="box-description">${esc(b.desc).replace(/\n/g, "<br>")}</p>` : ""}${tabs}${tab ? (isMeowBox(id)?"":cargoInfoPublica(b)) : colorLegend()}${body}`
         );
       }
       function vFind(q) {
@@ -3350,6 +3353,7 @@
         ["fotos-kr1", "Fotos KR #1"],
         ["fotos-kr2", "Fotos KR #2"],
         ["fotos-poca", "Fotos Pocamarket"],
+        ["fotos-meow", "Fotos Meowcafe"],
         ["envios", "Envíos"],
         ["cargos", "Cargos"],
         ["personalizar", "Personalizar página"],
@@ -3504,6 +3508,9 @@
         if (tab === "fotos-poca") {
           b = `<h2>Fotografías de Pocamarket ♡</h2><p>Selecciona una caja o PICK PACK y las imágenes descomprimidas. Los productos sin foto se conservan sin cambios.</p><div class="card"><label for="pocaPhotoGroup">Caja</label><select id="pocaPhotoGroup"><option value="12">POCA 12</option><option value="13">POCA 13</option><option value="14">POCA 14</option><option value="pick">PICK PACK · 15, 16 y 17</option><option value="18">POCA 18</option><option value="19">POCA 19</option><option value="20">POCA 20</option></select><label for="pocaPhotoFiles" style="margin-top:12px">Fotografías originales de Apps Script</label><input type="file" id="pocaPhotoFiles" multiple accept=".jpg,.jpeg,.png,.webp,.gif"><p id="pocaPhotoStatus" role="status">Selecciona las imágenes para revisar coincidencias.</p><div id="pocaPhotoPreview"></div><button type="button" class="btn pri" id="pocaPhotoUpload" disabled>Subir fotografías verificadas ♡</button><p id="pocaPhotoProgress" role="status"></p></div>`;
         }
+        if (tab === "fotos-meow") {
+          b = `<h2>Fotografías de Meowcafe ♡</h2><p>Selecciona una caja y las imágenes descomprimidas. Los productos sin foto se conservan sin cambios.</p><div class="card"><label for="meowPhotoGroup">Caja</label><select id="meowPhotoGroup"><option value="1">MC #1</option><option value="2">MC #2</option><option value="3">MC #3</option></select><label for="meowPhotoFiles" style="margin-top:12px">Fotografías originales de Apps Script</label><input type="file" id="meowPhotoFiles" multiple accept=".jpg,.jpeg,.png,.webp,.gif"><p id="meowPhotoStatus" role="status">Selecciona las imágenes para revisar coincidencias.</p><div id="meowPhotoPreview"></div><button type="button" class="btn pri" id="meowPhotoUpload" disabled>Subir fotografías verificadas ♡</button><p id="meowPhotoProgress" role="status"></p></div>`;
+        }
         if (tab === "cupiditos") {
           if (sub) {
             const key = nmz(decodeURIComponent(sub)),
@@ -3554,7 +3561,8 @@
         if (tab === "cargos") {
           const bid = S.cb && box(S.cb) ? S.cb : D.boxes[0]?.id;
           const ps = bid ? D.prods.filter((p) => p.box === bid) : [];
-          b = `<h2>Cargos por cupidito ♡</h2><p style="color:var(--t2)">Solo se cobran EMS y aduana. Los precios de productos ya están pagados. Los estados se guardan individualmente en Supabase.</p><div style="max-width:340px;margin:14px 0"><label for="cb">Caja publicada</label><select id="cb">${[
+          if(isMeowBox(bid)) await loadMeowCharges(bid);
+          b = `<h2>Cargos por cupidito ♡</h2><p style="color:var(--t2)">${isMeowBox(bid)?"Cruce por cupidito. Guarda cada cargo para publicarlo.":"Solo se cobran EMS y aduana. Los precios de productos ya están pagados. Los estados se guardan individualmente en Supabase."}</p><div style="max-width:340px;margin:14px 0"><label for="cb">Caja publicada</label><select id="cb">${[
             ...D.boxes,
           ]
             .sort(ordenCajas)
@@ -3564,7 +3572,7 @@
             )
             .join(
               "",
-            )}</select></div>${bid ? `<div class="row" style="margin:12px 0"><button type="button" class="btn" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>` : ""}<div style="max-width:420px;margin:14px 0"><label for="cargoSearch">Buscar cargos por cupidito</label><input id="cargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.cargoSearch || "")}"></div><p id="cargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${renderCargosAgrupados(ps, true)}`;
+            )}</select></div>${bid && !isMeowBox(bid) ? `<div class="row" style="margin:12px 0"><button type="button" class="btn" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>` : ""}<div style="max-width:420px;margin:14px 0"><label for="cargoSearch">Buscar cargos por cupidito</label><input id="cargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.cargoSearch || "")}"></div><p id="cargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${isMeowBox(bid)?renderMeowCharges(bid,true):renderCargosAgrupados(ps, true)}`;
         }
         if (tab === "personalizar") {
           const u = await currentImage("logo"),
@@ -4361,6 +4369,51 @@
         }
       }
       /* Cargos agrupados por cupidito: los estados de pago siguen siendo por producto. */
+      const meowCharges = new Map();
+      function isMeowBox(id){return String(cat(box(id)?.cat)?.name||"").trim().toLowerCase()==="meowcafe";}
+      async function loadMeowCharges(id){
+        try{
+          const r=await fetch(AUTH_URL+"/rest/v1/cargos_meowcafe?select=caja_id,cupidito_id,cruce,estado,orden,fecha_limite&caja_id=eq."+encodeURIComponent(id)+"&order=orden.asc",{headers:{apikey:AUTH_PUBLISHABLE_KEY},cache:"no-store"});
+          if(!r.ok)throw Error("HTTP "+r.status);
+          const rows=await r.json(); if(!Array.isArray(rows))throw Error("Respuesta inválida");
+          meowCharges.set(id,{rows});
+        }catch(e){meowCharges.set(id,{error:e.message});}
+      }
+      function renderMeowCharges(id,admin){
+        const data=meowCharges.get(id);
+        if(!data||data.error)return `<div class="empty">No se pudieron cargar los cargos de cruce. Recarga la página. ${esc(data?.error||"")}</div>`;
+        const rows=data.rows, people=new Map();
+        for(const p of D.prods.filter(p=>p.box===id).sort(compararOrdenOriginal))if(p.cupiditoId&&!people.has(p.cupiditoId))people.set(p.cupiditoId,p.buyer);
+        const labels={pagado:"Pagado",pendiente:"Pendiente",stock:"Stock"};
+        const next=Math.max(0,...rows.map(r=>Number(r.orden)))+1;
+        const entries=admin?[...rows,...[...people].filter(([k])=>!rows.some(r=>r.cupidito_id===k)).map(([k],i)=>({cupidito_id:k,orden:next+i,nuevo:true,estado:"pendiente",cruce:""}))]:rows;
+        if(!entries.length)return '<div class="empty">Esta caja todavía no tiene cargos publicados.</div>';
+        const dates=[...new Set(rows.map(r=>r.fecha_limite).filter(Boolean))];
+        const fmt=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||"")?d.split("-").reverse().join("/"):"";
+        const note=rows.length?`<section class="card cargo-info">${dates.length===1?`<p><strong>✦ Fecha límite cruce: ${esc(fmt(dates[0]))}</strong></p>`:""}<p>Si no se liquida dentro del plazo estimado, se aplicará una multa de $10 por día y por cada artículo. La multa podrá acumularse por un máximo de 10 días después de la fecha límite, si después de ese tiempo sigue sin liquidarse, los artículos pasarán a stock y no habrá reembolso.</p></section>`:"";
+        return note+`<h3>Total cruce: ${money(rows.reduce((a,r)=>a+Number(r.cruce),0))}</h3>`+entries.map(r=>{
+          const name=people.get(r.cupidito_id)||"Cupidito";
+          return `<details class="card" data-cargo-cupidito="${esc(nmz(name))}" ${admin?"":"open"}><summary><strong>${esc(name)}</strong> · ${r.nuevo?"Sin cargo publicado":money(r.cruce)+" · "+esc(labels[r.estado]||r.estado)}</summary>${!admin?(dates.length>1&&r.fecha_limite?`<p>Fecha límite: ${esc(fmt(r.fecha_limite))}</p>`:""):`<div class="f" data-meow-editor data-box="${esc(id)}" data-person="${esc(r.cupidito_id)}" data-order="${esc(r.orden)}" data-new="${r.nuevo?1:0}"><label>Importe de cruce (MXN)<input data-mc-amount type="number" min="0" max="9999999999.99" step="0.01" value="${esc(r.cruce)}"></label><label>Estado<select data-mc-state>${Object.entries(labels).map(([k,v])=>`<option value="${k}" ${r.estado===k?"selected":""}>${v}</option>`).join("")}</select></label><label>Fecha límite<input data-mc-date type="date" value="${esc(r.fecha_limite||dates[0]||"")}"></label><button type="button" class="btn pri" data-mc-save>${r.nuevo?"Publicar cargo":"Guardar cargo"}</button><p role="status" data-mc-status></p></div>`}</details>`;
+        }).join("");
+      }
+      document.addEventListener("click",async e=>{
+        const btn=e.target.closest("[data-mc-save]"); if(!btn)return;
+        const ed=btn.closest("[data-meow-editor]"), status=ed.querySelector("[data-mc-status]"), id=ed.dataset.box, person=ed.dataset.person;
+        const amount=ed.querySelector("[data-mc-amount]"), state=ed.querySelector("[data-mc-state]").value, date=ed.querySelector("[data-mc-date]").value;
+        if(!isMeowBox(id)||!amount.value.trim()||!amount.checkValidity()||!Number.isFinite(Number(amount.value))||Number(amount.value)<0){status.textContent="Revisa el importe.";return;}
+        if(!confirm("¿Publicar este cargo de cruce?"))return;
+        btn.disabled=true;
+        try{
+          const values={cruce:Number(amount.value),estado:state,fecha_limite:date||null,actualizado_en:new Date().toISOString()};
+          let result;
+          if(ed.dataset.new==="1"){
+            const current=await jp1Request("cargos_meowcafe?select=orden&caja_id=eq."+encodeURIComponent(id)+"&order=orden.desc&limit=1");
+            result=await jp1Request("cargos_meowcafe",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...values,caja_id:id,cupidito_id:person,orden:Number(current[0]?.orden||0)+1})});
+          }else result=await jp1Request("cargos_meowcafe?caja_id=eq."+encodeURIComponent(id)+"&cupidito_id=eq."+encodeURIComponent(person),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(values)});
+          if(!Array.isArray(result)||result.length!==1)throw Error("No se confirmó el guardado");
+          toast("Cargo de cruce guardado ♡"); await route();
+        }catch(err){status.textContent=err.message;btn.disabled=false;}
+      });
       function renderCargosAgrupados(products, admin) {
         const groups = new Map();
         for (const p of [...products].sort(compararOrdenOriginal)) {
@@ -4809,12 +4862,14 @@
           "en méxico",
           "entregado",
           "stock",
+          "sin asignar",
         ];
         D.prods = productos.map((p, i) => ({
           referenciaExcel: p.referencia_excel || "",
           ordenCarga: i,
           id: p.id,
           box: p.caja_id,
+          cupiditoId: p.cupidito_id,
           buyer: names[p.cupidito_id] || "Cupidito",
           desc: p.nombre || p.descripcion || "",
           plat: p.plataforma || "",
@@ -4857,13 +4912,14 @@
             }
           }
           html = vCat(p[1]);
-        } else if (p[0] === "box")
+        } else if (p[0] === "box") {
+          if(p[2]==="cargos" && isMeowBox(p[1])) await loadMeowCharges(p[1]);
           html = vBox(
             p[1],
             p[2] === "u" ? "" : p[2],
             p[2] === "u" ? decodeURIComponent(p[3] || "") : "",
           );
-        else if (p[0] === "buscar") {
+        } else if (p[0] === "buscar") {
           try {
             await sincronizarEnviosSupabase();
           } catch (e) {
@@ -6079,6 +6135,97 @@
         }
       });
       document.addEventListener("click",e=>{if(e.target.id==="pocaPhotoUpload")pocaUpload();});
+
+      /* Fotografías Meowcafe: referencias originales, sin sobrescribir. */
+      let meowPlan = null, meowBusy = false, meowPreviewVersion = 0;
+      const meowRanges={1:[4,34],2:[4,22],3:[4,24]};
+      const meowBoxName=n=>`MC #${n}`;
+      const meowRef=(n,row)=>`MC #${n} fila ${row}`;
+      async function meowPreview(files) {
+        const selector = $("#meowPhotoGroup"), status = $("#meowPhotoStatus"), out = $("#meowPhotoPreview"), button = $("#meowPhotoUpload");
+        if (!selector || !status || meowBusy) return;
+        const version = ++meowPreviewVersion, group = selector.value;
+        meowPlan = null; button.disabled = true; out.innerHTML = "";
+        $("#meowPhotoProgress").textContent = "";
+        status.textContent = "Verificando referencias en Supabase…";
+        try {
+          const nums = [Number(group)];
+          const categories = D.cats.filter(c => c.name.trim().toLowerCase() === "meowcafe");
+          if (categories.length !== 1) throw Error("No se encontró una categoría Meowcafe única.");
+          const refs = new Map(), counts = new Map();
+          for (const n of nums) {
+            const boxes = D.boxes.filter(b => b.cat === categories[0].id && b.name.trim() === meowBoxName(n));
+            if (boxes.length !== 1) throw Error("No se encontró una caja única: " + meowBoxName(n));
+            const bid = boxes[0].id, [first,last] = meowRanges[n];
+            const rows = await jp1Request("productos?select=id,caja_id,referencia_excel,nombre,imagen_url&caja_id=eq." + encodeURIComponent(bid) + "&limit=500");
+            if (!Array.isArray(rows)) throw Error("Respuesta inválida de productos.");
+            for (let i=first;i<=last;i++) {
+              const ref = meowRef(n,i), matches = rows.filter(p => p.referencia_excel === ref && p.caja_id === bid);
+              if (matches.length !== 1 || refs.has(ref)) throw Error("Referencia ausente o duplicada: " + ref);
+              refs.set(ref,{product:matches[0],n,bid});
+            }
+            counts.set(n,{total:last-first+1,matched:0,pending:0,existing:0});
+          }
+          const seen = new Set(), matched=[], extra=[], invalid=[];
+          for (const file of files) {
+            const m = /^MC_(\d+)_fila_(\d+)_col_3\.(png|jpe?g|webp|gif)$/i.exec(file.name);
+            if (!m) { invalid.push(file.name); continue; }
+            const row=Number(m[2]), n=Number(group);
+            if(Number(m[1])!==n){extra.push(file.name);continue;}
+            const ref=meowRef(n,row), record=refs.get(ref);
+            if (!record) { extra.push(file.name); continue; }
+            if (seen.has(ref)||file.size<1||file.size>5*1024*1024) { invalid.push(file.name); continue; }
+            let normalized;
+            try { normalized=await pocaNormalizeImage(file); }
+            catch(e) { invalid.push(file.name+" ("+e.message+")"); continue; }
+            seen.add(ref); matched.push({...record,ref,file:normalized,row});
+            const c=counts.get(n); c.matched++; if(record.product.imagen_url)c.existing++; else c.pending++;
+          }
+          if (version!==meowPreviewVersion || !status.isConnected || selector.value!==group) return;
+          const pending=matched.filter(x=>!x.product.imagen_url);
+          status.textContent=`${matched.length} coincidencias · ${pending.length} por subir · ${extra.length} fuera de selección · ${invalid.length} inválidas.`;
+          out.innerHTML='<p><strong>Vista previa: no se ha subido nada.</strong></p>'+ [...counts].map(([n,c])=>`<p>${esc(meowBoxName(n))}: ${c.matched}/${c.total} archivos seleccionados · ${c.existing} ya tienen imagen · ${c.total-c.matched} sin archivo seleccionado.</p>`).join("")+(extra.length?'<p>Se omitirán: '+extra.map(esc).join(", ")+ '</p>':"")+(invalid.length?'<p class="err">Archivos inválidos o duplicados: '+invalid.map(esc).join(", ")+ '</p>':"")+'<div style="max-height:290px;overflow:auto"><table><thead><tr><th>Referencia</th><th>Producto</th><th>Estado</th></tr></thead><tbody>'+matched.sort((a,b)=>a.n-b.n||a.row-b.row).map(x=>`<tr><td>${esc(x.ref)}</td><td>${esc(x.product.nombre)}</td><td>${x.product.imagen_url?"Ya tiene imagen":"Lista para subir"}</td></tr>`).join("")+'</tbody></table></div>';
+          if (invalid.length) return;
+          meowPlan={group,items:pending}; button.disabled=!pending.length;
+        } catch(e) { if(version===meowPreviewVersion) status.textContent="Error: "+e.message; }
+      }
+      async function meowUpload() {
+        const selector=$("#meowPhotoGroup"), input=$("#meowPhotoFiles"), button=$("#meowPhotoUpload"), progress=$("#meowPhotoProgress");
+        if(meowBusy||!meowPlan?.items.length||selector.value!==meowPlan.group)return;
+        const {items}=meowPlan;
+        if(!confirm(`¿Subir ${items.length} imágenes verificadas de Meowcafe?`))return;
+        meowBusy=true; selector.disabled=input.disabled=button.disabled=true;
+        let saved=0,skipped=0; const errors=[];
+        try {
+          for(const item of items) {
+            progress.textContent=`Procesando ${saved+skipped+errors.length+1}/${items.length} · ${item.ref}`;
+            try {
+              const filter="id=eq."+encodeURIComponent(item.product.id)+"&caja_id=eq."+encodeURIComponent(item.bid)+"&referencia_excel=eq."+encodeURIComponent(item.ref);
+              const current=await jp1Request("productos?select=id,imagen_url&"+filter);
+              if(!Array.isArray(current)||current.length!==1)throw Error("Producto cambiado o no encontrado.");
+              if(current[0].imagen_url){skipped++;continue;}
+              if(!(await refreshAdmin())||!adminSession?.token)throw Error("Sesión expirada.");
+              const form=new FormData(); form.append("file",item.file,item.file.name);form.append("folder","productos");
+              const response=await fetch(R2_WORKER+"/images",{method:"POST",headers:{Authorization:"Bearer "+adminSession.token},body:form});
+              const uploaded=await response.json().catch(()=>({}));
+              if(!response.ok||!validProductImage(uploaded.url))throw Error(uploaded.error||"Error de R2 ("+response.status+")");
+              const patched=await jp1Request("productos?"+filter+"&imagen_url=is.null",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({imagen_url:uploaded.url})});
+              if(!Array.isArray(patched)||patched.length!==1)throw Error("Imagen subida a R2 pero no vinculada; revisar antes de repetir.");
+              saved++;
+            }catch(e){errors.push(item.ref+": "+e.message);}
+          }
+          progress.textContent=`Finalizado: ${saved} vinculadas · ${skipped} omitidas · ${errors.length} errores. `+errors.join(" | ");
+          try{await sincronizarProductosSupabase();}catch(e){console.warn(e);}
+          toast(errors.length?"Revisa los errores de Meowcafe":"Fotos de Meowcafe guardadas ♡",!!errors.length);
+        }finally{meowBusy=false;meowPlan=null;selector.disabled=input.disabled=false;input.value="";button.disabled=true;}
+      }
+      document.addEventListener("change",e=>{
+        if(e.target.id==="meowPhotoFiles")meowPreview([...e.target.files]);
+        if(e.target.id==="meowPhotoGroup"){
+          ++meowPreviewVersion;meowPlan=null;$("#meowPhotoFiles").value="";$("#meowPhotoUpload").disabled=true;$("#meowPhotoPreview").innerHTML="";$("#meowPhotoProgress").textContent="";$("#meowPhotoStatus").textContent="Selecciona las imágenes para revisar coincidencias.";
+        }
+      });
+      document.addEventListener("click",e=>{if(e.target.id==="meowPhotoUpload")meowUpload();});
 
       /* ===== Fotografías JP #3: importación protegida y reanudable ===== */
       const JP3_BOX_ID = "42866b92-7154-42c5-8627-517bb6294c95";
