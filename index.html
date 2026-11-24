@@ -3541,7 +3541,7 @@
             b = '<p class="err">' + esc(e.message) + "</p>";
           }
           b +=
-            '<div class="row sp"><h2>Borradores privados</h2><button class="btn pri" data-act="newPrivateBox">Crear caja privada ♡</button></div><p style="color:var(--t2)">Solo visibles para administradores. Puedes continuar editándolos en otro momento.</p><div class="lst">' +
+            '<div class="row sp"><h2>Borradores privados</h2><button class="btn pri" data-act="newPrivateBox">Crear caja privada ♡</button></div><div class="lst">' +
             (drafts
               .map((x) => {
                 const v = x.contenido?.caja || {},
