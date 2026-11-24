@@ -8064,12 +8064,38 @@
             }
             break;
           case "tbox": {
-            const b = box(id);
-            b.st = b.st === 0 ? 1 : 0;
-            b.closed = b.st ? new Date().toISOString().slice(0, 10) : "";
-            save();
-            toast(b.st ? "Caja cerrada" : "Caja reabierta");
-            rerender();
+            if (a.disabled) break;
+            a.disabled = true;
+            try {
+              const b = box(id);
+              if (!b) throw Error("No se encontró la caja seleccionada.");
+              const next = b.st === 0 ? 1 : 0;
+              const estado = BOX[next];
+              const rows = await jp1Request(
+                "cajas?id=eq." + encodeURIComponent(id) + "&select=id,estado",
+                {
+                  method: "PATCH",
+                  headers: { Prefer: "return=representation" },
+                  body: JSON.stringify({ estado }),
+                },
+              );
+              if (!Array.isArray(rows) || rows.length !== 1 ||
+                  rows[0].id !== id || rows[0].estado !== estado) {
+                throw Error("Supabase no confirmó el nuevo estado. Revisa los permisos y recarga la página.");
+              }
+              const current = box(id);
+              if (current) {
+                current.st = next;
+                current.closed = "";
+              }
+              save();
+              toast(next ? "Caja cerrada" : "Caja reabierta");
+              rerender();
+            } catch (ex) {
+              toast("No se pudo cambiar el estado: " + ex.message, 1);
+            } finally {
+              a.disabled = false;
+            }
             break;
           }
 
