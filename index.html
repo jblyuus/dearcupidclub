@@ -1000,6 +1000,9 @@
         cursor: zoom-in;
         padding: 0;
       }
+      .ship-collage-field [hidden] { display: none !important; }
+      .ship-collage-field img { max-width: 100%; max-height: 230px; border-radius: 10px; }
+      .ship-collage-field input[type="checkbox"] { width: auto; margin-right: 6px; }
       .shipphoto .ph {
         display: block;
         width: 100%;
@@ -2433,7 +2436,10 @@
           body: form,
         });
         const result = await r.json().catch(() => ({}));
-        if (!r.ok || !validPublicImage(result.url))
+        const validUploadUrl = folder === "envios"
+          ? (() => { try { const u = new URL(result.url); return u.origin === R2_WORKER && /^\/images\/envios\/[a-f0-9-]{36}\.(png|jpg|webp|gif)$/.test(u.pathname); } catch { return false; } })()
+          : validPublicImage(result.url);
+        if (!r.ok || !validUploadUrl)
           throw Error(
             result.error ||
               result.mensaje ||
@@ -3224,7 +3230,7 @@
         D.envios = rows.map(mapShip);
         return D.envios;
       }
-      async function guardarEnvioSupabase(id, fd) {
+      async function guardarEnvioSupabase(id, fd, collageUrl) {
         if (!(await refreshAdmin()) || !adminSession?.token)
           throw Error("Inicia sesión como administrador.");
         const nombre = String(fd.buyer || "").trim();
@@ -3235,38 +3241,29 @@
           guia: String(fd.tracking || "").trim() || null,
           estado: SHIP_ST[Number(fd.status)] || SHIP_ST[0],
         };
-        const url =
-          AUTH_URL +
-          "/rest/v1/envios" +
-          (id ? "?id=eq." + encodeURIComponent(id) : "");
+        // undefined conserva el collage anterior; null lo desvincula.
+        if (collageUrl !== undefined) data.collage_url = collageUrl;
+        const url = AUTH_URL + "/rest/v1/envios" +
+          (id ? "?id=eq." + encodeURIComponent(id) + "&select=id,nombre,collage_url,paqueteria,guia,estado,created_at" : "?select=id,nombre,collage_url,paqueteria,guia,estado,created_at");
         const r = await fetch(url, {
           method: id ? "PATCH" : "POST",
           headers: {
             apikey: AUTH_PUBLISHABLE_KEY,
             Authorization: "Bearer " + adminSession.token,
             "Content-Type": "application/json",
-            Prefer: "return=minimal",
+            Prefer: "return=representation",
           },
           body: JSON.stringify(data),
         });
-        if (!r.ok)
-          throw Error(
-            "No se pudo guardar el envío en Supabase: " +
-              (await r.text()).slice(0, 300),
-          );
-        await sincronizarEnviosSupabase(true);
-        if (id && !D.envios.some((x) => x.id === id))
-          throw Error("No se encontró el envío actualizado.");
-        if (
-          !id &&
-          !D.envios.some(
-            (x) =>
-              x.buyer === nombre &&
-              x.carrier === (fd.carrier || "") &&
-              x.tracking === String(fd.tracking || "").trim(),
-          )
-        )
-          throw Error("No se encontró el nuevo envío después de guardar.");
+        if (!r.ok) throw Error("No se pudo guardar el envío en Supabase: " + (await r.text()).slice(0, 300));
+        const rows = await r.json();
+        if (!Array.isArray(rows) || rows.length !== 1 || (id && String(rows[0].id) !== String(id)))
+          throw Error("Supabase no confirmó el envío. Revisa el listado antes de reintentar.");
+        const saved = mapShip(rows[0]);
+        D.envios = [saved, ...D.envios.filter(x => String(x.id) !== String(saved.id))];
+        // No repetir un INSERT si la consulta de refresco falla después de guardar.
+        try { await sincronizarEnviosSupabase(true); }
+        catch (error) { console.warn("Envío guardado; no se pudo refrescar el listado", error); }
       }
       async function eliminarEnvioSupabase(id) {
         if (!(await refreshAdmin()) || !adminSession?.token)
@@ -3334,15 +3331,84 @@
       }
       function eShip(id) {
         const x = D.envios.find((v) => v.id === id) || {};
+        const old = shipPublicImage(x.collageUrl);
+        let selected = null, uploaded = null, removed = false, busy = false, previewVersion = 0, checking = false;
         dlg(
           id ? "Editar envío nacional" : "Nuevo envío nacional",
-          `<div class="f">${fld("buyer", "Username del cupidito", x.buyer || "", "text", 'required maxlength="120" autocomplete="off" aria-controls="shipBuyerSuggestions"')}<div id="shipBuyerSuggestions" aria-live="polite"></div>${sel("carrier", "Paquetería", CARRIERS.map((v) => `<option value="${esc(v)}" ${x.carrier === v ? "selected" : ""}>${esc(v)}</option>`).join(""))}${fld("tracking", "Número de guía (visible públicamente)", x.tracking || "", "text", 'maxlength="120"')}${sel("status", "Status", opts(SHIP_ST, x.status ?? 0))}<p class="note">El envío se guardará directamente en Supabase. Los collages se conectarán después con Cloudflare R2; por ahora no se pueden subir desde este formulario.</p><p style="color:var(--t2);font-size:.85rem">No incluyas direcciones, teléfonos ni datos personales en el nombre o la guía.</p>${err}${foot}</div>`,
+          `<div class="f">${fld("buyer", "Username del cupidito", x.buyer || "", "text", 'required maxlength="120" autocomplete="off" aria-controls="shipBuyerSuggestions"')}<div id="shipBuyerSuggestions" aria-live="polite"></div>${sel("carrier", "Paquetería", CARRIERS.map((v) => `<option value="${esc(v)}" ${x.carrier === v ? "selected" : ""}>${esc(v)}</option>`).join(""))}${fld("tracking", "Número de guía (visible públicamente)", x.tracking || "", "text", 'maxlength="120"')}${sel("status", "Status", opts(SHIP_ST, x.status ?? 0))}<div class="drop ship-collage-field"><label for="shipCollageFile">Collage del envío (opcional)</label><img id="shipCollagePreview" alt="Vista previa del collage" ${old ? `src="${esc(old)}"` : "hidden"}><input type="file" id="shipCollageFile" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"><div class="row"><button type="button" class="btn sm" id="shipCollageRemove" ${old ? "" : "hidden"}>Quitar collage</button></div><p id="shipCollageStatus" role="status" style="margin:0;font-size:.85rem;color:var(--t2)">${old ? "Collage actual. Puedes cambiarlo o conservarlo." : "JPG, PNG, WebP o GIF · Máximo 5 MB."}</p><label id="shipCollageConsentRow" hidden><input type="checkbox" id="shipCollageConsent"> Confirmo que tengo autorización para publicar esta imagen y que no contiene direcciones, teléfonos, etiquetas postales ni datos privados.</label></div><p class="note">El collage es público. Se subirá al guardar el envío; puedes agregarlo o cambiarlo después.</p><p style="color:var(--t2);font-size:.85rem">No incluyas direcciones, teléfonos ni datos personales en el nombre o la guía.</p>${err}${foot}</div>`,
           async (fd) => {
-            await guardarEnvioSupabase(id, fd);
-            toast("Envío guardado y verificado en Supabase ♡");
-            return 0;
+            if (!String(fd.buyer || "").trim()) throw Error("Escribe el username del cupidito.");
+            if (checking) throw Error("Espera a que termine la validación de la imagen.");
+            if (selected && !consent.checked) throw Error("Confirma que el collage puede publicarse sin datos privados.");
+            busy = true;
+            fileInput.disabled = removeButton.disabled = consent.disabled = true;
+            closeButtons.forEach(b => b.disabled = true);
+            try {
+              let collageUrl = removed ? null : undefined;
+              if (selected) {
+                status.textContent = "Subiendo collage a Cloudflare R2…";
+                if (!uploaded) uploaded = await uploadR2Image(selected, "envios");
+                collageUrl = uploaded;
+              }
+              status.textContent = "Guardando envío…";
+              await guardarEnvioSupabase(id, fd, collageUrl);
+              toast("Envío guardado y verificado en Supabase ♡");
+              return 0;
+            } catch (error) {
+              status.textContent = "No se pudo completar el guardado. Revisa el mensaje e inténtalo de nuevo.";
+              throw error;
+            } finally {
+              busy = false;
+              fileInput.disabled = removeButton.disabled = consent.disabled = false;
+              closeButtons.forEach(b => b.disabled = false);
+            }
           },
         );
+        const dialog = $("#dlg"), fileInput = $("#shipCollageFile"), preview = $("#shipCollagePreview"),
+          removeButton = $("#shipCollageRemove"), status = $("#shipCollageStatus"), consent = $("#shipCollageConsent"),
+          consentRow = $("#shipCollageConsentRow"), closeButtons = [...dialog.querySelectorAll('[data-act="close"]')];
+        let objectUrl = null;
+        function showPreview(url) {
+          if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+          if (url && url.startsWith("blob:")) objectUrl = url;
+          if (url) preview.src = url; else preview.removeAttribute("src");
+          preview.hidden = !url;
+          removeButton.hidden = !url;
+        }
+        const preventCancel = e => { if (busy) e.preventDefault(); };
+        dialog.addEventListener("cancel", preventCancel);
+        dialog.addEventListener("close", () => {
+          previewVersion++;
+          if (objectUrl) URL.revokeObjectURL(objectUrl);
+          dialog.removeEventListener("cancel", preventCancel);
+        }, {once:true});
+        fileInput.addEventListener("change", async () => {
+          const file = fileInput.files[0];
+          if (!file || busy) return;
+          const version = ++previewVersion;
+          checking = true; selected = uploaded = null; consent.checked = false; consentRow.hidden = true;
+          showPreview(removed ? "" : old);
+          status.textContent = "Verificando imagen…";
+          try {
+            if (!file.size || file.size > 5 * 1048576) throw Error("El collage debe pesar entre 1 byte y 5 MB.");
+            const normalized = await pocaNormalizeImage(file);
+            if (version !== previewVersion || !dialog.open) return;
+            selected = normalized; removed = false;
+            showPreview(URL.createObjectURL(normalized));
+            consentRow.hidden = false;
+            status.textContent = "Imagen lista para subir al guardar.";
+          } catch (error) {
+            if (version !== previewVersion) return;
+            fileInput.value = "";
+            status.textContent = error.message || "Imagen inválida.";
+          } finally { if (version === previewVersion) checking = false; }
+        });
+        removeButton.addEventListener("click", () => {
+          if (busy) return;
+          previewVersion++; checking = false; selected = uploaded = null; removed = true;
+          fileInput.value = ""; consent.checked = false; consentRow.hidden = true;
+          showPreview(""); status.textContent = "El envío se guardará sin collage.";
+        });
         cargarCupiditosParaBorradores()
           .then(() => {
             if ($("#shipBuyerSuggestions"))
