@@ -1916,6 +1916,72 @@
           margin-top: -26px !important;
         }
       }
+
+      /* Dearcupid UI refresh: overrides visuales, conserva personalización. */
+      :root { --ui-ease: cubic-bezier(.22,.8,.25,1); }
+      h1,h2,h3 { letter-spacing:-.025em; }
+      .hero p { line-height:1.75; max-width: 590px; }
+      .home .hero h1 { margin-top: -12px !important; }
+      .home .menu { margin-top:24px !important; }
+      .menu { max-width:880px; gap:14px; }
+      .menu a { min-height:88px; padding:17px 18px; gap:14px; position:relative; }
+      .menu a > span:nth-child(2) { min-width:0; flex:1; overflow-wrap:anywhere; }
+      .menu a::after { content:""; width:7px; height:7px; border-top:1.6px solid currentColor; border-right:1.6px solid currentColor; transform:rotate(45deg); opacity:.45; flex:none; }
+      .ic.cat-icon { width:54px; height:54px; border-radius:16px; background:var(--p1); border:1px solid var(--bd); position:relative; overflow:hidden; color:#8a4a68; }
+      .cat-icon svg { width:25px; height:25px; }
+      .cat-icon img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; padding:5px; background:var(--sf); }
+      .grid,.gal { gap:18px; }
+      .card,.row2,.menu a { transition:transform .28s var(--ui-ease),box-shadow .28s var(--ui-ease),border-color .22s,background-color .22s; }
+      .card:hover,.row2:hover { transform:none; box-shadow:var(--sh); }
+      .btn,input,select,textarea { transition:background-color .2s,border-color .2s,box-shadow .2s,transform .2s var(--ui-ease); }
+      .btn { font-weight:550; }
+      .btn:disabled { cursor:not-allowed; opacity:.6; transform:none; }
+      .tabs { gap:6px; padding:4px 2px 8px; scrollbar-width:thin; }
+      .tabs a { border:1px solid transparent; border-radius:12px; padding:10px 14px; transition:background .2s,color .2s,border-color .2s; }
+      .tabs a[aria-current] { background:var(--p1); border-color:var(--bd); }
+      .b { gap:6px; padding:5px 10px; font-weight:550; line-height:1.2; }
+      .b svg { width:15px; height:15px; flex:none; }
+      .b.box-state { padding:6px 11px; border:1px solid; font-size:.79rem; }
+      .b.box-state-0 { color:#32664f; background:#edf8f0; border-color:#d2eadb; }
+      .b.box-state-1 { color:#92516c; background:#fff0f4; border-color:#f1d6e0; }
+      .b.box-state-2 { color:#465b89; background:#eef2ff; border-color:#d8e0f5; }
+      .b.box-state-3 { color:#496457; background:#f1f5f1; border-color:#dce7de; }
+      .b.box-state-unknown { color:var(--t2); background:var(--sf); border-color:var(--bd); }
+      .b.box-state-0 svg { animation:dc-breathe 3s ease-in-out infinite; }
+      .pc .bd { padding:16px; gap:9px; }
+      .pc .im { overflow:hidden; }
+      .pc .im img,.th img { transition:transform .45s var(--ui-ease); }
+      .row2 .mn { min-width:0; overflow-wrap:anywhere; }
+      table { box-shadow:var(--sh); }
+      th { font-weight:650; }
+      .empty { padding:40px 20px; background:var(--sf); }
+      dialog { background:var(--sf); border:1px solid var(--bd); border-radius:calc(var(--radius-ui) + 4px); }
+      dialog[open] { animation:dc-modal .26s var(--ui-ease) backwards; }
+      dialog::backdrop { background:rgba(41,38,42,.36); backdrop-filter:blur(3px); }
+      #app { animation:dc-view .28s var(--ui-ease) backwards; }
+      .menu a,.grid > * { animation:dc-view .36s var(--ui-ease) backwards; }
+      .menu a:nth-child(n+5),.grid > *:nth-child(n+5) { animation-delay:.08s; }
+      .gal > *,.row2 { animation:none; }
+      #stars { opacity:.55; }
+      @keyframes dc-view { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+      @keyframes dc-modal { from { opacity:0; transform:translateY(9px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+      @keyframes dc-breathe { 0%,100% { opacity:1; } 50% { opacity:.55; } }
+      @media (hover:hover) and (pointer:fine) {
+        .menu a:hover,a.card:hover { transform:translateY(-3px); background:var(--sf); border-color:var(--ac); box-shadow:0 10px 25px rgba(120,70,95,.10); }
+        .pc .im:hover img,.th:hover img { transform:scale(1.035); }
+        tbody tr:hover { background:var(--bg); }
+      }
+      @media(max-width:600px) {
+        .home .hero h1 { margin-top:0 !important; }
+        .menu { grid-template-columns:1fr; gap:10px; }
+        .menu a { min-height:74px; padding:12px 14px; }
+        .ic.cat-icon { width:46px; height:46px; }
+        .grid,.gal { gap:12px; }
+        .tabs a { padding:9px 12px; }
+      }
+      @media(prefers-reduced-motion:reduce) {
+        *,*::before,*::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+      }
     </style>
   </head>
   <body>
@@ -2003,6 +2069,13 @@
         if (input && selector && input.value.trim())
           selector.value = plataformaCupidito(input.value);
       }
+      const uiSvg = (body) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
+      const boxIcons = [
+        '<path d="M3 10h18v10H3zM3 10l3-6h12l3 6M12 4v6"/><path d="M9 15h6"/>',
+        '<rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
+        '<path d="M3 5h12v12H3zM15 9h4l3 4v4h-7"/><circle cx="7" cy="18" r="2" fill="white"/><circle cx="18" cy="18" r="2" fill="white"/>',
+        '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>'
+      ];
       const badge = (i, l, ic, k) =>
         `<span class="b ${k ? "k" + i : ""}"><span aria-hidden="true">${ic[i]}</span>${esc(l[i])}</span>`;
       /* Colores de referencia del Excel de Isa; no se cambian los estados guardados. */
@@ -2028,7 +2101,10 @@
           `<span class="logi-color ${colorLogi(i)}">${badge(i, LOGI, LI)}</span>`,
         bPay = (i) =>
           `<span class="b k${i ? 2 : 0}"><span aria-hidden="true">${PI[i]}</span>${PAY[i]}</span>`,
-        bBox = (i) => badge(i, BOX, BI);
+        bBox = (i) => {
+          const n = Number(i), ok = i !== null && i !== "" && Number.isInteger(n) && n >= 0 && n < BOX.length;
+          return `<span class="b box-state box-state-${ok?n:"unknown"}">${uiSvg(ok?boxIcons[n]:'<circle cx="12" cy="12" r="9"/>')}<span>${esc(ok?BOX[n]:"Sin asignar")}</span></span>`;
+        };
       function toast(m, e) {
         const t = document.createElement("div");
         t.className = "t" + (e ? " e" : "");
@@ -2248,8 +2324,19 @@
       const isEnv = (id) =>
         id === "c5" ||
         D.cats.some((c) => c.id === id && c.name.toLowerCase() === "envíos");
-      const cIc = (c) =>
-        `<span class="ic" aria-hidden="true"${c.imgId ? ` data-img="${esc(c.imgId)}" data-alt=""` : ""}>${esc(c.icon || "✿")}</span>`;
+      const categoryIconKey = id => "categoryIcon_" + id;
+      function categoryDefaultIcon(c) {
+        const name = String(c.name||"").toLowerCase();
+        if(name.includes("meow")) return '<path d="M4 10V4l5 4h6l5-4v6a8 8 0 1 1-16 0Z"/><path d="M9 14h.01M15 14h.01M10 17l2 1 2-1"/>';
+        if(name.includes("poca")) return '<rect x="6" y="3" width="13" height="18" rx="3"/><path d="M3 7v11M9 15l3-3 4 4"/><circle cx="14" cy="8" r="1.5"/>';
+        if(name.includes("env")) return boxIcons[2];
+        if(name.includes("jap")) return '<circle cx="12" cy="12" r="3"/><path d="M12 3c4 0 4 5 0 6-4-1-4-6 0-6ZM21 12c0 4-5 4-6 0 1-4 6-4 6 0ZM12 21c-4 0-4-5 0-6 4 1 4 6 0 6ZM3 12c0-4 5-4 6 0-1 4-6 4-6 0Z"/>';
+        return '<path d="M20 9c0 5-8 10-8 10S4 14 4 9a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3Z"/>';
+      }
+      const cIc = (c) => {
+        const url = validPublicImage(publicImages[categoryIconKey(c.id)]);
+        return `<span class="ic cat-icon" aria-hidden="true">${uiSvg(categoryDefaultIcon(c))}${url?`<img src="${esc(url)}" alt="" loading="lazy" onerror="this.hidden=true;this.style.display='none'">`:""}</span>`;
+      };
       const cat = (id) => D.cats.find((c) => c.id === id),
         box = (id) => D.boxes.find((b) => b.id === id),
         cnt = (id) => D.prods.filter((p) => p.box === id).length;
@@ -2309,6 +2396,9 @@
           logo: validPublicImage(data.logo),
           banner: validPublicImage(data.banner),
         };
+        for (const [key,value] of Object.entries(data)) {
+          if (key.startsWith("categoryIcon_")) publicImages[key] = validPublicImage(value);
+        }
         publicLogoWidth =
           Number.isFinite(Number(data.logoWidth)) &&
           Number(data.logoWidth) >= 100 &&
@@ -3412,7 +3502,7 @@
             .join("")}</div>`;
         }
         if (tab === "categorias")
-          b = `<div class="row sp"><h2>Categorías</h2><span class="note">Edita las descripciones públicas de cada categoría ♡</span></div><div class="grid" style="margin-top:16px">${D.cats.map((c) => `<div class="card">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><div class="row" style="margin-top:12px"><button class="btn sm" data-act="ecat" data-id="${c.id}">Editar descripción</button><button class="btn sm dng" data-act="dcat" data-id="${c.id}">Eliminar</button></div></div>`).join("")}</div>`;
+          b = `<div class="row sp"><h2>Categorías</h2><span class="note">Edita las descripciones y los iconos públicos de cada categoría ♡</span></div><div class="grid" style="margin-top:16px">${D.cats.map((c) => `<div class="card">${cIc(c)}<h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><div class="row" style="margin-top:12px"><button class="btn sm" data-act="ecat" data-id="${c.id}">Editar descripción</button><button class="btn sm" data-act="ecaticon" data-id="${esc(c.id)}">Cambiar icono</button><button class="btn sm dng" data-act="dcat" data-id="${c.id}">Eliminar</button></div></div>`).join("")}</div>`;
         if (tab === "cajas") {
           let conteosAdmin = null,
             conteosError = "";
@@ -3809,6 +3899,25 @@
             }
           },
         );
+      }
+      function eCatIcon(id) {
+        const c=cat(id);
+        if(!c) return toast("No se encontró la categoría.",1);
+        const key=categoryIconKey(id), current=validPublicImage(publicImages[key]);
+        dlg("Icono de categoría · "+c.name,
+          `<div class="f"><p class="note">El icono será público para todos los visitantes. PNG transparente recomendado, máximo 5 MB.</p><div class="row">${cIc(c)}<strong>${esc(c.name)}</strong></div><div><label for="categoryIconFile">Nueva imagen</label><input id="categoryIconFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div>${current?'<label><input type="checkbox" name="removeIcon" value="1" style="width:auto;min-height:0"> Quitar imagen y volver al icono predeterminado</label>':""}${err}${foot}</div>`,
+          async(fd)=>{
+            const file=$("#categoryIconFile")?.files?.[0];
+            if(file && fd.removeIcon) return "Selecciona una imagen nueva o quitar el icono, no ambos.";
+            if(!file && !fd.removeIcon) return "Selecciona una imagen.";
+            try {
+              if(file && (file.size===0 || file.size>5*1024*1024)) return "La imagen debe pesar como máximo 5 MB.";
+              const url=file?await uploadR2Image(await pocaNormalizeImage(file),"logo"):"";
+              await publishPublicImage(key,url);
+              toast("Icono público actualizado ♡");
+              return 0;
+            } catch(e) { return e.message || String(e); }
+          });
       }
       /* Borradores privados de los datos de una caja (no publicados). */
       async function borradorRequest(path, options = {}) {
@@ -7731,6 +7840,9 @@
           }
           case "ecat":
             eCat(id);
+            break;
+          case "ecaticon":
+            eCatIcon(id);
             break;
           case "ebox":
             eBox(id);
