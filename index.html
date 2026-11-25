@@ -2006,7 +2006,32 @@
       .dc-division-icon{display:flex;justify-content:center;color:var(--ib)}.dc-division-icon svg{width:32px;height:32px}.dc-sections small{font-size:.78rem;color:var(--t2);font-weight:400}
       .dc-sec-row{display:flex;align-items:center;gap:6px;margin:6px 0}.dc-sec-row input{flex:1;min-width:0}.dc-sec-row button{padding:6px 10px;min-height:40px}
       .shipmonth{font:inherit;text-align:left;cursor:pointer;display:grid;gap:5px;color:var(--tx)} .shipmonth.active{background:var(--p1);border-color:var(--ib)} .shipmonth .ic svg{width:25px;height:25px}.shipmonth span:last-child{color:var(--t2);font-size:.88rem}.ship-correos{background:#fce7f0;color:#a44170;border-color:#fce7f0}.ship-estafeta{background:#f2e5fa;color:#77548f;border-color:#f2e5fa}.ship-mensajeria{background:#e0f2fc;color:#376b91;border-color:#e0f2fc}
-    </style>
+    
+      /* Pulido final: estilos adaptables a la personalización de Isa. */
+      :root { --dc-outline: color-mix(in srgb,var(--ib) 42%,var(--bd)); }
+      main.w { max-width:var(--page-width); }
+      .card,.row2,.menu a { border-color:var(--bd); box-shadow:0 2px 12px rgba(120,70,95,.055); }
+      .row2 { padding:12px 16px; gap:14px; min-width:0; }
+      .row2 .mn { gap:7px; } .row2 .meta { line-height:1.45; }
+      .row2 .ac { gap:7px; } .row2 .ac .btn { min-height:38px; }
+      .btn { border-color:var(--dc-outline,var(--ib)); }
+      .btn.pri { border-color:var(--ac); }
+      .tabs { gap:7px; margin:16px 0 22px; } .tabs a { min-height:44px; display:flex; align-items:center; }
+      .tabs a[aria-current] { box-shadow:inset 0 -2px 0 var(--ac); }
+      .dc-sections { gap:12px; margin:18px 0; }
+      .dc-sections .btn { min-height:105px; padding:13px 10px; border-radius:var(--r); gap:5px; align-content:center; }
+      .dc-sections .btn[aria-current] { box-shadow:inset 0 0 0 1px var(--ac); }
+      .dc-catalog { border:1px solid var(--bd); background:var(--bg); border-radius:14px; padding:12px; display:grid; gap:8px; margin:8px 0; }
+      .dc-catalog-search { margin-top:5px; background:var(--sf); }
+      .dc-catalog-results { display:flex; gap:7px; flex-wrap:wrap; max-height:160px; overflow:auto; }
+      .dc-catalog-option { white-space:normal; min-height:42px; justify-content:flex-start; }
+      .dc-catalog-option .dc-division-icon svg { width:22px; height:22px; }
+      .dc-catalog-hint { font-size:.8rem; color:var(--t2); margin:2px 0; line-height:1.4; }
+      dialog select:disabled { opacity:1; color:var(--tx); background:var(--bg); }
+      dialog .f { gap:15px; } dialog .f > .row:last-child { margin-top:8px; }
+      .btn.dng { border-color:#c68b9b; } .btn.dng:hover { background:#fff0f3; }
+      @media(max-width:600px){ .row2{padding:10px;gap:10px;} .row2 .ac .btn{min-height:42px;} .dc-sections .btn{flex-basis:86px;min-height:94px;padding:10px 5px;font-size:.82rem;} .dc-sections .btn small{font-size:.7rem;} .dc-sec-row{flex-wrap:wrap;} .dc-sec-row input{flex-basis:100%;} .dc-catalog{padding:10px;} dialog{padding:16px;} }
+      </style>
   </head>
   <body>
     <header>
@@ -3138,16 +3163,6 @@
       function shipMonthLabel(k){if(k==="sin-periodo")return "Sin mes asignado";const [y,m]=k.split("-");const label=new Intl.DateTimeFormat("es-MX",{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(Date.UTC(+y,+m-1,1)));return label.charAt(0).toUpperCase()+label.slice(1);}
       function shipMonths(admin=false){const current=admin?shipAdminMonth:shipPublicMonth;const months=[...new Set(D.envios.map(shipMonthKey))].sort((a,b)=>a==="sin-periodo"?1:b==="sin-periodo"?-1:b.localeCompare(a));return `<div class="grid" style="margin:16px 0">${months.map(k=>`<button type="button" class="card shipmonth ${current===k?'active':''}" data-shipmonth="${esc(k)}" data-shipadmin="${admin?1:0}"><span class="ic">${uiSvg('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M12 18c-7-4-2-8 0-4 2-4 7 0 0 4Z"/>')}</span><strong>${esc(shipMonthLabel(k))}</strong><span>${D.envios.filter(x=>shipMonthKey(x)===k).length} envíos</span></button>`).join('')}</div>`;}
       function shipMonthRows(admin=false,q=""){const k=admin?shipAdminMonth:shipPublicMonth;const rows=D.envios.filter(x=>q?`${x.buyer} ${x.carrier} ${x.tracking}`.toLowerCase().includes(q.toLowerCase()):k?shipMonthKey(x)===k:admin);return !k&&!q&&!admin?'<div class="empty">Selecciona un mes para consultar los envíos.</div>':`<h2 class="s">${esc(q?'Resultados de todos los meses':k?shipMonthLabel(k):'Todos los envíos')}</h2>${shipRows(rows,admin)}`;}
-
-      const shipImportManifest=[{"row": 4, "buyer": "@elleancards", "carrier": "Correos de México", "tracking": "RA054375390MX", "period": "2026-11-01"}, {"row": 5, "buyer": "Natt Rojas", "carrier": "Correos de México", "tracking": "RA054375386MX", "period": "2026-11-01"}, {"row": 6, "buyer": "Juan Manuel", "carrier": "Correos de México", "tracking": "RA054375409MX", "period": "2026-11-01"}, {"row": 7, "buyer": "@hachh.0", "carrier": "Estafeta", "tracking": "387883528", "period": "2026-11-01"}, {"row": 8, "buyer": "Areli Razo", "carrier": "Estafeta", "tracking": "2689022514", "period": "2026-11-01"}, {"row": 9, "buyer": "Diana Moreno", "carrier": "Estafeta", "tracking": "3378239865", "period": "2026-11-01"}, {"row": 10, "buyer": "Ariadna García", "carrier": "LaMensajeria", "tracking": "2856244", "period": "2026-11-01"}, {"row": 11, "buyer": "@bethaglr", "carrier": "Correos de México", "tracking": "RN127889217MX", "period": "2026-11-01"}, {"row": 12, "buyer": "@ijusaurio", "carrier": "LaMensajeria", "tracking": "2856246", "period": "2026-11-01"}, {"row": 13, "buyer": "@noitsfatima", "carrier": "Correos de México", "tracking": "RN127889203MX", "period": "2026-11-01"}, {"row": 14, "buyer": "@haannnl", "carrier": "Correos de México", "tracking": "RN127889115MX", "period": "2026-11-01"}, {"row": 15, "buyer": "@myriam.elena23", "carrier": "LaMensajeria", "tracking": "2856250", "period": "2026-11-01"}, {"row": 16, "buyer": "@haeiian", "carrier": "Correos de México", "tracking": "RN127889132MX", "period": "2026-11-01"}, {"row": 17, "buyer": "@luv3rtiz", "carrier": "Estafeta", "tracking": "269186218", "period": "2026-11-01"}, {"row": 18, "buyer": "Montse Villegas", "carrier": "Correos de México", "tracking": "RN127889101MX", "period": "2026-11-01"}, {"row": 19, "buyer": "@tmibgyu", "carrier": "Correos de México", "tracking": "RN127889146MX", "period": "2026-11-01"}, {"row": 20, "buyer": "Ur hope", "carrier": "Correos de México", "tracking": "RN127889177MX", "period": "2026-11-01"}, {"row": 21, "buyer": "VillanuevaLp", "carrier": "Estafeta", "tracking": "3536744969", "period": "2026-11-01"}, {"row": 22, "buyer": "@woneesgarden.co", "carrier": "Estafeta", "tracking": "1617002533", "period": "2026-11-01"}, {"row": 23, "buyer": "@daesstar", "carrier": "Correos de México", "tracking": "RN127889129MX", "period": "2026-11-01"}, {"row": 24, "buyer": "Alvarado Karlos", "carrier": "LaMensajeria", "tracking": "2856256", "period": "2026-11-01"}, {"row": 25, "buyer": "@snoweirl", "carrier": "LaMensajeria", "tracking": "2856258", "period": "2026-11-01"}, {"row": 26, "buyer": "Marla Alvarez", "carrier": "Correos de México", "tracking": "RN127889194MX", "period": "2026-11-01"}, {"row": 27, "buyer": "@monlimon28", "carrier": "Correos de México", "tracking": "RN127889150MX", "period": "2026-11-01"}, {"row": 28, "buyer": "@gi0g00", "carrier": "LaMensajeria", "tracking": "2856263", "period": "2026-11-01"}, {"row": 29, "buyer": "@notbetita", "carrier": "LaMensajeria", "tracking": "2856265", "period": "2026-11-01"}, {"row": 30, "buyer": "Nayara Calderon", "carrier": "Correos de México", "tracking": "RN127889185MX", "period": "2026-11-01"}, {"row": 31, "buyer": "@vanillacuplix", "carrier": "Correos de México", "tracking": "RN127889163MX", "period": "2026-11-01"}, {"row": 32, "buyer": "@honeeeybee__", "carrier": "LaMensajeria", "tracking": "2858732", "period": "2026-11-01"}];
-      function shipImportUI(){return `<h2>Collages de noviembre 2026</h2><p>Selecciona los 29 archivos. Se comprueba mes, nombre, paquetería y guía. No se reemplazan collages existentes.</p><input id="shipImportFiles" type="file" multiple accept="image/*"><div class="row" style="margin:12px 0"><button class="btn" id="shipImportCheck">Verificar</button><button class="btn pri" id="shipImportSave" disabled>Subir collages seleccionados</button></div><p id="shipImportStatus" role="status"></p><div id="shipImportRows" class="lst"></div>`;}
-      function shipImportBind(){const files=$('#shipImportFiles'),check=$('#shipImportCheck'),save=$('#shipImportSave'),status=$('#shipImportStatus'),list=$('#shipImportRows');let plan=[],urls=[],busy=false;function clear(){urls.forEach(u=>URL.revokeObjectURL(u));urls=[];plan=[];list.replaceChildren();save.disabled=true;}files.onchange=clear;
-        check.onclick=async()=>{if(busy)return;busy=true;check.disabled=files.disabled=true;clear();try{const records=await adminRequest('envios?select=id,nombre,paqueteria,guia,periodo,collage_url&periodo=eq.2026-11-01&limit=1000');const chosen=[...files.files];for(const m of shipImportManifest){const matches=records.filter(x=>x.nombre===m.buyer&&x.paqueteria===m.carrier&&String(x.guia)===m.tracking&&x.periodo===m.period);const fs=chosen.filter(f=>new RegExp('^ENVIO_fila_'+m.row+'_col_3\\.(jpg|jpeg|png|webp|gif)$','i').test(f.name));let reason='',f=null;const rec=matches[0];if(matches.length!==1)reason='Coincidencia no única';else if(rec.collage_url)reason='Ya tiene collage';else if(fs.length!==1)reason='Archivo ausente o duplicado';else try{f=await normalizarImagen(fs[0]);if(f.size>5*1024*1024)throw Error('Supera 5 MB');}catch(e){reason=e.message;}
-          const card=document.createElement('div');card.className='card';card.innerHTML=`<strong>${esc(m.buyer)} · ${esc(m.tracking)}</strong><p>Fila ${m.row} · ${esc(reason||'Lista para revisión')}</p>`;if(!reason&&f){const u=URL.createObjectURL(f);urls.push(u);const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';a.textContent='Ampliar para revisar';const img=document.createElement('img');img.src=u;img.alt='Collage';img.style.cssText='display:block;max-width:100%;max-height:160px;object-fit:contain';a.prepend(img);card.append(a);const l=document.createElement('label');const cb=document.createElement('input');cb.type='checkbox';cb.style.cssText='width:auto;min-height:0;margin-right:8px';l.append(cb,document.createTextNode(' Autorizado para publicación, sin datos privados'));card.append(l);plan.push({m,rec,f,cb,card});cb.onchange=()=>save.disabled=!plan.some(p=>p.cb.checked);}list.append(card);}
-          status.textContent=`${plan.length} listos de 29. Revisa cada collage y marca los autorizados. No se ha subido nada.`;
-        }catch(e){status.textContent=e.message;}finally{busy=false;check.disabled=files.disabled=false;}};
-        save.onclick=async()=>{if(busy)return;busy=true;save.disabled=check.disabled=files.disabled=true;const selected=plan.filter(p=>p.cb.checked);plan.forEach(p=>p.cb.disabled=true);let ok=0,fail=0;for(const p of selected){try{const filter='envios?id=eq.'+encodeURIComponent(p.rec.id)+'&periodo=eq.2026-11-01&guia=eq.'+encodeURIComponent(p.m.tracking)+'&nombre=eq.'+encodeURIComponent(p.m.buyer)+'&paqueteria=eq.'+encodeURIComponent(p.m.carrier);const fresh=await adminRequest(filter+'&select=id,collage_url');if(fresh.length!==1||fresh[0].collage_url)throw Error('Registro cambiado o ya tiene collage');const u=await uploadR2Image(p.f,'envios');const result=await adminRequest(filter+'&or=(collage_url.is.null,collage_url.eq.)&select=id,collage_url',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({collage_url:u})});if(result.length!==1||result[0].collage_url!==u)throw Error('No se confirmó el vínculo');ok++;p.cb.checked=false;p.card.append(' · Guardado');}catch(e){fail++;p.card.append(document.createTextNode(' · Error: '+e.message));}status.textContent=`Guardados ${ok} · Errores ${fail} · Seleccionados ${selected.length}`;}busy=false;check.disabled=files.disabled=false;try{await sincronizarEnviosSupabase(true);}catch(e){console.warn(e);}status.textContent+= ' · Verifica nuevamente antes de reintentar.';};}
-
       function vEnvios(){return bc([["Inicio","#/"],["Envíos"]])+`<h1>envíos nacionales ♡</h1><div class="bar" style="margin-top:22px"><div><label for="shipq">Buscar en todos los meses</label><input id="shipq" type="search" placeholder="Nombre, paquetería o guía" autocomplete="off"></div></div><div id="shipmonths">${shipMonths()}</div><div id="shiplist">${shipMonthRows()}</div>`;}
       document.addEventListener('click',e=>{const b=e.target.closest('[data-shipmonth]');if(!b)return;const admin=b.dataset.shipadmin==='1';if(admin){shipAdminMonth=shipAdminMonth===b.dataset.shipmonth?'':b.dataset.shipmonth;$('#shipadminmonths').innerHTML=shipMonths(true);$('#shipadminlist').innerHTML=shipMonthRows(true);}else{shipPublicMonth=b.dataset.shipmonth;$('#shipq').value='';$('#shipmonths').innerHTML=shipMonths();$('#shiplist').innerHTML=shipMonthRows();}});
       /* Los envíos publicados se consultan siempre desde Supabase. */
@@ -3409,7 +3424,15 @@
       function dcPublicList(id){const all=D.prods.filter(p=>p.box===id);if(!dcSections(id).length||String(S.q||'').trim())return all;return all.filter(p=>(p.section||'')===(S.section||''));}
       function dcDivisionIcon(name){const k=String(name).trim().toLowerCase();const paths=k==='makestar'?'<rect x="3" y="2" width="18" height="20" rx="2"/><path d="M6 2v20"/><circle cx="14" cy="12" r="6"/><circle cx="14" cy="12" r="1.5"/><path d="M14 6v3M20 12h-3M14 18v-3"/>':k==='daiso'?'<rect x="5" y="3" width="15" height="18" rx="2"/><path d="M8 3v18M3 7h4M3 12h4M3 17h4M14 7l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/>':k==='popcorn'?'<rect x="3" y="6" width="12" height="16" rx="2" transform="rotate(-10 9 14)"/><rect x="9" y="2" width="12" height="17" rx="2" fill="var(--sf)"/><path d="M15 13c-6-4-2-7 0-4 2-3 6 0 0 4z"/>': '<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 8l3-5h12l3 5M12 3v5M12 17c-6-4-2-7 0-4 2-3 6 0 0 4z"/>';return `<span class="dc-division-icon">${uiSvg(paths)}</span>`;}
       function dcPublicButtons(id){const sections=dcSections(id);if(!sections.length)return '';if(S.section&&!sections.some(x=>x.id===S.section))S.section='';const all=D.prods.filter(p=>p.box===id);return `<div class="dc-sections" aria-label="Divisiones de la caja">${[{id:'',nombre:'General'},...sections].map(x=>`<button type="button" class="btn" data-act="dcPublicSection" data-id="${esc(x.id)}" ${!String(S.q||'').trim()&&(S.section||'')===x.id?'aria-current="true"':''}>${dcDivisionIcon(x.nombre)}<span>${esc(x.nombre)}</span><small>${all.filter(p=>(p.section||'')===x.id).length} productos</small></button>`).join('')}</div><p style="font-size:.82rem;color:var(--t2)">La búsqueda por cupidito abarca todas las divisiones.</p>`;}
-      function dcEditor(rows){return `<section class="card" style="padding:12px"><h3>Divisiones</h3><p>General se crea automáticamente. Añade las divisiones que necesites; quitar una con productos está bloqueado.</p><div id="dcSectionRows">${rows.map(dcEditorRow).join('')}</div><button type="button" class="btn sm" data-act="dcAddSection">+ Añadir división</button></section>`;}
+      const dcSectionKey = n=>String(n||'').trim().normalize('NFKC').toLocaleLowerCase('es');
+      function dcCatalog(){const map=new Map();for(const name of ['DAISO','POPCORN','MAKESTAR',...(D.sections||[]).map(x=>x.nombre)]){const k=dcSectionKey(name);if(k&&k!=='general'&&!map.has(k))map.set(k,String(name).trim());}return [...map.values()].sort((a,b)=>a.localeCompare(b,'es'));}
+      function dcCatalogMarkup(mode){return `<div class="dc-catalog" data-catalog-mode="${mode}"><label>Buscar división reutilizable<input type="search" class="dc-catalog-search" placeholder="Ej. MAKESTAR, DAISO…" autocomplete="off" aria-label="Buscar división reutilizable"></label><div class="dc-catalog-results" aria-live="polite"></div><p class="dc-catalog-hint">Se reutiliza el nombre y el icono, no los productos de otra caja.</p></div>`;}
+      function dcCatalogPaint(root){const mode=root.dataset.catalogMode, q=dcSectionKey(root.querySelector('input').value), list=root.querySelector('.dc-catalog-results');const names=dcCatalog().filter(n=>dcSectionKey(n).includes(q));list.innerHTML=names.length?names.map(n=>`<button type="button" class="btn sm dc-catalog-option" data-act="dcReuseSection" data-name="${esc(n)}">${dcDivisionIcon(n)}<span>${esc(n)}</span></button>`).join(''):'<span class="meta">No hay coincidencias. Puedes crear una división nueva desde Cajas.</span>';}
+      function dcCatalogSelect(root,name){const mode=root.dataset.catalogMode,key=dcSectionKey(name);if(mode==='editor'){const el=$('#dcSectionRows');const rows=$$('[data-dc-section]',el);const old=rows.find(r=>dcSectionKey(r.querySelector('input').value)===key);if(old){old.querySelector('input').focus();return;}if(rows.length>=50)throw Error('Máximo 50 divisiones');el.insertAdjacentHTML('beforeend',dcEditorRow({id:crypto.randomUUID(),nombre:name}));return;}
+        const select=$('#dlg #'+(mode==='draft'?'dcDraftSection':'dcProductSection'));if(!select)throw Error('No se encontró el selector de división');const old=[...select.options].find(o=>dcSectionKey(o.textContent)===key);if(old){select.value=old.value;return;}const val='reuse:'+name;select.add(new Option(name+' (crear en esta caja)',val));select.value=val;}
+      async function dcResolveProductSection(boxId,value){if(!value)return null;if(!value.startsWith('reuse:'))return value;const name=value.slice(6);if(!dcCatalog().some(n=>dcSectionKey(n)===dcSectionKey(name)))throw Error('División no válida');const query='secciones_caja?select=id,caja_id,nombre,orden&caja_id=eq.'+encodeURIComponent(boxId);let rows=await adminRequest(query);let match=rows.find(x=>dcSectionKey(x.nombre)===dcSectionKey(name));if(!match){try{const inserted=await adminRequest('secciones_caja',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({caja_id:boxId,nombre:name,orden:Math.max(0,...rows.map(x=>Number(x.orden)||0))+1})});if(!Array.isArray(inserted)||inserted.length!==1)throw Error('No se confirmó la creación de la división');match=inserted[0];}catch(e){rows=await adminRequest(query);match=rows.find(x=>dcSectionKey(x.nombre)===dcSectionKey(name));if(!match)throw e;}}D.sections=[...(D.sections||[]).filter(x=>x.id!==match.id),match];return match.id;}
+      function dcResolveDraftSection(value){if(!value)return null;if(!value.startsWith('reuse:'))return value;const name=value.slice(6);const rows=privateWork.contenido.secciones||(privateWork.contenido.secciones=[]);let match=rows.find(x=>dcSectionKey(x.nombre)===dcSectionKey(name));if(!match){if(rows.length>=50)throw Error('Máximo 50 divisiones');match={id:crypto.randomUUID(),nombre:name,orden:rows.length+1};rows.push(match);}return match.id;}
+      function dcEditor(rows){return `<section class="card" style="padding:12px"><h3>Divisiones</h3><p>General se crea automáticamente. Añade las divisiones que necesites; quitar una con productos está bloqueado.</p><div id="dcSectionRows">${rows.map(dcEditorRow).join('')}</div>${dcCatalogMarkup("editor")}<button type="button" class="btn sm" data-act="dcAddSection">+ Añadir división</button></section>`;}
       function dcEditorRow(x){return `<div class="dc-sec-row" data-dc-section="${esc(x.id)}"><input maxlength="80" aria-label="Nombre de división" placeholder="Ej. DAISO" value="${esc(x.nombre)}"><button type="button" class="btn sm" data-act="dcSectionUp" aria-label="Subir">↑</button><button type="button" class="btn sm" data-act="dcSectionDown" aria-label="Bajar">↓</button><button type="button" class="btn sm dng" data-act="dcRemoveSection" aria-label="Quitar">✕</button></div>`;}
       function dcReadEditor(){const el=$('#dcSectionRows');if(!el)return null;const rows=$$('[data-dc-section]',el).map((r,i)=>({id:r.dataset.dcSection,nombre:r.querySelector('input').value.trim(),orden:i+1}));if(rows.length>50||rows.some(x=>!x.nombre||x.nombre.length>80||x.nombre.toLowerCase()==='general')||new Set(rows.map(x=>x.nombre.toLowerCase())).size!==rows.length)throw Error('Escribe nombres únicos (máx. 80 caracteres); General es automático.');return rows;}
       async function dcSaveSections(id,rows){if(rows===null)return;const result=await adminRequest('rpc/dc_guardar_secciones',{method:'POST',body:JSON.stringify({p_caja_id:id,p_secciones:rows})});if(!Array.isArray(result)||result.length!==rows.length)throw Error('No se confirmaron las divisiones');D.sections=[...(D.sections||[]).filter(x=>x.caja_id!==id),...result];}
@@ -3487,7 +3510,6 @@
         ["borradores", "Borradores privados"],
         ["productos", "Productos"],
         ["envios", "Envíos"],
-        ["fotosenvios", "Collages noviembre"],
         ["cargos", "Cargos"],
         ["personalizar", "Personalizar página"],
       ];
@@ -3500,7 +3522,7 @@
           ? l
               .map(
                 (n) =>
-                  `<a class="row2 cup" href="#/admin/cupiditos/${encodeURIComponent(n)}"><div class="mn"><strong>${esc(n)}</strong></div><span aria-hidden="true">›</span></a>`,
+                  `<a class="row2 cup" href="#/admin/cupiditos/${encodeURIComponent(n)}"><div class="mn"><strong>${esc(n)}</strong><span class="meta">${esc(plataformaCupidito(n))}</span></div><span aria-hidden="true">›</span></a>`,
               )
               .join("")
           : '<div class="empty">Sin resultados.</div>';
@@ -3592,7 +3614,7 @@
                   esc(cat(v.cat)?.name || "Sin categoría") +
                   '</span></div><button class="btn sm" data-act="editPrivateBox" data-id="' +
                   esc(x.caja_id) +
-                  '">Continuar</button></div>'
+                  '">Continuar</button><button type="button" class="btn sm dng" data-act="dcDeleteDraft" data-id="' + esc(x.caja_id) + '">Eliminar borrador</button></div>'
                 );
               })
               .join("") ||
@@ -3681,7 +3703,6 @@
               "",
             )}</select></div>${bid && !isMeowBox(bid) ? `<div class="row" style="margin:12px 0"><button type="button" class="btn" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>` : ""}<div style="max-width:420px;margin:14px 0"><label for="cargoSearch">Buscar cargos por cupidito</label><input id="cargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.cargoSearch || "")}"></div><p id="cargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${isMeowBox(bid)?renderMeowCharges(bid,true):renderCargosAgrupados(ps, true)}`;
         }
-        if (tab === "fotosenvios") b = shipImportUI();
         if (tab === "galeriaskr2") b = galleryBulkUI();
         if (tab === "personalizar") {
           const u = await currentImage("logo"),
@@ -3700,6 +3721,8 @@
         onSub = fn;
         const d = $("#dlg");
         d.innerHTML = `<form data-f="dlg" novalidate><div class="row sp"><h2>${esc(title)}</h2><button type="button" class="btn sm" data-act="close" aria-label="Cerrar">✕</button></div>${html}</form>`;
+        $$('.dc-catalog',d).forEach(dcCatalogPaint);
+        const platform=d.querySelector('[name="plat"]');if(platform){platform.disabled=true;platform.insertAdjacentHTML('afterend','<small class="dc-catalog-hint">Asignación automática: @ = Instagram; sin @ = Facebook.</small>');}
         d.showModal();
       }
       const fld = (id, l, v = "", t = "text", x = "") =>
@@ -3783,11 +3806,11 @@
         pend = { blob: null, rm: false, old: validProductImage(p.imagenUrl), checking: false, version: 0, uploaded: null };
         dlg(
           ne ? "Nuevo producto" : "Editar producto",
-          `<div class="f">${fld("buyer", "Username del comprador", p.buyer, "text", 'required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}${sel("box", "Caja", D.boxes.map((b) => `<option value="${b.id}" ${p.box === b.id || (S.ab === b.id && ne) ? "selected" : ""}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(""))}</div>${sel("dcProductSection","División",dcOptions(dcSections(p.box||S.ab||D.boxes[0]?.id),p.section))}<div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld("price", "Precio (MXN)", p.price, "number", 'min="0" step="0.01" required')}${sel("logi", "Estatus logístico", opts(LOGI, p.logi ?? 0))}</div><div class="f2">${fld("ems", "EMS (MXN, 0 = pendiente)", p.ems ?? 0, "number", 'min="0" step="0.01"')}${fld("adu", "Aduana (MXN, 0 = pendiente)", p.adu ?? 0, "number", 'min="0" step="0.01"')}</div>${imgField(pend.old || p.imgId, "Foto original / respaldo")}${!ne && Array.isArray(p.gallery) ? `<p class="note">Este producto tiene galería independiente. Para cambiar las imágenes visibles, usa Fotografías en la lista de productos.</p>` : ""}${err}${foot}</div>`,
+          `<div class="f">${fld("buyer", "Username del comprador", p.buyer, "text", 'required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel("plat", "Plataforma", PLAT.map((x) => `<option ${plataformaCupidito(p.buyer) === x ? "selected" : ""}>${x}</option>`).join(""))}${sel("box", "Caja", D.boxes.map((b) => `<option value="${b.id}" ${p.box === b.id || (S.ab === b.id && ne) ? "selected" : ""}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(""))}</div>${sel("dcProductSection","División",dcOptions(dcSections(p.box||S.ab||D.boxes[0]?.id),p.section))}${dcCatalogMarkup("product")}<div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld("price", "Precio (MXN)", p.price, "number", 'min="0" step="0.01" required')}${sel("logi", "Estatus logístico", opts(LOGI, p.logi ?? 0))}</div><div class="f2">${fld("ems", "EMS (MXN, 0 = pendiente)", p.ems ?? 0, "number", 'min="0" step="0.01"')}${fld("adu", "Aduana (MXN, 0 = pendiente)", p.adu ?? 0, "number", 'min="0" step="0.01"')}</div>${imgField(pend.old || p.imgId, "Foto original / respaldo")}${!ne && Array.isArray(p.gallery) ? `<p class="note">Este producto tiene galería independiente. Para cambiar las imágenes visibles, usa Fotografías en la lista de productos.</p>` : ""}${err}${foot}</div>`,
           async (fd) => {
             const o = {
               buyer: fd.buyer.trim(),
-              plat: fd.plat || plataformaCupidito(fd.buyer),
+              plat: fd.buyer.trim() ? plataformaCupidito(fd.buyer) : "",
               box: fd.box,
               desc: fd.desc.trim(),
               price: +fd.price,
@@ -3834,7 +3857,7 @@
               const payload = {
                 cupidito_id: matches[0].id,
                 caja_id: caja.id,
-                seccion_id: fd.dcProductSection || null,
+                seccion_id: await dcResolveProductSection(caja.id,fd.dcProductSection),
                 categoria_id: caja.cat,
                 nombre: o.desc || "Producto sin descripción",
                 descripcion: o.desc || "",
@@ -3876,7 +3899,7 @@
           },
         );
         const boxField=$('#dlg #box'),sectionField=$('#dlg #dcProductSection');
-        if(boxField&&sectionField){const update=(initial=false)=>{sectionField.innerHTML=dcOptions(dcSections(boxField.value),initial&&boxField.value===p.box?p.section:'');};update(true);boxField.addEventListener('change',()=>update(false));}
+        if(boxField&&sectionField){const update=(initial=false)=>{const prior=initial?null:sectionField.options[sectionField.selectedIndex];const name=prior&&prior.value?(prior.value.startsWith('reuse:')?prior.value.slice(6):prior.textContent):'';sectionField.innerHTML=dcOptions(dcSections(boxField.value),initial&&boxField.value===p.box?p.section:'');if(name){const root=$('#dlg [data-catalog-mode="product"]');if(root)dcCatalogSelect(root,name);}};update(true);boxField.addEventListener('change',()=>update(false));}
         if (pend.old) setPv(pend.old);
         else if (p.imgId) imgUrl(p.imgId).then((u) => u && $("#pv") && setPv(u));
       }
@@ -4295,16 +4318,16 @@
           index >= 0
             ? "Editar producto del borrador"
             : "Agregar producto al borrador",
-          `<div class="f">${fld("nombre", "Nombre o descripción del producto", p.nombre || "", "text", "required")}${fld("buyer", "Username del cupidito", p.buyer || "", "text", 'autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}<div class="f2">${fld("precio", "Precio", p.precio ?? "", "number", 'min="0" step="0.01"')}${sel("moneda", "Moneda", ["MXN", "KRW", "JPY", "USD"].map((x) => `<option ${p.moneda === x ? "selected" : ""}>${x}</option>`).join(""))}</div>${sel("dcDraftSection","División",dcOptions(privateWork.contenido.secciones||[],p.seccion_id))}${sel("estado", "Estado", LOGI.map((x, i) => `<option value="${i}" ${p.logi === i ? "selected" : ""}>${esc(x)}</option>`).join(""))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion || "")}</textarea></div><p class="note">Puedes añadir fotografías desde Productos después de publicar la caja.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,
+          `<div class="f">${fld("nombre", "Nombre o descripción del producto", p.nombre || "", "text", "required")}${fld("buyer", "Username del cupidito", p.buyer || "", "text", 'autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel("plat", "Plataforma", PLAT.map((x) => `<option ${plataformaCupidito(p.buyer) === x ? "selected" : ""}>${x}</option>`).join(""))}<div class="f2">${fld("precio", "Precio", p.precio ?? "", "number", 'min="0" step="0.01"')}${sel("moneda", "Moneda", ["MXN", "KRW", "JPY", "USD"].map((x) => `<option ${p.moneda === x ? "selected" : ""}>${x}</option>`).join(""))}</div>${sel("dcDraftSection","División",dcOptions(privateWork.contenido.secciones||[],p.seccion_id))}${dcCatalogMarkup("draft")}${sel("estado", "Estado", LOGI.map((x, i) => `<option value="${i}" ${p.logi === i ? "selected" : ""}>${esc(x)}</option>`).join(""))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion || "")}</textarea></div><p class="note">Puedes añadir fotografías desde Productos después de publicar la caja.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,
           async (fd) => {
             if (!fd.nombre.trim()) return "Escribe el nombre del producto.";
             const o = {
               ...p,
               id: p.id || crypto.randomUUID(),
-              seccion_id: fd.dcDraftSection || null,
+              seccion_id: null,
               nombre: fd.nombre.trim(),
               buyer: fd.buyer.trim(),
-              plat: fd.plat || plataformaCupidito(fd.buyer),
+              plat: fd.buyer.trim() ? plataformaCupidito(fd.buyer) : "",
               precio: fd.precio === "" ? null : Number(fd.precio),
               moneda: fd.moneda,
               logi: +fd.estado,
@@ -4315,6 +4338,7 @@
               (!Number.isFinite(o.precio) || o.precio < 0)
             )
               return "Precio inválido.";
+            o.seccion_id=dcResolveDraftSection(fd.dcDraftSection);
             if (index >= 0) privateWork.contenido.productos[index] = o;
             else privateWork.contenido.productos.push(o);
             await persistPrivateWork();
@@ -5021,7 +5045,7 @@
           cupiditoId: p.cupidito_id,
           buyer: names[p.cupidito_id] || "Cupidito",
           desc: p.nombre || p.descripcion || "",
-          plat: p.plataforma || "",
+          plat: names[p.cupidito_id] ? plataformaCupidito(names[p.cupidito_id]) : (p.plataforma || ""),
           price: Number(p.precio) || 0,
           logi: Math.max(
             0,
@@ -5101,7 +5125,6 @@
         $("#hl").href = back;
         document.body.classList.toggle("home", !p.length);
         app.innerHTML = html;
-        if(p[0]==="admin" && p[1]==="fotosenvios" && adminReady) shipImportBind();
         if(p[0]==="admin" && p[1]==="galeriaskr2" && adminReady) galleryBulkBind();
         if (p[0] === "admin" && p[1] === "cargos") filtrarCargosAdmin();
         if (p[0] === "box" && p[2] === "cargos") filtrarCargosAdmin(true);
@@ -5243,9 +5266,10 @@
         }
       });
       document.addEventListener("input", (e) => {
+        if(e.target?.matches(".dc-catalog-search"))dcCatalogPaint(e.target.closest(".dc-catalog"));
         if (e.target?.matches('#dlg [name="buyer"]')) {
           sugerirPlataformaCupidito(e.target);
-          if (privateWork) sugerenciasCupiditos(e.target.value);
+          if ($("#draftBuyerSuggestions")) sugerenciasCupiditos(e.target.value);
         }
       });
       document.addEventListener("input", (e) => {
@@ -5274,6 +5298,7 @@
         switch (ac) {
           case "dcPublicSection": S.section=id||'';S.q='';S.page=1;rerender();break;
           case "dcManageSections": if(adminReady)dcManageSections(id);break;
+          case "dcReuseSection": if(adminReady){try{dcCatalogSelect(a.closest('.dc-catalog'),a.dataset.name);}catch(ex){toast(ex.message,1);}}break;
           case "dcAddSection": if(adminReady){const el=$('#dcSectionRows');if(el&&el.children.length<50){el.insertAdjacentHTML('beforeend',dcEditorRow({id:crypto.randomUUID(),nombre:''}));el.lastElementChild.querySelector('input').focus();}}break;
           case "dcRemoveSection": if(adminReady)a.closest('[data-dc-section]')?.remove();break;
           case "dcSectionUp": if(adminReady){const r=a.closest('[data-dc-section]');if(r?.previousElementSibling)r.parentNode.insertBefore(r,r.previousElementSibling);}break;
@@ -5473,6 +5498,16 @@
             }
             break;
           }
+          case "dcDeleteDraft": {
+            if(!adminReady) break;
+            confirmDlg('¿Eliminar este borrador privado? Se perderán sus cambios no publicados. La caja publicada, sus productos, fotos y cargos no se eliminarán.',async()=>{
+              const r=await borradorRequest('?caja_id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=representation'}});
+              const rows=await r.json();
+              if(!Array.isArray(rows)||rows.length!==1||rows[0].caja_id!==id) throw Error('No se confirmó la eliminación del borrador. Revisa los permisos.');
+              if(privateWork?.id===id)privateWork=null;
+              toast('Borrador privado eliminado');
+            });break;
+          }
           case "draftAddProduct":
             try {
               await draftProductForm(-1);
@@ -5503,7 +5538,7 @@
               if (input) input.value = c.nombre;
               {
                 const plat = $('#dlg [name="plat"]');
-                const value = c.plat || plataformaCupidito(c.nombre);
+                const value = plataformaCupidito(c.nombre);
                 if (plat && [...plat.options].some((o) => o.value === value))
                   plat.value = value;
               }
@@ -5821,8 +5856,7 @@
           case "usebuyer": {
             $("#buyer").value = a.dataset.u;
             const pe = $("#plat");
-            if (pe && [...pe.options].some((o) => o.value === a.dataset.p))
-              pe.value = a.dataset.p;
+            if (pe) pe.value = plataformaCupidito(a.dataset.u);
             $("#bsug").innerHTML = "";
             $("#buyer").focus();
             break;
