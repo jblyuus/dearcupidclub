@@ -3453,6 +3453,7 @@
         ["envios", "Envíos"],
         ["cargos", "Cargos"],
         ["personalizar", "Personalizar página"],
+        ["jp6fotos", "Fotos JP #6"],
       ];
       const nmz = (t) => String(t).trim().replace(/^@/, "").toLowerCase();
       let CUP = [];
@@ -3644,6 +3645,7 @@
               "",
             )}</select></div>${bid && !isMeowBox(bid) ? `<div class="row" style="margin:12px 0"><button type="button" class="btn" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>` : ""}<div style="max-width:420px;margin:14px 0"><label for="cargoSearch">Buscar cargos por cupidito</label><input id="cargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.cargoSearch || "")}"></div><p id="cargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${isMeowBox(bid)?renderMeowCharges(bid,true):renderCargosAgrupados(ps, true)}`;
         }
+        if (tab === "jp6fotos") b = jp6ImportUI();
         if (tab === "personalizar") {
           const u = await currentImage("logo"),
             bu = await currentImage("banner");
@@ -5047,6 +5049,7 @@
         $("#hl").href = back;
         document.body.classList.toggle("home", !p.length);
         app.innerHTML = html;
+        if (p[0] === "admin" && p[1] === "jp6fotos" && adminReady) jp6Bind();
         if (p[0] === "admin" && p[1] === "cargos") filtrarCargosAdmin();
         if (p[0] === "box" && p[2] === "cargos") filtrarCargosAdmin(true);
         app.style.animation = "none";
@@ -5133,6 +5136,72 @@
         try { await new Promise((resolve,reject)=>{const img=new Image();img.onload=resolve;img.onerror=()=>reject(Error("Imagen dañada"));img.src=url;}); }
         finally { URL.revokeObjectURL(url); }
         return normalized;
+      }
+
+      function jp6ImportUI() {
+        return `<h2>Fotografías · JP #6</h2><div class="card f" style="margin-top:16px"><p>Selecciona las imágenes descomprimidas de Apps Script. Solo se actualizarán productos sin foto de JP #6.</p><label for="jp6files">Fotografías originales</label><input id="jp6files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif"><div class="row"><button type="button" class="btn" id="jp6check">Verificar archivos</button><button type="button" class="btn pri" id="jp6upload" disabled>Subir fotografías verificadas ♡</button></div><p id="jp6status" role="status"></p><div id="jp6results" style="max-height:480px;overflow:auto"></div></div>`;
+      }
+      const JP6_BOX = 'b41f63b9-0486-46f9-be32-3d9bcd0f2bfe';
+      let jp6Busy = false;
+      async function jp6Rows() {
+        const boxes = await adminRequest('cajas?select=id,nombre&id=eq.'+JP6_BOX);
+        if (boxes.length !== 1 || boxes[0].nombre !== 'JP #6') throw Error('No se encontró la caja esperada.');
+        const rows = await adminRequest('productos?select=id,nombre,referencia_excel,imagen_url&caja_id=eq.'+JP6_BOX+'&limit=1000');
+        if (!Array.isArray(rows) || rows.length !== 96 || new Set(rows.map(x=>x.referencia_excel)).size !== 96) throw Error('La caja no contiene las 96 referencias únicas esperadas.');
+        return rows;
+      }
+      function jp6Bind() {
+        const input = $('#jp6files'), check = $('#jp6check'), upload = $('#jp6upload'), status = $('#jp6status'), results = $('#jp6results');
+        if (!input) return;
+        let plan = [];
+        function render() {
+          results.innerHTML = '<table><thead><tr><th>Archivo</th><th>Producto</th><th>Estado</th></tr></thead><tbody>'+plan.map(x=>`<tr><td data-l="Archivo">${esc(x.file.name)}</td><td data-l="Producto">${esc(x.row?.nombre||'—')}</td><td data-l="Estado">${esc(x.state)}</td></tr>`).join('')+'</tbody></table>';
+        }
+        function busy(v) { jp6Busy=v; input.disabled=check.disabled=v; upload.disabled=v || !plan.some(x=>x.ready); }
+        input.addEventListener('change',()=>{plan=[];results.textContent='';status.textContent='Verifica la selección antes de subir.';upload.disabled=true;});
+        check.addEventListener('click',async()=>{
+          if(jp6Busy)return; plan=[];busy(true);
+          try {
+            const files=[...input.files]; if(!files.length)throw Error('Selecciona las fotografías.');
+            const rows=await jp6Rows(), map=new Map(rows.map(r=>[r.referencia_excel,r]));
+            const ref=f=>{const m=/^JP_6_fila_(\d+)_col_3\.(jpg|jpeg|png|webp|gif)$/i.exec(f.name);return m?'JAPON-JP6-FILA'+Number(m[1]):null;};
+            const counts=new Map(); for(const f of files){const k=ref(f);counts.set(k,(counts.get(k)||0)+1);}
+            for(const file of files){
+              const key=ref(file),row=map.get(key),x={file,row,key,ready:false,state:''};plan.push(x);
+              if(!key||!row)x.state='Sin referencia válida (omitida)';
+              else if(counts.get(key)>1)x.state='Referencia repetida en selección (omitida)';
+              else if(row.imagen_url)x.state='Ya tiene foto (omitida)';
+              else try { if(!file.size||file.size>5*1048576)throw Error('Tamaño inválido (máximo 5 MB)'); x.normalized=await normalizarImagen(file);x.ready=true;x.state='Lista para subir'; } catch(e){x.state=e.message;}
+            }
+            status.textContent=`${rows.length} productos · ${rows.filter(r=>r.imagen_url).length} con foto · ${plan.filter(x=>x.ready).length} listas · ${plan.filter(x=>!x.ready).length} omitidas o inválidas. No se ha subido nada.`;
+            render();
+          }catch(e){plan=[];status.textContent=e.message;}finally{busy(false);}
+        });
+        upload.addEventListener('click',async()=>{
+          if(jp6Busy||!plan.some(x=>x.ready))return;
+          if(!confirm('¿Publicar las fotografías verificadas de JP #6?'))return;
+          busy(true);let done=0,skip=0,errors=0;
+          const beforeUnload=e=>{e.preventDefault();e.returnValue='';}; window.addEventListener('beforeunload',beforeUnload);
+          try{
+            for(const x of plan.filter(x=>x.ready)){
+              try{
+                const path='productos?id=eq.'+encodeURIComponent(x.row.id)+'&caja_id=eq.'+JP6_BOX+'&referencia_excel=eq.'+encodeURIComponent(x.key);
+                const fresh=await adminRequest(path+'&select=id,imagen_url');
+                if(fresh.length!==1)throw Error('La referencia cambió; verifica de nuevo.');
+                if(fresh[0].imagen_url){x.state='Ya tiene foto (omitida)';x.ready=false;skip++;continue;}
+                x.state='Subiendo…';render();
+                if(!x.url)x.url=await uploadR2Image(x.normalized,'productos');
+                const condition=fresh[0].imagen_url===null?'&imagen_url=is.null':'&imagen_url=eq.';
+                const updated=await adminRequest(path+condition+'&select=id,imagen_url',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({imagen_url:x.url})});
+                if(!Array.isArray(updated)||updated.length!==1||updated[0].id!==x.row.id||updated[0].imagen_url!==x.url)throw Error('No se confirmó el vínculo; verifica nuevamente.');
+                x.ready=false;x.state='Vinculada';done++;
+                const local=D.prods.find(p=>p.id===x.row.id);if(local)local.imagenUrl=x.url;
+              }catch(e){x.state='Error: '+e.message;errors++;}
+              finally{status.textContent=`Vinculadas: ${done} · omitidas: ${skip} · errores: ${errors}`;render();}
+            }
+            status.textContent=`Finalizado: ${done} vinculadas · ${skip} omitidas · ${errors} errores. Puedes reintentar las pendientes.`;
+          }finally{window.removeEventListener('beforeunload',beforeUnload);busy(false);}
+        });
       }
 
       /* ===== Eventos ===== */
