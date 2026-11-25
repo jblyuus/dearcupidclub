@@ -2000,6 +2000,11 @@
       .dc-gallery-admin img {width:64px;height:64px;object-fit:contain;border-radius:8px;background:var(--bg);}
       .dc-gallery-admin .row {border-bottom:1px solid var(--bd);padding:8px 0;}
       @media(max-width:520px){.row2 .dc-gallery-thumbs{width:82px}.dc-gallery-admin .btn{padding:5px 8px;min-height:40px}.dc-gallery-main{height:min(50vh,420px)}}
+      .dc-sections{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0 20px}
+      .dc-sections .btn{flex:1 1 125px;white-space:normal;min-height:62px;display:grid;gap:2px;text-align:center;border-color:var(--bd)}
+      .dc-sections .btn[aria-current]{background:var(--p1);border-color:var(--ac);font-weight:650}
+      .dc-division-icon{display:flex;justify-content:center;color:var(--ib)}.dc-division-icon svg{width:32px;height:32px}.dc-sections small{font-size:.78rem;color:var(--t2);font-weight:400}
+      .dc-sec-row{display:flex;align-items:center;gap:6px;margin:6px 0}.dc-sec-row input{flex:1;min-width:0}.dc-sec-row button{padding:6px 10px;min-height:40px}
     </style>
   </head>
   <body>
@@ -2966,7 +2971,7 @@
         const ref = String(p.referenciaExcel || "").trim();
         const mc = /^MC\s*#([123])\s+fila\s+(\d+)$/i.exec(ref);
         if (mc) return {tipo:"MC",caja:Number(mc[1]),fila:Number(mc[2])};
-        const kr = /^KR\s*#([12])\s+fila\s+(\d+)$/i.exec(ref);
+        const kr = /^KR\s*#(\d+)\s+fila\s+(\d+)$/i.exec(ref);
         if (kr) return { tipo: "KR", caja: Number(kr[1]), fila: Number(kr[2]) };
         const jp = /^JAPON-JP(\d+)-FILA(\d+)$/i.exec(ref);
         if (jp) return { tipo: "JP", caja: Number(jp[1]), fila: Number(jp[2]) };
@@ -3030,7 +3035,7 @@
         return +n > 0 ? money(n) : "Pendiente";
       };
       const prow = (p, admin) =>
-        `<article class="row2">${galleryThumbs(p,"th")} <div class="mn"><strong>${esc(p.desc)}</strong><span class="meta">${esc(p.buyer)} · ${esc(p.plat)}${admin && box(p.box) ? " · " + esc(box(p.box).name) : ""}</span><div class="bs">${bLogi(p.logi)}${isMeowBox(p.box)?`<a href="#/box/${esc(p.box)}/cargos">Consultar cruce por cupidito</a>`:`<span class="b">EMS: ${pm(p.ems, p.emsEstado)}</span><span class="b">Aduana: ${pm(p.adu, p.aduEstado)}</span>`}</div>${admin ? `<div class="ac"><button class="btn sm" data-act="eprod" data-id="${p.id}">Editar</button><button class="btn sm" data-act="galleryEdit" data-id="${esc(p.id)}">Fotografías</button><button class="btn sm dng" data-act="dprod" data-id="${p.id}">Eliminar</button></div>` : ""}</div><div class="pr">${admin ? money(p.price) : publicPrice(p)}</div></article>`;
+        `<article class="row2">${galleryThumbs(p,"th")} <div class="mn"><strong>${esc(p.desc)}</strong><span class="meta">${esc(p.buyer)} · ${esc(p.plat)}${admin && box(p.box) ? " · " + esc(box(p.box).name) + (dcSections(p.box).length ? " · " + esc(dcSectionName(p)) : "") : ""}</span><div class="bs">${bLogi(p.logi)}${isMeowBox(p.box)?`<a href="#/box/${esc(p.box)}/cargos">Consultar cruce por cupidito</a>`:`<span class="b">EMS: ${pm(p.ems, p.emsEstado)}</span><span class="b">Aduana: ${pm(p.adu, p.aduEstado)}</span>`}</div>${admin ? `<div class="ac"><button class="btn sm" data-act="eprod" data-id="${p.id}">Editar</button><button class="btn sm" data-act="galleryEdit" data-id="${esc(p.id)}">Fotografías</button><button class="btn sm dng" data-act="dprod" data-id="${p.id}">Eliminar</button></div>` : ""}</div><div class="pr">${admin ? money(p.price) : publicPrice(p)}</div></article>`;
       function plist(list, admin) {
         const f = filt(list),
           pages = Math.max(1, Math.ceil(f.length / PER));
@@ -3395,6 +3400,20 @@
         };
         return `<section class="card cargo-info" aria-label="Información y fechas límite de cargos">${b.cargoDesc?.trim() ? `<p class="cargo-info-text">${esc(b.cargoDesc).replace(/\n/g, "<br>")}</p>` : ""}<div class="cargo-info-dates">${b.emsLimite ? `<div><strong>✦ Fecha límite EMS:</strong><span>${esc(fecha(b.emsLimite))}</span></div>` : ""}${b.aduanaLimite ? `<div><strong>✦ Fecha límite aduana:</strong><span>${esc(fecha(b.aduanaLimite))}</span></div>` : ""}</div></section>`;
       }
+      /* Divisiones de caja: General implícita, UUID estable por sección. */
+      function dcSections(id){return (D.sections||[]).filter(x=>x.caja_id===id).sort((a,b)=>a.orden-b.orden||a.nombre.localeCompare(b.nombre,'es'));}
+      async function dcLoadSections(){const all=[];let offset=0;while(true){const r=await fetch(AUTH_URL+'/rest/v1/secciones_caja?select=id,caja_id,nombre,orden&order=id.asc&limit=500&offset='+offset,{headers:{apikey:AUTH_PUBLISHABLE_KEY},cache:'no-store'});if(!r.ok)throw Error('No se pudieron cargar las divisiones ('+r.status+')');const a=await r.json();if(!Array.isArray(a))throw Error('Divisiones inválidas');if(!a.length)break;all.push(...a);offset+=a.length;}D.sections=all;}
+      function dcSectionName(p){return dcSections(p.box).find(x=>x.id===p.section)?.nombre||'General';}
+      function dcOptions(rows,selected){return '<option value="">General</option>'+rows.map(x=>`<option value="${esc(x.id)}" ${selected===x.id?'selected':''}>${esc(x.nombre)}</option>`).join('');}
+      function dcPublicList(id){const all=D.prods.filter(p=>p.box===id);if(!dcSections(id).length||String(S.q||'').trim())return all;return all.filter(p=>(p.section||'')===(S.section||''));}
+      function dcDivisionIcon(name){const k=String(name).trim().toLowerCase();const paths=k==='daiso'?'<rect x="5" y="3" width="15" height="18" rx="2"/><path d="M8 3v18M3 7h4M3 12h4M3 17h4M14 7l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/>':k==='popcorn'?'<rect x="3" y="6" width="12" height="16" rx="2" transform="rotate(-10 9 14)"/><rect x="9" y="2" width="12" height="17" rx="2" fill="var(--sf)"/><path d="M15 13c-6-4-2-7 0-4 2-3 6 0 0 4z"/>': '<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 8l3-5h12l3 5M12 3v5M12 17c-6-4-2-7 0-4 2-3 6 0 0 4z"/>';return `<span class="dc-division-icon">${uiSvg(paths)}</span>`;}
+      function dcPublicButtons(id){const sections=dcSections(id);if(!sections.length)return '';if(S.section&&!sections.some(x=>x.id===S.section))S.section='';const all=D.prods.filter(p=>p.box===id);return `<div class="dc-sections" aria-label="Divisiones de la caja">${[{id:'',nombre:'General'},...sections].map(x=>`<button type="button" class="btn" data-act="dcPublicSection" data-id="${esc(x.id)}" ${!String(S.q||'').trim()&&(S.section||'')===x.id?'aria-current="true"':''}>${dcDivisionIcon(x.nombre)}<span>${esc(x.nombre)}</span><small>${all.filter(p=>(p.section||'')===x.id).length} productos</small></button>`).join('')}</div><p style="font-size:.82rem;color:var(--t2)">La búsqueda por cupidito abarca todas las divisiones.</p>`;}
+      function dcEditor(rows){return `<section class="card" style="padding:12px"><h3>Divisiones</h3><p>General se crea automáticamente. Añade las divisiones que necesites; quitar una con productos está bloqueado.</p><div id="dcSectionRows">${rows.map(dcEditorRow).join('')}</div><button type="button" class="btn sm" data-act="dcAddSection">+ Añadir división</button></section>`;}
+      function dcEditorRow(x){return `<div class="dc-sec-row" data-dc-section="${esc(x.id)}"><input maxlength="80" aria-label="Nombre de división" placeholder="Ej. DAISO" value="${esc(x.nombre)}"><button type="button" class="btn sm" data-act="dcSectionUp" aria-label="Subir">↑</button><button type="button" class="btn sm" data-act="dcSectionDown" aria-label="Bajar">↓</button><button type="button" class="btn sm dng" data-act="dcRemoveSection" aria-label="Quitar">✕</button></div>`;}
+      function dcReadEditor(){const el=$('#dcSectionRows');if(!el)return null;const rows=$$('[data-dc-section]',el).map((r,i)=>({id:r.dataset.dcSection,nombre:r.querySelector('input').value.trim(),orden:i+1}));if(rows.length>50||rows.some(x=>!x.nombre||x.nombre.length>80||x.nombre.toLowerCase()==='general')||new Set(rows.map(x=>x.nombre.toLowerCase())).size!==rows.length)throw Error('Escribe nombres únicos (máx. 80 caracteres); General es automático.');return rows;}
+      async function dcSaveSections(id,rows){if(rows===null)return;const result=await adminRequest('rpc/dc_guardar_secciones',{method:'POST',body:JSON.stringify({p_caja_id:id,p_secciones:rows})});if(!Array.isArray(result)||result.length!==rows.length)throw Error('No se confirmaron las divisiones');D.sections=[...(D.sections||[]).filter(x=>x.caja_id!==id),...result];}
+      function dcManageSections(id){const b=box(id);if(!b)return;dlg('Divisiones · '+b.name,`<div class="f">${dcEditor(dcSections(id))}${err}${foot}</div>`,async()=>{try{await dcSaveSections(id,dcReadEditor());toast('Divisiones guardadas ♡');return 0;}catch(e){return e.message;}});}
+      function dcDraftCapture(){const r=dcReadEditor();if(r!==null&&privateWork){const used=new Set(privateWork.contenido.productos.map(p=>p.seccion_id).filter(Boolean));if([...used].some(id=>!r.some(x=>x.id===id)))throw Error('Mueve los productos del borrador a otra división antes de quitarla.');privateWork.contenido.secciones=r;}}
       function vBox(id, tab, u) {
         const b = box(id);
         if (!b) return nf();
@@ -3408,6 +3427,7 @@
             sort: "original",
             page: 1,
             box: id,
+            section: "",
             publicCargoSearch: "",
           };
         }
@@ -3421,7 +3441,7 @@
           const ps = D.prods.filter((p) => p.box === id);
           body = `<div style="max-width:440px;margin:14px 0"><label for="publicCargoSearch">Buscar cargos por cupidito</label><input id="publicCargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.publicCargoSearch || "")}"></div><p id="publicCargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${isMeowBox(id)?renderMeowCharges(id,false):renderCargosAgrupados(ps, false)}`;
         } else
-          body = `${controls()}<div id="list">${plist(D.prods.filter((p) => p.box === id))}</div>`;
+          body = `${dcPublicButtons(id)}${controls()}<div id="list">${plist(dcPublicList(id))}</div>`;
         return (
           bc([["Inicio", "#/"], [c.name, "#/cat/" + c.id], [b.name]]) +
           `<div class="row sp"><h1>${esc(c.name)} · ${esc(b.name)}</h1>${bBox(b.st)}</div>${b.tracking?.trim() ? `<p class="box-track"><span aria-hidden="true">♥</span> <span>Guía</span> <strong>${esc(b.tracking)}</strong></p>` : ""}${b.desc?.trim() ? `<p class="box-description">${esc(b.desc).replace(/\n/g, "<br>")}</p>` : ""}${tabs}${tab ? (isMeowBox(id)?"":cargoInfoPublica(b)) : colorLegend()}${body}`
@@ -3468,7 +3488,6 @@
         ["envios", "Envíos"],
         ["cargos", "Cargos"],
         ["personalizar", "Personalizar página"],
-        ["galeriaskr2", "Galerías KR #2"],
       ];
       const nmz = (t) => String(t).trim().replace(/^@/, "").toLowerCase();
       let CUP = [];
@@ -3545,7 +3564,7 @@
             )
             .map(
               (x) =>
-                `<tr><td data-l="Caja">${esc(cat(x.cat)?.name)} · ${esc(x.name)}</td><td data-l="Estado">${bBox(x.st)}</td><td data-l="Productos">${conteosAdmin ? conteosAdmin.get(x.id) || 0 : "Sin verificar"}</td><td data-l="Fechas">${x.created}${x.closed ? " → " + x.closed : ""}</td><td data-l="Acciones"><button class="btn sm pri" data-act="boxprods" data-id="${x.id}">Productos</button> <button class="btn sm" data-act="ebox" data-id="${x.id}">Editar</button> <button class="btn sm" data-act="tbox" data-id="${x.id}">${x.st === 0 ? "Cerrar" : "Reabrir"}</button> <button class="btn sm dng" data-act="dbox" data-id="${x.id}" ${!conteosAdmin ? "disabled" : ""}>Eliminar</button></td></tr>`,
+                `<tr><td data-l="Caja">${esc(cat(x.cat)?.name)} · ${esc(x.name)}</td><td data-l="Estado">${bBox(x.st)}</td><td data-l="Productos">${conteosAdmin ? conteosAdmin.get(x.id) || 0 : "Sin verificar"}</td><td data-l="Fechas">${x.created}${x.closed ? " → " + x.closed : ""}</td><td data-l="Acciones"><button class="btn sm pri" data-act="boxprods" data-id="${x.id}">Productos</button> <button class="btn sm" data-act="ebox" data-id="${x.id}">Editar</button> <button class="btn sm" data-act="dcManageSections" data-id="${x.id}">Divisiones</button> <button class="btn sm" data-act="tbox" data-id="${x.id}">${x.st === 0 ? "Cerrar" : "Reabrir"}</button> <button class="btn sm dng" data-act="dbox" data-id="${x.id}" ${!conteosAdmin ? "disabled" : ""}>Eliminar</button></td></tr>`,
             )
             .join("")}</tbody></table>`;
         }
@@ -3761,7 +3780,7 @@
         pend = { blob: null, rm: false, old: validProductImage(p.imagenUrl), checking: false, version: 0, uploaded: null };
         dlg(
           ne ? "Nuevo producto" : "Editar producto",
-          `<div class="f">${fld("buyer", "Username del comprador", p.buyer, "text", 'required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}${sel("box", "Caja", D.boxes.map((b) => `<option value="${b.id}" ${p.box === b.id || (S.ab === b.id && ne) ? "selected" : ""}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(""))}</div><div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld("price", "Precio (MXN)", p.price, "number", 'min="0" step="0.01" required')}${sel("logi", "Estatus logístico", opts(LOGI, p.logi ?? 0))}</div><div class="f2">${fld("ems", "EMS (MXN, 0 = pendiente)", p.ems ?? 0, "number", 'min="0" step="0.01"')}${fld("adu", "Aduana (MXN, 0 = pendiente)", p.adu ?? 0, "number", 'min="0" step="0.01"')}</div>${imgField(pend.old || p.imgId, "Foto original / respaldo")}${!ne && Array.isArray(p.gallery) ? `<p class="note">Este producto tiene galería independiente. Para cambiar las imágenes visibles, usa Fotografías en la lista de productos.</p>` : ""}${err}${foot}</div>`,
+          `<div class="f">${fld("buyer", "Username del comprador", p.buyer, "text", 'required autocomplete="off"')}<div id="bsug" aria-live="polite"></div><div class="f2">${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}${sel("box", "Caja", D.boxes.map((b) => `<option value="${b.id}" ${p.box === b.id || (S.ab === b.id && ne) ? "selected" : ""}>${esc(cat(b.cat).name)} · ${esc(b.name)}</option>`).join(""))}</div>${sel("dcProductSection","División",dcOptions(dcSections(p.box||S.ab||D.boxes[0]?.id),p.section))}<div><label for="desc">Descripción (opcional)</label><textarea id="desc" name="desc">${esc(p.desc)}</textarea></div><div class="f2">${fld("price", "Precio (MXN)", p.price, "number", 'min="0" step="0.01" required')}${sel("logi", "Estatus logístico", opts(LOGI, p.logi ?? 0))}</div><div class="f2">${fld("ems", "EMS (MXN, 0 = pendiente)", p.ems ?? 0, "number", 'min="0" step="0.01"')}${fld("adu", "Aduana (MXN, 0 = pendiente)", p.adu ?? 0, "number", 'min="0" step="0.01"')}</div>${imgField(pend.old || p.imgId, "Foto original / respaldo")}${!ne && Array.isArray(p.gallery) ? `<p class="note">Este producto tiene galería independiente. Para cambiar las imágenes visibles, usa Fotografías en la lista de productos.</p>` : ""}${err}${foot}</div>`,
           async (fd) => {
             const o = {
               buyer: fd.buyer.trim(),
@@ -3812,6 +3831,7 @@
               const payload = {
                 cupidito_id: matches[0].id,
                 caja_id: caja.id,
+                seccion_id: fd.dcProductSection || null,
                 categoria_id: caja.cat,
                 nombre: o.desc || "Producto sin descripción",
                 descripcion: o.desc || "",
@@ -3852,6 +3872,8 @@
             }
           },
         );
+        const boxField=$('#dlg #box'),sectionField=$('#dlg #dcProductSection');
+        if(boxField&&sectionField){const update=(initial=false)=>{sectionField.innerHTML=dcOptions(dcSections(boxField.value),initial&&boxField.value===p.box?p.section:'');};update(true);boxField.addEventListener('change',()=>update(false));}
         if (pend.old) setPv(pend.old);
         else if (p.imgId) imgUrl(p.imgId).then((u) => u && $("#pv") && setPv(u));
       }
@@ -3985,7 +4007,7 @@
         if (!(await refreshAdmin()) || !adminSession?.token)
           throw Error("Sesión de administrador no disponible.");
         const r = await fetch(
-          AUTH_URL + "/rest/v1/rpc/publicar_borrador_caja",
+          AUTH_URL + "/rest/v1/rpc/dc_publicar_borrador_con_secciones",
           {
             method: "POST",
             headers: {
@@ -4109,7 +4131,7 @@
           ? l
               .map(
                 (p, i) =>
-                  `<div class="row2"><div class="mn"><strong>${esc(p.nombre)}</strong><span class="meta">${esc(p.buyer || "Sin username")} · ${money(p.precio)} · ${esc(p.moneda || "MXN")}</span><label for="draft-logi-${i}">Estado logístico</label><select id="draft-logi-${i}" data-draft-logi="${i}" aria-label="Estado de ${esc(p.nombre)}">${opts(LOGI, p.logi ?? 0)}</select></div><button type="button" class="btn sm" data-act="draftEditProduct" data-index="${i}">Editar</button><button type="button" class="btn sm dng" data-act="draftDeleteProduct" data-index="${i}">Quitar</button></div>`,
+                  `<div class="row2"><div class="mn"><strong>${esc(p.nombre)}</strong><span class="meta">${esc(p.buyer || "Sin username")} · ${money(p.precio)} · ${esc(p.moneda || "MXN")} · ${esc((privateWork.contenido.secciones||[]).find(x=>x.id===p.seccion_id)?.nombre||"General")}</span><label for="draft-logi-${i}">Estado logístico</label><select id="draft-logi-${i}" data-draft-logi="${i}" aria-label="Estado de ${esc(p.nombre)}">${opts(LOGI, p.logi ?? 0)}</select></div><button type="button" class="btn sm" data-act="draftEditProduct" data-index="${i}">Editar</button><button type="button" class="btn sm dng" data-act="draftDeleteProduct" data-index="${i}">Quitar</button></div>`,
               )
               .join("")
           : '<p style="color:var(--t2)">Todavía no has añadido productos al borrador.</p>';
@@ -4186,6 +4208,7 @@
                 .filter((p) => p.box === id)
                 .map((p) => ({
                   id: p.id,
+                  seccion_id: p.section || null,
                   nombre: p.desc,
                   buyer: p.buyer,
                   plat: p.plat || "",
@@ -4223,6 +4246,8 @@
         };
         const w = privateWork.contenido;
         w.productos = Array.isArray(w.productos) ? w.productos : [];
+        w.secciones=Array.isArray(w.secciones)?w.secciones:dcSections(id).map(x=>({...x}));
+        for(const p of w.productos)if(!Object.hasOwn(p,'seccion_id'))p.seccion_id=D.prods.find(x=>x.id===p.id)?.section||null;
         const v = w.caja || {};
         dlg(
           "Editor de borradores",
@@ -4236,25 +4261,27 @@
                   `<option value="${esc(c.id)}" ${c.id === v.cat ? "selected" : ""}>${esc(c.name)}</option>`,
               )
               .join(""),
-          )}${sel("st", "Estado", opts(BOX, v.st ?? 0))}<div class="row sp"><h3>Productos</h3><button type="button" class="btn sm" data-act="draftAddProduct">+ Agregar producto</button></div><div class="row" style="align-items:end"><div style="flex:1;min-width:180px"><label for="draftBulkStatus">Cambiar todos los productos a</label><select id="draftBulkStatus">${opts(LOGI, 0)}</select></div><button type="button" class="btn sm" data-act="draftApplyAll">Aplicar a todos</button></div><span id="draftCount" style="font-size:.85rem;color:var(--t2)"></span><div id="draftProductRows" class="lst"></div><p id="draftStatus" role="status" style="font-size:.9rem"></p>${err}<div class="row"><button type="button" class="btn pri" data-act="draftSaveAll">Guardar borrador privado ♡</button><button type="button" class="btn" data-act="draftPublish">Publicar caja ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.84rem;color:var(--t2)">Publicar hará visible la caja y sus productos. Los productos anteriores se conservarán.</p></div>`,
+          )}${sel("st", "Estado", opts(BOX, v.st ?? 0))}${dcEditor(w.secciones)}<div class="row sp"><h3>Productos</h3><button type="button" class="btn sm" data-act="draftAddProduct">+ Agregar producto</button></div><div class="row" style="align-items:end"><div style="flex:1;min-width:180px"><label for="draftBulkStatus">Cambiar todos los productos a</label><select id="draftBulkStatus">${opts(LOGI, 0)}</select></div><button type="button" class="btn sm" data-act="draftApplyAll">Aplicar a todos</button></div><span id="draftCount" style="font-size:.85rem;color:var(--t2)"></span><div id="draftProductRows" class="lst"></div><p id="draftStatus" role="status" style="font-size:.9rem"></p>${err}<div class="row"><button type="button" class="btn pri" data-act="draftSaveAll">Guardar borrador privado ♡</button><button type="button" class="btn" data-act="draftPublish">Publicar caja ♡</button><button type="button" class="btn" data-act="close">Cerrar</button></div><p style="font-size:.84rem;color:var(--t2)">Publicar hará visible la caja y sus productos. Los productos anteriores se conservarán.</p></div>`,
         );
         draftProductRows();
       }
       async function draftProductForm(index) {
         if (!privateWork) return;
         collectDraftLogistics();
+        dcDraftCapture();
         await cargarCupiditosParaBorradores();
         // Conserva los cambios escritos en la caja mientras se abre el formulario de producto.
         const f = $("#dlg form");
         if (f) {
           const fd = Object.fromEntries(new FormData(f));
           privateWork.contenido.caja = {
+                ...privateWork.contenido.caja,
             name: String(fd.name || "").trim(),
             desc: String(fd.desc || "").trim(),
             tracking: String(fd.tracking || "").trim(),
-            cargoDesc: String(fd.cargoDesc || "").trim(),
-            emsLimite: fd.emsLimite || "",
-            aduanaLimite: fd.aduanaLimite || "",
+            cargoDesc: privateWork.contenido.caja.cargoDesc || "",
+            emsLimite: privateWork.contenido.caja.emsLimite || "",
+            aduanaLimite: privateWork.contenido.caja.aduanaLimite || "",
             cat: fd.cat,
             st: +fd.st,
             closed: "",
@@ -4265,12 +4292,13 @@
           index >= 0
             ? "Editar producto del borrador"
             : "Agregar producto al borrador",
-          `<div class="f">${fld("nombre", "Nombre o descripción del producto", p.nombre || "", "text", "required")}${fld("buyer", "Username del cupidito", p.buyer || "", "text", 'autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}<div class="f2">${fld("precio", "Precio", p.precio ?? "", "number", 'min="0" step="0.01"')}${sel("moneda", "Moneda", ["MXN", "KRW", "JPY", "USD"].map((x) => `<option ${p.moneda === x ? "selected" : ""}>${x}</option>`).join(""))}</div>${sel("estado", "Estado", LOGI.map((x, i) => `<option value="${i}" ${p.logi === i ? "selected" : ""}>${esc(x)}</option>`).join(""))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion || "")}</textarea></div><p class="note">Puedes añadir fotografías desde Productos después de publicar la caja.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,
+          `<div class="f">${fld("nombre", "Nombre o descripción del producto", p.nombre || "", "text", "required")}${fld("buyer", "Username del cupidito", p.buyer || "", "text", 'autocomplete="off"')}${'<div id="draftBuyerSuggestions" role="listbox" aria-label="Cupiditos existentes" hidden></div>'}${sel("plat", "Plataforma", PLAT.map((x) => `<option ${(p.plat || plataformaCupidito(p.buyer)) === x ? "selected" : ""}>${x}</option>`).join(""))}<div class="f2">${fld("precio", "Precio", p.precio ?? "", "number", 'min="0" step="0.01"')}${sel("moneda", "Moneda", ["MXN", "KRW", "JPY", "USD"].map((x) => `<option ${p.moneda === x ? "selected" : ""}>${x}</option>`).join(""))}</div>${sel("dcDraftSection","División",dcOptions(privateWork.contenido.secciones||[],p.seccion_id))}${sel("estado", "Estado", LOGI.map((x, i) => `<option value="${i}" ${p.logi === i ? "selected" : ""}>${esc(x)}</option>`).join(""))}<div><label for="descripcion">Notas o detalles</label><textarea name="descripcion" id="descripcion">${esc(p.descripcion || "")}</textarea></div><p class="note">Puedes añadir fotografías desde Productos después de publicar la caja.</p>${err}<div class="row"><button class="btn pri">Guardar producto en borrador</button><button type="button" class="btn" data-act="draftBack">Volver</button></div></div>`,
           async (fd) => {
             if (!fd.nombre.trim()) return "Escribe el nombre del producto.";
             const o = {
               ...p,
               id: p.id || crypto.randomUUID(),
+              seccion_id: fd.dcDraftSection || null,
               nombre: fd.nombre.trim(),
               buyer: fd.buyer.trim(),
               plat: fd.plat || plataformaCupidito(fd.buyer),
@@ -4327,9 +4355,10 @@
                   `<option value="${c.id}" ${v.cat === c.id ? "selected" : ""}>${esc(c.name)}</option>`,
               )
               .join(""),
-          )}${sel("st", "Estado", opts(BOX, v.st ?? 0))}${fld("closed", "Fecha de cierre (opcional)", v.closed, "date")}${err}${id ? '<div class="row" style="margin-top:6px"><button class="btn pri">Publicar cambios</button><button type="button" class="btn" data-act="close">Cancelar</button></div>' : foot}</div>`,
+          )}${sel("st", "Estado", opts(BOX, v.st ?? 0))}${fld("closed", "Fecha de cierre (opcional)", v.closed, "date")}${id?`<p class="note">Las divisiones se editan desde el botón Divisiones de esta caja.</p>`:dcEditor([])}${err}${id ? '<div class="row" style="margin-top:6px"><button class="btn pri">Publicar cambios</button><button type="button" class="btn" data-act="close">Cancelar</button></div>' : foot}</div>`,
           async (fd) => {
             if (!fd.name.trim()) return "Escribe un nombre.";
+            const nuevasDivisiones=dcReadEditor();
             const o = {
               name: fd.name.trim(),
               cat: fd.cat,
@@ -4368,6 +4397,7 @@
                 ...o,
               });
             }
+            if(!id && nuevasDivisiones?.length){const created=D.boxes[D.boxes.length-1];try{await dcSaveSections(created.id,nuevasDivisiones);}catch(e){toast('Caja creada. No se guardaron las divisiones; edítalas desde Cajas: '+e.message,1);save();return 0;}}
             save();
             toast(id ? "Cambios publicados" : "Caja guardada");
             return 0;
@@ -4930,7 +4960,7 @@
         while (true) {
           const r = await fetch(
             AUTH_URL +
-              "/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,ems,aduana,ems_estado,aduana_estado,created_at&order=created_at.asc,id.asc&limit=" + pageSize + "&offset=" + offset,
+              "/rest/v1/productos?select=id,caja_id,categoria_id,cupidito_id,nombre,descripcion,precio,moneda,estado,plataforma,imagen_url,referencia_excel,seccion_id,ems,aduana,ems_estado,aduana_estado,created_at&order=created_at.asc,id.asc&limit=" + pageSize + "&offset=" + offset,
             { headers, cache: "no-store" },
           );
           if (!r.ok)
@@ -4976,9 +5006,11 @@
           "stock",
           "sin asignar",
         ];
+        await dcLoadSections();
         const galleries = await loadGalleryMap();
         D.prods = productos.map((p, i) => ({
           gallery: galleries.get(p.id),
+          section: p.seccion_id || null,
           referenciaExcel: p.referencia_excel || "",
           ordenCarga: i,
           id: p.id,
@@ -5097,9 +5129,10 @@
           l.innerHTML = plist(
             adm
               ? D.prods.filter((p) => !S.ab || p.box === S.ab)
-              : D.prods.filter((p) => p.box === S.box),
+              : dcPublicList(S.box),
             adm,
           );
+          if(!adm) $$('[data-act="dcPublicSection"]').forEach(b=>{if(!String(S.q||'').trim()&&b.dataset.id===(S.section||''))b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');});
           hydrate();
         }
       }
@@ -5235,6 +5268,12 @@
         )
           return;
         switch (ac) {
+          case "dcPublicSection": S.section=id||'';S.q='';S.page=1;rerender();break;
+          case "dcManageSections": if(adminReady)dcManageSections(id);break;
+          case "dcAddSection": if(adminReady){const el=$('#dcSectionRows');if(el&&el.children.length<50){el.insertAdjacentHTML('beforeend',dcEditorRow({id:crypto.randomUUID(),nombre:''}));el.lastElementChild.querySelector('input').focus();}}break;
+          case "dcRemoveSection": if(adminReady)a.closest('[data-dc-section]')?.remove();break;
+          case "dcSectionUp": if(adminReady){const r=a.closest('[data-dc-section]');if(r?.previousElementSibling)r.parentNode.insertBefore(r,r.previousElementSibling);}break;
+          case "dcSectionDown": if(adminReady){const r=a.closest('[data-dc-section]');if(r?.nextElementSibling)r.parentNode.insertBefore(r.nextElementSibling,r);}break;
           case "chooseShipBuyer": {
             const field = $("#dlg #buyer");
             if (field) {
@@ -5347,6 +5386,7 @@
               if (!String(fd.name || "").trim())
                 throw Error("Escribe un nombre para la caja.");
               privateWork.contenido.caja = {
+                ...privateWork.contenido.caja,
                 name: String(fd.name).trim(),
                 cat: fd.cat,
                 desc: String(fd.desc || "").trim(),
@@ -5355,6 +5395,7 @@
                 closed: "",
               };
               collectDraftLogistics();
+              dcDraftCapture();
               await guardarYVerificarBorrador();
             } catch (ex) {
               draftStatus(ex.message, true);
@@ -5371,6 +5412,7 @@
               if (!String(fd.name || "").trim())
                 throw Error("Escribe un nombre para la caja.");
               privateWork.contenido.caja = {
+                ...privateWork.contenido.caja,
                 name: String(fd.name).trim(),
                 cat: fd.cat,
                 desc: String(fd.desc || "").trim(),
@@ -5379,6 +5421,7 @@
                 closed: "",
               };
               collectDraftLogistics();
+              dcDraftCapture();
               const esperados = privateWork.contenido.productos.map((p) => ({
                 id: p.id,
                 logi: Number(p.logi),
