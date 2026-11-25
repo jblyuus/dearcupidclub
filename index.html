@@ -2005,6 +2005,7 @@
       .dc-sections .btn[aria-current]{background:var(--p1);border-color:var(--ac);font-weight:650}
       .dc-division-icon{display:flex;justify-content:center;color:var(--ib)}.dc-division-icon svg{width:32px;height:32px}.dc-sections small{font-size:.78rem;color:var(--t2);font-weight:400}
       .dc-sec-row{display:flex;align-items:center;gap:6px;margin:6px 0}.dc-sec-row input{flex:1;min-width:0}.dc-sec-row button{padding:6px 10px;min-height:40px}
+      .shipmonth{font:inherit;text-align:left;cursor:pointer;display:grid;gap:5px;color:var(--tx)} .shipmonth.active{background:var(--p1);border-color:var(--ib)} .shipmonth .ic svg{width:25px;height:25px}.shipmonth span:last-child{color:var(--t2);font-size:.88rem}.ship-correos{background:#fce7f0;color:#a44170;border-color:#fce7f0}.ship-estafeta{background:#f2e5fa;color:#77548f;border-color:#f2e5fa}.ship-mensajeria{background:#e0f2fc;color:#376b91;border-color:#e0f2fc}
     </style>
   </head>
   <body>
@@ -3131,15 +3132,24 @@
         "LaMensajeria",
         "Otra",
       ];
-      function vEnvios() {
-        const rows = [...D.envios].sort((a, b) =>
-          String(b.date || "").localeCompare(String(a.date || "")),
-        );
-        return (
-          bc([["Inicio", "#/"], ["Envíos"]]) +
-          `<h1>envíos</h1><div class="bar" style="margin-top:22px"><div><label for="shipq">Buscar por username, paquetería o guía</label><input id="shipq" type="search" placeholder="Buscar envío" autocomplete="off"></div></div><div id="shiplist">${shipRows(rows)}</div>`
-        );
-      }
+      let shipAdminMonth="", shipPublicMonth="";
+      function shipPeriodValue(v){if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(v)))throw Error("Selecciona un mes y año válidos.");return v+"-01";}
+      const shipMonthKey=x=>x.period?x.period.slice(0,7):"sin-periodo";
+      function shipMonthLabel(k){if(k==="sin-periodo")return "Sin mes asignado";const [y,m]=k.split("-");const label=new Intl.DateTimeFormat("es-MX",{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(Date.UTC(+y,+m-1,1)));return label.charAt(0).toUpperCase()+label.slice(1);}
+      function shipMonths(admin=false){const current=admin?shipAdminMonth:shipPublicMonth;const months=[...new Set(D.envios.map(shipMonthKey))].sort((a,b)=>a==="sin-periodo"?1:b==="sin-periodo"?-1:b.localeCompare(a));return `<div class="grid" style="margin:16px 0">${months.map(k=>`<button type="button" class="card shipmonth ${current===k?'active':''}" data-shipmonth="${esc(k)}" data-shipadmin="${admin?1:0}"><span class="ic">${uiSvg('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M12 18c-7-4-2-8 0-4 2-4 7 0 0 4Z"/>')}</span><strong>${esc(shipMonthLabel(k))}</strong><span>${D.envios.filter(x=>shipMonthKey(x)===k).length} envíos</span></button>`).join('')}</div>`;}
+      function shipMonthRows(admin=false,q=""){const k=admin?shipAdminMonth:shipPublicMonth;const rows=D.envios.filter(x=>q?`${x.buyer} ${x.carrier} ${x.tracking}`.toLowerCase().includes(q.toLowerCase()):k?shipMonthKey(x)===k:admin);return !k&&!q&&!admin?'<div class="empty">Selecciona un mes para consultar los envíos.</div>':`<h2 class="s">${esc(q?'Resultados de todos los meses':k?shipMonthLabel(k):'Todos los envíos')}</h2>${shipRows(rows,admin)}`;}
+
+      const shipImportManifest=[{"row": 4, "buyer": "@elleancards", "carrier": "Correos de México", "tracking": "RA054375390MX", "period": "2026-11-01"}, {"row": 5, "buyer": "Natt Rojas", "carrier": "Correos de México", "tracking": "RA054375386MX", "period": "2026-11-01"}, {"row": 6, "buyer": "Juan Manuel", "carrier": "Correos de México", "tracking": "RA054375409MX", "period": "2026-11-01"}, {"row": 7, "buyer": "@hachh.0", "carrier": "Estafeta", "tracking": "387883528", "period": "2026-11-01"}, {"row": 8, "buyer": "Areli Razo", "carrier": "Estafeta", "tracking": "2689022514", "period": "2026-11-01"}, {"row": 9, "buyer": "Diana Moreno", "carrier": "Estafeta", "tracking": "3378239865", "period": "2026-11-01"}, {"row": 10, "buyer": "Ariadna García", "carrier": "LaMensajeria", "tracking": "2856244", "period": "2026-11-01"}, {"row": 11, "buyer": "@bethaglr", "carrier": "Correos de México", "tracking": "RN127889217MX", "period": "2026-11-01"}, {"row": 12, "buyer": "@ijusaurio", "carrier": "LaMensajeria", "tracking": "2856246", "period": "2026-11-01"}, {"row": 13, "buyer": "@noitsfatima", "carrier": "Correos de México", "tracking": "RN127889203MX", "period": "2026-11-01"}, {"row": 14, "buyer": "@haannnl", "carrier": "Correos de México", "tracking": "RN127889115MX", "period": "2026-11-01"}, {"row": 15, "buyer": "@myriam.elena23", "carrier": "LaMensajeria", "tracking": "2856250", "period": "2026-11-01"}, {"row": 16, "buyer": "@haeiian", "carrier": "Correos de México", "tracking": "RN127889132MX", "period": "2026-11-01"}, {"row": 17, "buyer": "@luv3rtiz", "carrier": "Estafeta", "tracking": "269186218", "period": "2026-11-01"}, {"row": 18, "buyer": "Montse Villegas", "carrier": "Correos de México", "tracking": "RN127889101MX", "period": "2026-11-01"}, {"row": 19, "buyer": "@tmibgyu", "carrier": "Correos de México", "tracking": "RN127889146MX", "period": "2026-11-01"}, {"row": 20, "buyer": "Ur hope", "carrier": "Correos de México", "tracking": "RN127889177MX", "period": "2026-11-01"}, {"row": 21, "buyer": "VillanuevaLp", "carrier": "Estafeta", "tracking": "3536744969", "period": "2026-11-01"}, {"row": 22, "buyer": "@woneesgarden.co", "carrier": "Estafeta", "tracking": "1617002533", "period": "2026-11-01"}, {"row": 23, "buyer": "@daesstar", "carrier": "Correos de México", "tracking": "RN127889129MX", "period": "2026-11-01"}, {"row": 24, "buyer": "Alvarado Karlos", "carrier": "LaMensajeria", "tracking": "2856256", "period": "2026-11-01"}, {"row": 25, "buyer": "@snoweirl", "carrier": "LaMensajeria", "tracking": "2856258", "period": "2026-11-01"}, {"row": 26, "buyer": "Marla Alvarez", "carrier": "Correos de México", "tracking": "RN127889194MX", "period": "2026-11-01"}, {"row": 27, "buyer": "@monlimon28", "carrier": "Correos de México", "tracking": "RN127889150MX", "period": "2026-11-01"}, {"row": 28, "buyer": "@gi0g00", "carrier": "LaMensajeria", "tracking": "2856263", "period": "2026-11-01"}, {"row": 29, "buyer": "@notbetita", "carrier": "LaMensajeria", "tracking": "2856265", "period": "2026-11-01"}, {"row": 30, "buyer": "Nayara Calderon", "carrier": "Correos de México", "tracking": "RN127889185MX", "period": "2026-11-01"}, {"row": 31, "buyer": "@vanillacuplix", "carrier": "Correos de México", "tracking": "RN127889163MX", "period": "2026-11-01"}, {"row": 32, "buyer": "@honeeeybee__", "carrier": "LaMensajeria", "tracking": "2858732", "period": "2026-11-01"}];
+      function shipImportUI(){return `<h2>Collages de noviembre 2026</h2><p>Selecciona los 29 archivos. Se comprueba mes, nombre, paquetería y guía. No se reemplazan collages existentes.</p><input id="shipImportFiles" type="file" multiple accept="image/*"><div class="row" style="margin:12px 0"><button class="btn" id="shipImportCheck">Verificar</button><button class="btn pri" id="shipImportSave" disabled>Subir collages seleccionados</button></div><p id="shipImportStatus" role="status"></p><div id="shipImportRows" class="lst"></div>`;}
+      function shipImportBind(){const files=$('#shipImportFiles'),check=$('#shipImportCheck'),save=$('#shipImportSave'),status=$('#shipImportStatus'),list=$('#shipImportRows');let plan=[],urls=[],busy=false;function clear(){urls.forEach(u=>URL.revokeObjectURL(u));urls=[];plan=[];list.replaceChildren();save.disabled=true;}files.onchange=clear;
+        check.onclick=async()=>{if(busy)return;busy=true;check.disabled=files.disabled=true;clear();try{const records=await adminRequest('envios?select=id,nombre,paqueteria,guia,periodo,collage_url&periodo=eq.2026-11-01&limit=1000');const chosen=[...files.files];for(const m of shipImportManifest){const matches=records.filter(x=>x.nombre===m.buyer&&x.paqueteria===m.carrier&&String(x.guia)===m.tracking&&x.periodo===m.period);const fs=chosen.filter(f=>new RegExp('^ENVIO_fila_'+m.row+'_col_3\\.(jpg|jpeg|png|webp|gif)$','i').test(f.name));let reason='',f=null;const rec=matches[0];if(matches.length!==1)reason='Coincidencia no única';else if(rec.collage_url)reason='Ya tiene collage';else if(fs.length!==1)reason='Archivo ausente o duplicado';else try{f=await normalizarImagen(fs[0]);if(f.size>5*1024*1024)throw Error('Supera 5 MB');}catch(e){reason=e.message;}
+          const card=document.createElement('div');card.className='card';card.innerHTML=`<strong>${esc(m.buyer)} · ${esc(m.tracking)}</strong><p>Fila ${m.row} · ${esc(reason||'Lista para revisión')}</p>`;if(!reason&&f){const u=URL.createObjectURL(f);urls.push(u);const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';a.textContent='Ampliar para revisar';const img=document.createElement('img');img.src=u;img.alt='Collage';img.style.cssText='display:block;max-width:100%;max-height:160px;object-fit:contain';a.prepend(img);card.append(a);const l=document.createElement('label');const cb=document.createElement('input');cb.type='checkbox';cb.style.cssText='width:auto;min-height:0;margin-right:8px';l.append(cb,document.createTextNode(' Autorizado para publicación, sin datos privados'));card.append(l);plan.push({m,rec,f,cb,card});cb.onchange=()=>save.disabled=!plan.some(p=>p.cb.checked);}list.append(card);}
+          status.textContent=`${plan.length} listos de 29. Revisa cada collage y marca los autorizados. No se ha subido nada.`;
+        }catch(e){status.textContent=e.message;}finally{busy=false;check.disabled=files.disabled=false;}};
+        save.onclick=async()=>{if(busy)return;busy=true;save.disabled=check.disabled=files.disabled=true;const selected=plan.filter(p=>p.cb.checked);plan.forEach(p=>p.cb.disabled=true);let ok=0,fail=0;for(const p of selected){try{const filter='envios?id=eq.'+encodeURIComponent(p.rec.id)+'&periodo=eq.2026-11-01&guia=eq.'+encodeURIComponent(p.m.tracking)+'&nombre=eq.'+encodeURIComponent(p.m.buyer)+'&paqueteria=eq.'+encodeURIComponent(p.m.carrier);const fresh=await adminRequest(filter+'&select=id,collage_url');if(fresh.length!==1||fresh[0].collage_url)throw Error('Registro cambiado o ya tiene collage');const u=await uploadR2Image(p.f,'envios');const result=await adminRequest(filter+'&or=(collage_url.is.null,collage_url.eq.)&select=id,collage_url',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({collage_url:u})});if(result.length!==1||result[0].collage_url!==u)throw Error('No se confirmó el vínculo');ok++;p.cb.checked=false;p.card.append(' · Guardado');}catch(e){fail++;p.card.append(document.createTextNode(' · Error: '+e.message));}status.textContent=`Guardados ${ok} · Errores ${fail} · Seleccionados ${selected.length}`;}busy=false;check.disabled=files.disabled=false;try{await sincronizarEnviosSupabase(true);}catch(e){console.warn(e);}status.textContent+= ' · Verifica nuevamente antes de reintentar.';};}
+
+      function vEnvios(){return bc([["Inicio","#/"],["Envíos"]])+`<h1>envíos nacionales ♡</h1><div class="bar" style="margin-top:22px"><div><label for="shipq">Buscar en todos los meses</label><input id="shipq" type="search" placeholder="Nombre, paquetería o guía" autocomplete="off"></div></div><div id="shipmonths">${shipMonths()}</div><div id="shiplist">${shipMonthRows()}</div>`;}
+      document.addEventListener('click',e=>{const b=e.target.closest('[data-shipmonth]');if(!b)return;const admin=b.dataset.shipadmin==='1';if(admin){shipAdminMonth=shipAdminMonth===b.dataset.shipmonth?'':b.dataset.shipmonth;$('#shipadminmonths').innerHTML=shipMonths(true);$('#shipadminlist').innerHTML=shipMonthRows(true);}else{shipPublicMonth=b.dataset.shipmonth;$('#shipq').value='';$('#shipmonths').innerHTML=shipMonths();$('#shiplist').innerHTML=shipMonthRows();}});
       /* Los envíos publicados se consultan siempre desde Supabase. */
       const shipStatusIndex = (value) => {
         const i = SHIP_ST.findIndex(
@@ -3163,6 +3173,7 @@
           tracking: x.guia || "",
           status: shipStatusIndex(x.estado),
           date: (x.created_at || "").slice(0, 10),
+          period: x.periodo || "",
           collageUrl: shipPublicImage(x.collage_url),
           notes: x.notas || "",
         };
@@ -3171,22 +3182,11 @@
         const headers = { apikey: AUTH_PUBLISHABLE_KEY };
         let url =
           AUTH_URL +
-          "/rest/v1/envios?select=id,nombre,collage_url,paqueteria,guia,estado,created_at&order=created_at.desc&limit=10000";
+          "/rest/v1/envios?select=id,nombre,collage_url,paqueteria,guia,estado,created_at,periodo&order=created_at.desc&limit=10000";
         let options = { headers, cache: "no-store" };
         if (admin) {
-          if (!(await refreshAdmin()) || !adminSession?.token)
-            throw Error("Inicia sesión como administrador.");
-          url = AUTH_URL + "/rest/v1/rpc/obtener_envios_admin";
-          options = {
-            method: "POST",
-            headers: {
-              ...headers,
-              Authorization: "Bearer " + adminSession.token,
-              "Content-Type": "application/json",
-            },
-            body: "{}",
-            cache: "no-store",
-          };
+          D.envios = (await adminRequest("envios?select=id,nombre,collage_url,paqueteria,guia,estado,created_at,periodo&order=created_at.desc&limit=10000")).map(mapShip);
+          return D.envios;
         }
         const r = await fetch(url, options);
         if (!r.ok)
@@ -3207,6 +3207,7 @@
         if (!nombre) throw Error("Escribe el username del cupidito.");
         const data = {
           nombre,
+          periodo: shipPeriodValue(fd.periodo),
           paqueteria: fd.carrier || null,
           guia: String(fd.tracking || "").trim() || null,
           estado: SHIP_ST[Number(fd.status)] || SHIP_ST[0],
@@ -3214,7 +3215,7 @@
         // undefined conserva el collage anterior; null lo desvincula.
         if (collageUrl !== undefined) data.collage_url = collageUrl;
         const url = AUTH_URL + "/rest/v1/envios" +
-          (id ? "?id=eq." + encodeURIComponent(id) + "&select=id,nombre,collage_url,paqueteria,guia,estado,created_at" : "?select=id,nombre,collage_url,paqueteria,guia,estado,created_at");
+          (id ? "?id=eq." + encodeURIComponent(id) + "&select=id,nombre,collage_url,paqueteria,guia,estado,created_at,periodo" : "?select=id,nombre,collage_url,paqueteria,guia,estado,created_at,periodo");
         const r = await fetch(url, {
           method: id ? "PATCH" : "POST",
           headers: {
@@ -3276,7 +3277,7 @@
           ? `<div class="shipwrap"><table class="shiptable"><thead><tr><th>Nombre</th><th>Collage</th><th>Paquetería</th><th>Guía</th><th>Status</th>${admin ? "<th>Acciones</th>" : ""}</tr></thead><tbody>${rows
               .map((x) => {
                 const img = shipPublicImage(x.collageUrl);
-                return `<tr><td data-l="Nombre"><strong>${esc(x.buyer || "Sin nombre")}</strong></td><td data-l="Collage">${img ? `<a class="shipphoto" href="${esc(img)}" target="_blank" rel="noopener noreferrer" aria-label="Ver collage del envío"><img src="${esc(img)}" alt="Collage del envío" loading="lazy"></a>` : '<span style="color:var(--t2)">Pendiente</span>'}</td><td data-l="Paquetería"><span class="b shipcarrier">${esc(x.carrier || "Sin asignar")}</span></td><td data-l="Guía"><span class="shiptrack">${esc(x.tracking || "Pendiente")}</span></td><td data-l="Status">${badge(Math.max(0, Math.min(SHIP_ST.length - 1, +x.status || 0)), SHIP_ST, ["◌", "●", "➜", "→", "✓", "!"], true)}</td>${admin ? `<td data-l="Acciones"><div class="row"><button class="btn sm" data-act="eship" data-id="${esc(x.id)}">Editar</button><button class="btn sm dng" data-act="dship" data-id="${esc(x.id)}">Eliminar</button></div></td>` : ""}</tr>`;
+                return `<tr><td data-l="Nombre"><strong>${esc(x.buyer || "Sin nombre")}</strong></td><td data-l="Collage">${img ? `<a class="shipphoto" href="${esc(img)}" target="_blank" rel="noopener noreferrer" aria-label="Ver collage del envío"><img src="${esc(img)}" alt="Collage del envío" loading="lazy"></a>` : '<span style="color:var(--t2)">Pendiente</span>'}</td><td data-l="Paquetería"><span class="b shipcarrier ${x.carrier==='Correos de México'?'ship-correos':x.carrier==='Estafeta'?'ship-estafeta':x.carrier==='LaMensajeria'?'ship-mensajeria':''}">${esc(x.carrier || "Sin asignar")}</span></td><td data-l="Guía"><span class="shiptrack">${esc(x.tracking || "Pendiente")}</span></td><td data-l="Status">${badge(Math.max(0, Math.min(SHIP_ST.length - 1, +x.status || 0)), SHIP_ST, ["◌", "●", "➜", "→", "✓", "!"], true)}</td>${admin ? `<td data-l="Acciones"><div class="row"><button class="btn sm" data-act="eship" data-id="${esc(x.id)}">Editar</button><button class="btn sm dng" data-act="dship" data-id="${esc(x.id)}">Eliminar</button></div></td>` : ""}</tr>`;
               })
               .join("")}</tbody></table></div>`
           : '<div class="empty">Todavía no hay envíos nacionales registrados.</div>';
@@ -3305,7 +3306,7 @@
         let selected = null, uploaded = null, removed = false, busy = false, previewVersion = 0, checking = false;
         dlg(
           id ? "Editar envío nacional" : "Nuevo envío nacional",
-          `<div class="f">${fld("buyer", "Username del cupidito", x.buyer || "", "text", 'required maxlength="120" autocomplete="off" aria-controls="shipBuyerSuggestions"')}<div id="shipBuyerSuggestions" aria-live="polite"></div>${sel("carrier", "Paquetería", CARRIERS.map((v) => `<option value="${esc(v)}" ${x.carrier === v ? "selected" : ""}>${esc(v)}</option>`).join(""))}${fld("tracking", "Número de guía (visible públicamente)", x.tracking || "", "text", 'maxlength="120"')}${sel("status", "Status", opts(SHIP_ST, x.status ?? 0))}<div class="drop ship-collage-field"><label for="shipCollageFile">Collage del envío (opcional)</label><img id="shipCollagePreview" alt="Vista previa del collage" ${old ? `src="${esc(old)}"` : "hidden"}><input type="file" id="shipCollageFile" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"><div class="row"><button type="button" class="btn sm" id="shipCollageRemove" ${old ? "" : "hidden"}>Quitar collage</button></div><p id="shipCollageStatus" role="status" style="margin:0;font-size:.85rem;color:var(--t2)">${old ? "Collage actual. Puedes cambiarlo o conservarlo." : "JPG, PNG, WebP o GIF · Máximo 5 MB."}</p><label id="shipCollageConsentRow" hidden><input type="checkbox" id="shipCollageConsent"> Confirmo que tengo autorización para publicar esta imagen y que no contiene direcciones, teléfonos, etiquetas postales ni datos privados.</label></div><p class="note">El collage será visible al guardar el envío.</p><p style="color:var(--t2);font-size:.85rem">No incluyas direcciones, teléfonos ni datos personales en el nombre o la guía.</p>${err}${foot}</div>`,
+          `<div class="f">${fld("periodo", "Mes y año del envío", (x.period || (id ? "" : (shipAdminMonth || new Date().toISOString().slice(0,7)))).slice(0,7), "month", "required")}${fld("buyer", "Username del cupidito", x.buyer || "", "text", 'required maxlength="120" autocomplete="off" aria-controls="shipBuyerSuggestions"')}<div id="shipBuyerSuggestions" aria-live="polite"></div>${sel("carrier", "Paquetería", CARRIERS.map((v) => `<option value="${esc(v)}" ${x.carrier === v ? "selected" : ""}>${esc(v)}</option>`).join(""))}${fld("tracking", "Número de guía (visible públicamente)", x.tracking || "", "text", 'maxlength="120"')}${sel("status", "Status", opts(SHIP_ST, x.status ?? 0))}<div class="drop ship-collage-field"><label for="shipCollageFile">Collage del envío (opcional)</label><img id="shipCollagePreview" alt="Vista previa del collage" ${old ? `src="${esc(old)}"` : "hidden"}><input type="file" id="shipCollageFile" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"><div class="row"><button type="button" class="btn sm" id="shipCollageRemove" ${old ? "" : "hidden"}>Quitar collage</button></div><p id="shipCollageStatus" role="status" style="margin:0;font-size:.85rem;color:var(--t2)">${old ? "Collage actual. Puedes cambiarlo o conservarlo." : "JPG, PNG, WebP o GIF · Máximo 5 MB."}</p><label id="shipCollageConsentRow" hidden><input type="checkbox" id="shipCollageConsent"> Confirmo que tengo autorización para publicar esta imagen y que no contiene direcciones, teléfonos, etiquetas postales ni datos privados.</label></div><p class="note">El collage será visible al guardar el envío.</p><p style="color:var(--t2);font-size:.85rem">No incluyas direcciones, teléfonos ni datos personales en el nombre o la guía.</p>${err}${foot}</div>`,
           async (fd) => {
             if (!String(fd.buyer || "").trim()) throw Error("Escribe el username del cupidito.");
             if (checking) throw Error("Espera a que termine la validación de la imagen.");
@@ -3486,9 +3487,9 @@
         ["borradores", "Borradores privados"],
         ["productos", "Productos"],
         ["envios", "Envíos"],
+        ["fotosenvios", "Collages noviembre"],
         ["cargos", "Cargos"],
         ["personalizar", "Personalizar página"],
-        ["fotoskr3", "Fotos KR #3"],
       ];
       const nmz = (t) => String(t).trim().replace(/^@/, "").toLowerCase();
       let CUP = [];
@@ -3663,7 +3664,7 @@
           }
         }
         if (tab === "envios")
-          b += `<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div>${shipRows(D.envios, true)}`;
+          b += `<div class="row sp"><h2>Envíos nacionales</h2><button class="btn pri" data-act="eship">Nuevo envío</button></div><p>Elige el mes al crear o editar un envío. Los meses nuevos aparecen automáticamente al guardar su primer envío.</p><div id="shipadminmonths">${shipMonths(true)}</div><div id="shipadminlist">${shipMonthRows(true)}</div>`;
         if (tab === "cargos") {
           const bid = S.cb && box(S.cb) ? S.cb : D.boxes[0]?.id;
           const ps = bid ? D.prods.filter((p) => p.box === bid) : [];
@@ -3680,8 +3681,8 @@
               "",
             )}</select></div>${bid && !isMeowBox(bid) ? `<div class="row" style="margin:12px 0"><button type="button" class="btn" data-act="openChargesDraft" data-id="${esc(bid)}">Editar borrador de cargos ♡</button></div>` : ""}<div style="max-width:420px;margin:14px 0"><label for="cargoSearch">Buscar cargos por cupidito</label><input id="cargoSearch" type="search" autocomplete="off" placeholder="Nombre o @username" value="${esc(S.cargoSearch || "")}"></div><p id="cargoSearchCount" role="status" style="font-size:.85rem;color:var(--t2)"></p>${isMeowBox(bid)?renderMeowCharges(bid,true):renderCargosAgrupados(ps, true)}`;
         }
+        if (tab === "fotosenvios") b = shipImportUI();
         if (tab === "galeriaskr2") b = galleryBulkUI();
-        if (tab === "fotoskr3") b = kr3UI();
         if (tab === "personalizar") {
           const u = await currentImage("logo"),
             bu = await currentImage("banner");
@@ -5100,8 +5101,8 @@
         $("#hl").href = back;
         document.body.classList.toggle("home", !p.length);
         app.innerHTML = html;
+        if(p[0]==="admin" && p[1]==="fotosenvios" && adminReady) shipImportBind();
         if(p[0]==="admin" && p[1]==="galeriaskr2" && adminReady) galleryBulkBind();
-        if(p[0]==="admin" && p[1]==="fotoskr3" && adminReady) kr3Bind();
         if (p[0] === "admin" && p[1] === "cargos") filtrarCargosAdmin();
         if (p[0] === "box" && p[2] === "cargos") filtrarCargosAdmin(true);
         app.style.animation = "none";
@@ -5220,23 +5221,6 @@
         const cleanup=()=>items.forEach(x=>{if(x.preview)URL.revokeObjectURL(x.preview);});d.addEventListener('close',cleanup,{once:true});$('#dcGalleryFiles').onchange=async e=>{if(busy)return;const input=e.target;busy=true;try{for(const f of input.files){if(items.length>=30)throw Error('Máximo 30 fotos');if(!f.size||f.size>5*1048576)throw Error('Máximo 5 MB por archivo');const file=await normalizarImagen(f);items.push({file,preview:URL.createObjectURL(file)});}status.textContent='';}catch(ex){status.textContent=ex.message;}finally{busy=false;input.value='';paint();}};
         $('#dcGalleryOriginal').onclick=()=>{if(busy)return;cleanup();items=[validProductImage(p.imagenUrl)].filter(Boolean).map(url=>({url}));paint();};
         $('#dcGallerySave').onclick=async()=>{if(busy)return;if(!items.length&&!confirm('¿Guardar este producto sin imágenes visibles?'))return;busy=true;const buttons=$$('button,input',d);buttons.forEach(b=>b.disabled=true);const stop=e=>e.preventDefault();d.addEventListener('cancel',stop);try{for(let i=0;i<items.length;i++){status.textContent=`Guardando ${i+1} de ${items.length}…`;if(!items[i].url)items[i].url=await galleryUpload(items[i].file);}await gallerySave(id,items.map(x=>x.url),previous);d.close();toast('Galería guardada ♡');await rerender();}catch(ex){status.textContent=ex.message;buttons.forEach(b=>b.disabled=false);paint();}finally{busy=false;d.removeEventListener('cancel',stop);}};paint();}
-
-      const KR3_BOX='1ea4e8c1-07a7-4882-a5fa-912ad96c1cc3';
-      const KR3_PLAN=[{"ref": "KR #3 fila 4", "name": "Yushi, Sion & Jaehee - NCT Wish  I Spy YES24", "buyer": "Ivette Reyna", "row": 4}, {"ref": "KR #3 fila 5", "name": "Jungwon & Sunoo - Enhypen Olive Young", "buyer": "@blyuus", "row": 5}, {"ref": "KR #3 fila 6", "name": "Sakuya & Ryo - NCT Wish  I Spy YES24", "buyer": "@blyuus", "row": 6}, {"ref": "KR #3 fila 7", "name": "Soobin - TXT M2u Perfect Storm", "buyer": "@blyuus", "row": 7}, {"ref": "KR #3 fila 8", "name": "Soobin - TXT Weverse Luckydraw", "buyer": "@blyuus", "row": 8}, {"ref": "KR #3 fila 9", "name": "Riku - NCT Wish  I Spy YES24", "buyer": "Gabriella Oh Xing", "row": 9}, {"ref": "KR #3 fila 10", "name": "Beomgyu - TXT M2u Perfect Storm", "buyer": "@ferugyuu", "row": 10}, {"ref": "KR #3 fila 11", "name": "Kai & Tae - TXT M2u Perfect Storm", "buyer": "@v.itzzrl", "row": 11}, {"ref": "KR #3 fila 12", "name": "Beomgyu & Kai - TXT Weverse Luckydraw", "buyer": "@v.itzzrl", "row": 12}, {"ref": "KR #3 fila 13", "name": "Yeonjun - TXT M2u Perfect Storm", "buyer": "@bbokkarizz", "row": 13}, {"ref": "KR #3 fila 14", "name": "Yeonjun - TXT Weverse Luckydraw", "buyer": "@bbokkarizz", "row": 14}, {"ref": "KR #3 fila 15", "name": "Tae - TXT Weverse Luckydraw", "buyer": "@bosstgirl", "row": 15}, {"ref": "KR #3 fila 16", "name": "Jay - Enhypen Olive Young", "buyer": "@haeiian", "row": 16}, {"ref": "KR #3 fila 17", "name": "Jake - Enhypen Olive Young", "buyer": "Lumbreras Denisse", "row": 17}, {"ref": "KR #3 fila 18", "name": "Sunghoon - Enhypen Olive Young", "buyer": "@snoweirl", "row": 18}, {"ref": "KR #3 fila 19", "name": "Niki - Enhypen Olive Young", "buyer": "@_povedano", "row": 19}, {"ref": "KR #3 fila 21", "name": "KiiiKiii Delulu Pack - Crystal ball ver.", "buyer": "@blyuus", "row": 21}, {"ref": "KR #3 fila 22", "name": "KiiiKiii Delulu Pack - Headphone ver.", "buyer": "@blyuus", "row": 22}, {"ref": "KR #3 fila 23", "name": "KiiiKiii Uncut Gem - Digging ver. (2)", "buyer": "@blyuus", "row": 23}, {"ref": "KR #3 fila 24", "name": "NCT Wish Ode To Love - Jewel Case ver.", "buyer": "@blyuus", "row": 24}, {"ref": "KR #3 fila 26", "name": "NCT Dream Candy - Photobook ver.", "buyer": "Gabriella Oh Xing", "row": 26}, {"ref": "KR #3 fila 27", "name": "NCT Dream Glitch Mode - Photobook ver.", "buyer": "Gabriella Oh Xing", "row": 27}, {"ref": "KR #3 fila 28", "name": "Nmixx 4th EP [Fe3O4:FORWARD", "buyer": "@shiromatsu", "row": 28}, {"ref": "KR #3 fila 29", "name": "XngHan&Xoul 1st Mini Album - Glow ver.", "buyer": "@shiromatsu", "row": 29}, {"ref": "KR #3 fila 30", "name": "KiiiKiii Delulu Pack - Crystal ball ver.", "buyer": "@ferugyuu", "row": 30}, {"ref": "KR #3 fila 31", "name": "Seulgi Accidentally on Purpose - Photobook ver.", "buyer": "@ferugyuu", "row": 31}, {"ref": "KR #3 fila 34", "name": "ATEEZ The World Ep. 1 - Movement Random ver.", "buyer": "@daesstar", "row": 34}, {"ref": "KR #3 fila 35", "name": "Baekhyun Esscene of Reverie - Photobook ver.", "buyer": "@dinixlk", "row": 35}, {"ref": "KR #3 fila 36", "name": "Zerobaseone Never Say Never - Photobook ver.", "buyer": "@dinixlk", "row": 36}, {"ref": "KR #3 fila 37", "name": "NCT [Golden Age] - Archiving ver.", "buyer": "@sphye__", "row": 37}];
-      function kr3UI(){return `<h2>Fotos KR #3</h2><div class="card f"><p>Selecciona las fotos descomprimidas de KR #3. Se verifican la referencia, nombre y comprador. No se reemplazan fotos ni galerías existentes.</p><input id="kr3Files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif"><div class="row"><button class="btn" id="kr3Check">Verificar archivos</button><button class="btn pri" id="kr3Save" disabled>Subir fotografías verificadas ♡</button></div><p id="kr3Status" role="status"></p><div id="kr3Rows"></div></div>`;}
-      function kr3Bind(){const input=$('#kr3Files'),check=$('#kr3Check'),save=$('#kr3Save'),status=$('#kr3Status'),list=$('#kr3Rows');let plan=[],busy=false;
-        const norm=v=>String(v??'').normalize('NFC').trim().replace(/\s+/g,' ');
-        const read=()=>adminRequest('productos?select=id,nombre,referencia_excel,imagen_url,cupiditos(nombre)&caja_id=eq.'+KR3_BOX+'&limit=1000');
-        const matches=(r,x)=>r.referencia_excel===x.ref&&norm(r.nombre)===norm(x.name)&&norm(r.cupiditos?.nombre)===norm(x.buyer);
-        const empty=v=>v==null||String(v).trim()==='';
-        function paint(){list.innerHTML=plan.map(x=>`<div class="card row" style="margin:8px 0"><div style="flex:1"><strong>${esc(x.name||x.fileName)}</strong><p>${esc(x.ref||'')} · ${esc(x.buyer||'')} · ${esc(x.fileName||'Sin archivo')}</p><p>${esc(x.state)}</p></div></div>`).join('');save.disabled=busy||!plan.some(x=>x.ready);input.disabled=check.disabled=busy;}
-        input.onchange=()=>{plan=[];status.textContent='Verifica los archivos.';paint();};
-        check.onclick=async()=>{if(busy)return;busy=true;plan=[];paint();try{status.textContent='Verificando…';const db=await read();if(!Array.isArray(db)||db.length!==48)throw Error('Se esperaban 48 productos; revisar caja');const files=new Map();for(const f of input.files){const m=f.name.match(/^KR_3_fila_(\d+)_col_3\.(jpg|jpeg|png|webp|gif)$/i);const n=m?Number(m[1]):0;if(!KR3_PLAN.some(x=>x.row===n)){plan.push({fileName:f.name,state:'Archivo fuera del inventario'});continue;}if(!files.has(n))files.set(n,[]);files.get(n).push(f);}
-        for(const g of KR3_PLAN){const x={...g,ready:false,state:''};plan.push(x);const fs=files.get(g.row)||[], rr=db.filter(r=>r.referencia_excel===g.ref);try{if(rr.length!==1||!matches(rr[0],x))throw Error('Producto no confirmado');x.id=rr[0].id;if(!empty(rr[0].imagen_url)||await galleryGet(x.id)){x.state='Ya tiene foto o galería';continue;}if(fs.length!==1)throw Error(fs.length?'Archivos duplicados':'Archivo no seleccionado');x.fileName=fs[0].name;if(!fs[0].size||fs[0].size>5*1048576)throw Error('Archivo vacío o mayor de 5 MB');x.file=await normalizarImagen(fs[0]);x.ready=true;x.state='Lista para subir';}catch(e){x.state=e.message;}}
-        status.textContent=`${plan.filter(x=>x.ready).length} listas de 30 esperadas. No se ha subido nada.`;}catch(e){plan=[];status.textContent=e.message;}finally{busy=false;paint();}};
-        save.onclick=async()=>{if(busy)return;const chosen=plan.filter(x=>x.ready);if(!chosen.length||!confirm('¿Subir '+chosen.length+' fotos?'))return;busy=true;paint();let ok=0,err=0;try{for(const x of chosen){try{status.textContent='Subiendo '+x.ref+'…';const base='productos?id=eq.'+encodeURIComponent(x.id)+'&caja_id=eq.'+KR3_BOX;const fresh=await adminRequest(base+'&select=id,nombre,referencia_excel,imagen_url,cupiditos(nombre)');if(fresh.length!==1||!matches(fresh[0],x)||!empty(fresh[0].imagen_url)||await galleryGet(x.id))throw Error('Producto cambió o ya tiene imagen');x.url=x.url||await uploadR2Image(x.file,'productos');const filter=fresh[0].imagen_url==null?'&imagen_url=is.null':'&imagen_url=eq.'+encodeURIComponent(fresh[0].imagen_url);const saved=await adminRequest(base+'&referencia_excel=eq.'+encodeURIComponent(x.ref)+filter,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({imagen_url:x.url})});if(!Array.isArray(saved)||saved.length!==1||saved[0].imagen_url!==x.url)throw Error('No se confirmó el guardado');x.ready=false;x.state='Guardada';ok++;}catch(e){x.state='Error: '+e.message;err++;}paint();}status.textContent=`Guardadas: ${ok} · Errores: ${err}. Actualiza la página para ver las fotos.`;}finally{busy=false;paint();}};
-      }
-
       const KR2_GALLERY_GROUPS=[{"ref": "KR #2 fila 13", "name": "Sumin STAYC Photocards", "buyer": "Villanueva Lp", "rows": [13, 14]}, {"ref": "KR #2 fila 15", "name": "Elena & Seah - Tuide Weverse Luckydraw", "buyer": "Mayte Gómez", "rows": [15, 16]}, {"ref": "KR #2 fila 20", "name": "Saki & Seoyeon - Tuide Everline Luckydraw", "buyer": "Monse Ab", "rows": [20, 21]}, {"ref": "KR #2 fila 23", "name": "Seoyeon & Saki - Tuide Ktown4u Luckydraw", "buyer": "Monse Ab", "rows": [23, 24]}, {"ref": "KR #2 fila 28", "name": "Minju ILLIT, Eunchae Le Sserafim & Keonho Cortis Photocards", "buyer": "Monse Ab", "rows": [28, 29, 30, 31]}, {"ref": "KR #2 fila 33", "name": "Elena & Jia - Tuide Everline Luckydraw", "buyer": "@v.itzzrl", "rows": [33, 34]}, {"ref": "KR #2 fila 35", "name": "Elena & Jia - Tuide m2u Luckydraw", "buyer": "@v.itzzrl", "rows": [35, 36]}, {"ref": "KR #2 fila 37", "name": "Elena & Jia - Tuide Ktown4u Luckydraw", "buyer": "@v.itzzrl", "rows": [37, 38]}, {"ref": "KR #2 fila 54", "name": "Martin & Grupal Torriden x Cortis Photocard", "buyer": "@gi0g00", "rows": [54, 55]}, {"ref": "KR #2 fila 56", "name": "Martin Cortis, Ian & Yeon Hearts2hearts photocards", "buyer": "@gi0g00", "rows": [56, 57]}, {"ref": "KR #2 fila 58", "name": "James & Holder Torriden x Cortis Photocard", "buyer": "@lzthh_", "rows": [58, 59]}, {"ref": "KR #2 fila 65", "name": "Sumin STAYC Photocards", "buyer": "@blyuus", "rows": [65, 66]}, {"ref": "KR #2 fila 67", "name": "Keonho, Seonghyeon & Grupal Torriden x Cortis Photocard", "buyer": "@snoweirl", "rows": [67, 68, 69]}, {"ref": "KR #2 fila 75", "name": "Martin & James Cortis Photocards", "buyer": "Gabriella Oh Xing", "rows": [75, 76]}, {"ref": "KR #2 fila 79", "name": "Keonho & Holder Torriden x Cortis Photocard", "buyer": "@astridoide2.0", "rows": [79, 80]}, {"ref": "KR #2 fila 82", "name": "Jeongyeon Twice Photocards", "buyer": "@lov2yoo", "rows": [82, 83]}, {"ref": "KR #2 fila 84", "name": "Jeongyeon Twice Photocards", "buyer": "@lov2yoo", "rows": [84, 85]}, {"ref": "KR #2 fila 90", "name": "Wonhee & Iroha - Illit Breakeven Kakaotalk POB", "buyer": "@woneesgarden.co", "rows": [90, 91]}, {"ref": "KR #2 fila 92", "name": "Yunah & Wonhee - Illit Breakeven Oliveyoung POB", "buyer": "@woneesgarden.co", "rows": [92, 93]}, {"ref": "KR #2 fila 112", "name": "Isa STAYC + IN Stray kids Photocards", "buyer": "@tloasgf", "rows": [112, 113, 114]}, {"ref": "KR #2 fila 115", "name": "Isa STAYC Photocards", "buyer": "@tloasgf", "rows": [115, 116, 117]}, {"ref": "KR #2 fila 120", "name": "TXT Photocards", "buyer": "@kyoblivion", "rows": [120, 121]}, {"ref": "KR #2 fila 130", "name": "a2O Soul Photocards", "buyer": "@tess4wh", "rows": [130, 131]}];
       const KR2_GALLERY_BOX='27e30699-3288-40c8-86df-ecb40a7a74c4';
       function galleryBulkUI(){return `<h2>Galerías individuales · KR #2</h2><div class="card f"><p>Selecciona el ZIP descomprimido original y las fotos complementarias. Se agrupan únicamente filas combinadas verificadas; no se cambia la foto original ni los cargos. Las galerías ya existentes se omiten.</p><input type="file" id="dcBulkFiles" multiple accept=".jpg,.jpeg,.png,.webp,.gif"><div class="row"><button class="btn" id="dcBulkCheck">Verificar</button><button class="btn pri" id="dcBulkSave" disabled>Guardar galerías seleccionadas</button></div><p id="dcBulkStatus" role="status"></p><div id="dcBulkRows"></div></div>`;}
@@ -5981,21 +5965,7 @@
               t.value +
               (themeRange.find((x) => x[0] === t.dataset.theme)?.[5] || "");
         }
-        if (t.id === "shipq") {
-          $("#shiplist").innerHTML = shipRows(
-            D.envios.filter((x) =>
-              (
-                (x.buyer || x.name || "") +
-                " " +
-                (x.carrier || "") +
-                " " +
-                (x.tracking || x.reference || "")
-              )
-                .toLowerCase()
-                .includes(t.value.toLowerCase()),
-            ),
-          );
-        }
+        if (t.id === "shipq") $("#shiplist").innerHTML=shipMonthRows(false,t.value.trim());
         if (t.id === "hq") homeFind();
         if (t.id === "buyer") buyerSug();
         if (t.id === "cq") $("#cl").innerHTML = cupRows(CUP, t.value);
